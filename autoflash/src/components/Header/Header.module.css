@@ -1,0 +1,105 @@
+/* HEADER BASE */
+.header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  height: 70px; /* Slightly taller for a premium feel */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5%;
+  background: rgba(0, 0, 0, 0.15); /* Lighter base for glass effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1000;
+}
+
+/* DARK ON SCROLL */
+.scrolled {
+  height: 60px; /* Shrinks slightly when scrolling */
+  background: rgba(0, 0, 0, 0.85);
+  border-bottom: 1px solid rgba(227, 30, 36, 0.3); /* Subtle red border on scroll */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* DESKTOP NAV */
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+
+.nav a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease;
+}
+
+.nav a:hover {
+  color:#e6205b;
+  text-shadow: 0 0 10px rgba(227, 30, 36, 0.5);
+}
+
+/* Nav CTA Button */
+.navCTA {
+  background: #e31e24;
+  color: white !important;
+  padding: 8px 20px;
+  border-radius: 4px;
+  font-size: 12px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.navCTA:hover {
+  transform: scale(1.05);
+  background: #ff2a31;
+}
+
+/* HAMBURGER */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  z-index: 1001;
+}
+
+.hamburger span {
+  width: 28px;
+  height: 2px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+/* MOBILE MENU */
+.mobileMenu {
+  position: fixed;
+  inset: 0;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.98);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.4s ease;
+}
+
+.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* RESPONSIVE */
+@media (max-width: 1024px) {
+  .nav { display: none; }
+  .hamburger { display: flex; }
+}

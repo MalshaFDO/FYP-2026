@@ -1,0 +1,98 @@
+.pageWrapper {
+  background-colour: #000;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* --- HERO --- */
+.hero {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.bgVideo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  z-index: -0.5;
+}
+
+.videoOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 0;
+}
+
+.heroContent {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  color: #fff;
+  max-width: 800px;
+}
+
+.heroSubtitle { color: #e31e24; letter-spacing: 4px; font-weight: 800; font-size: 14px; }
+.heroTitle { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; text-transform: uppercase; margin: 10px 0; }
+.heroDescription { font-size: 1.1rem; color: #ddd; margin-bottom: 30px; }
+
+/* --- BUTTONS --- */
+.heroBtns { display: flex; gap: 15px; justify-content: center; }
+.btnRed { background: #e31e24; color: white; padding: 16px 35px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+.btnGold { background: #c5a367; color: black; padding: 16px 35px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+
+/* --- SECTION 2 (WHITE) --- */
+.contentSection { background: #fff; padding: 100px 0; color: #000; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 30px; }
+.mainInfo { display: flex; align-items: center; gap: 60px; margin-bottom: 100px; }
+.textSide, .imageSide { flex: 1; }
+.carImage { width: 100%; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1)); }
+.accentText { color: #e31e24; font-weight: 800; font-size: 13px; letter-spacing: 2px; }
+.sectionTitle { font-size: 40px; font-weight: 900; margin: 15px 0; line-height: 1.1; }
+.phone { font-size: 28px; font-weight: 900; color: #e31e24; }
+.btnRedSquare { background: #e31e24; color: white; padding: 15px 35px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+
+/* --- FEATURES GRID --- */
+.featuresGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; border-top: 1px solid #eee; padding-top: 60px; }
+.featureItem h3 { font-size: 18px; margin: 15px 0 10px; font-weight: 900; }
+.featureItem p { font-size: 14px; color: #777; }
+.featureIcon { font-size: 40px; }
+
+/* --- HOW IT WORKS (DARK) --- */
+.howSection { background: #0a0a0a; padding: 100px 0; color: #fff; }
+.centerTitleLight { text-align: center; font-size: 40px; font-weight: 900; margin-bottom: 50px; }
+.stepsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.stepCard { background: #111; padding: 30px; border: 1px solid #222; position: relative; }
+.stepCard span { font-size: 30px; font-weight: 900; color: #e31e24; opacity: 0.3; }
+
+/* --- SERVICES (WHITE) --- */
+.servicesSection { background: #fff; padding: 100px 0; color: #000; }
+.centerTitle { text-align: center; font-size: 40px; font-weight: 900; margin-bottom: 50px; }
+.servicesGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.serviceCard { border: 1px solid #eee; padding: 25px; text-align: center; transition: 0.3s; }
+.serviceCard:hover { background: #e31e24; color: #fff; }
+
+/* --- WHY AUTOFLASH --- */
+.whySection { background: #000; padding: 80px 0; color: #fff; text-align: center; }
+.whyList { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
+.whyList li { background: #111; padding: 10px 20px; border: 1px solid #c5a367; border-radius: 50px; color: #c5a367; }
+
+/* --- CTA --- */
+.ctaSection { padding: 100px 0; text-align: center; background: #e31e24; color: #fff; }
+
+/* --- ANIMATION --- */
+.revealEffect { opacity: 0; transform: translateY(100px); transition: all 1s ease-out; }
+.isVisible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 1024px) {
+  .mainInfo { flex-direction: column; text-align: center; }
+  .featuresGrid, .stepsGrid, .servicesGrid { grid-template-columns: repeat(2, 1fr); }
+}
