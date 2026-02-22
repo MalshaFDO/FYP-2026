@@ -1,0 +1,103 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal {
+  background: linear-gradient(145deg, #0f0f0f, #1a1a1a);
+  padding: 60px 50px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 850px;
+  position: relative;
+  animation: slideUp 0.35s ease;
+  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+}
+
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.closeBtn {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 22px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.closeBtn:hover {
+  color: #ff3b3b;
+}
+
+.title {
+  text-align: center;
+  color: #ffffff;
+  font-size: 30px;
+  font-weight: 700;
+  margin-bottom: 45px;
+  letter-spacing: 1px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 25px;
+}
+
+.card {
+  background: #181818;
+  padding: 45px 30px;
+  border-radius: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.card:hover {
+  border: 1px solid #ff3b3b;
+  transform: translateY(-6px);
+  background: #202020;
+}
+
+.icon {
+  font-size: 34px;
+  color: #ff3b3b;
+  margin-bottom: 18px;
+}
+
+.card h3 {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 40px 25px;
+  }
+}

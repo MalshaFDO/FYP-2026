@@ -16,7 +16,8 @@ import {
   FaCalendarAlt,
   FaClock
 } from 'react-icons/fa';
-import styles from "./Booking.module.css";
+import { PiEngineFill } from "react-icons/pi";
+import styles from "./Bodywash.module.css";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
@@ -34,11 +35,29 @@ interface Plan {
   dark?: boolean;
 }
 
+type ExtraService =
+  | {
+      id: number;
+      name: string;
+      time: string;
+      price: number;
+      icon: ReactNode;
+      desc: string;
+    }
+  | {
+      id: number;
+      name: string;
+      time: string;
+      priceByVehicle: Record<VehicleType, number>;
+      icon: ReactNode;
+      desc: string;
+    };
+
 const featureLabels = [
-  "Exterior washing",
-  "Vacuum cleaning",
-  "Interior wet cleaning",
-  "Window wiping"
+  "Quick Wash",
+  "Bodywash & Vacuum",
+  "Wash, Vacuum & WAX",
+  "Full BodyWash"
 ];
 
 /* ---------------- DATA ---------------- */
@@ -52,39 +71,57 @@ const carImages: Record<VehicleType, string> = {
 
 const pricing: Record<VehicleType, Plan[]> = {
   Sedan: [
-    { id: 1, name: "Express Washing", price: 12, cents: 99, time: "15 min", duration: 15, features: [true, false, false, false] },
-    { id: 2, name: "Basic Cleaning", price: 24, cents: 99, time: "30 min", duration: 30, features: [true, true, false, false] },
-    { id: 3, name: "Premium Service", price: 36, cents: 99, time: "45 min", duration: 45, features: [true, true, true, false] },
-    { id: 4, name: "Full Complex", price: 59, cents: 99, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
+    { id: 1, name: "Quick Wash", price: 900, cents: 0, time: "15 min", duration: 15, features: [true, false, false, false] },
+    { id: 2, name: "Bodywash & Vacuum", price: 1450, cents: 0, time: "30 min", duration: 30, features: [true, true, false, false] },
+    { id: 3, name: "Wash, Vacuum & WAX", price: 1950, cents: 0, time: "45 min", duration: 45, features: [true, true, true, false] },
+    { id: 4, name: "Full Bodaywash", price: 3600, cents: 0, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
   ],
   SUV: [
-    { id: 1, name: "Express Washing", price: 16, cents: 99, time: "20 min", duration: 20, features: [true, false, false, false] },
-    { id: 2, name: "Basic Cleaning", price: 28, cents: 99, time: "35 min", duration: 35, features: [true, true, false, false] },
-    { id: 3, name: "Premium Service", price: 42, cents: 99, time: "50 min", duration: 50, features: [true, true, true, false] },
-    { id: 4, name: "Full Complex", price: 69, cents: 99, time: "130 min", duration: 130, features: [true, true, true, true], dark: true },
+    { id: 1, name: "Quick Wash", price: 1100, cents: 0, time: "20 min", duration: 20, features: [true, false, false, false] },
+    { id: 2, name: "Bodywash & Vacuum", price: 1750, cents: 0, time: "35 min", duration: 35, features: [true, true, false, false] },
+    { id: 3, name: "Wash, Vacuum & WAX", price: 2250, cents: 0, time: "50 min", duration: 50, features: [true, true, true, false] },
+    { id: 4, name: "Full Bodywash", price: 4100, cents: 0, time: "130 min", duration: 130, features: [true, true, true, true], dark: true },
   ],
   Pickup: [
-    { id: 1, name: "Express Washing", price: 18, cents: 99, time: "25 min", duration: 25, features: [true, false, false, false] },
-    { id: 2, name: "Basic Cleaning", price: 32, cents: 99, time: "40 min", duration: 40, features: [true, true, false, false] },
-    { id: 3, name: "Premium Service", price: 48, cents: 99, time: "55 min", duration: 55, features: [true, true, true, false] },
-    { id: 4, name: "Full Complex", price: 79, cents: 99, time: "140 min", duration: 140, features: [true, true, true, true], dark: true },
+    { id: 1, name: "Quick Wash", price: 1250, cents: 0, time: "25 min", duration: 25, features: [true, false, false, false] },
+    { id: 2, name: "Bodywash & Vacuum", price: 2000, cents: 0, time: "40 min", duration: 40, features: [true, true, false, false] },
+    { id: 3, name: "Wash, Vacuum & WAX", price: 2450, cents: 0, time: "55 min", duration: 55, features: [true, true, true, false] },
+    { id: 4, name: "Full Bodywash", price: 4600, cents: 0, time: "140 min", duration: 140, features: [true, true, true, true], dark: true },
   ],
   MiniVan: [
-    { id: 1, name: "Express Washing", price: 22, cents: 99, time: "30 min", duration: 30, features: [true, false, false, false] },
-    { id: 2, name: "Basic Cleaning", price: 38, cents: 99, time: "45 min", duration: 45, features: [true, true, false, false] },
-    { id: 3, name: "Premium Service", price: 55, cents: 99, time: "60 min", duration: 60, features: [true, true, true, false] },
-    { id: 4, name: "Full Complex", price: 95, cents: 99, time: "160 min", duration: 160, features: [true, true, true, true], dark: true },
+    { id: 1, name: "Quick Wash", price: 1550, cents: 0, time: "30 min", duration: 30, features: [true, false, false, false] },
+    { id: 2, name: "Bodywash & Vacuum", price: 2400, cents: 0, time: "45 min", duration: 45, features: [true, true, false, false] },
+    { id: 3, name: "Wash, Vacuum & WAX", price: 2800, cents: 0, time: "60 min", duration: 60, features: [true, true, true, false] },
+    { id: 4, name: "Full Bodywash", price: 4850, cents: 0, time: "160 min", duration: 160, features: [true, true, true, true], dark: true },
   ],
 };
 
-const additionalServices = [
-  { id: 1, name: "Leather Restoration", time: "30 min", price: 29, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 2, name: "Window Cleaning", time: "15 min", price: 10, icon: <FaTint />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 3, name: "Hard Stain Removing", time: "5 min", price: 4, icon: <FaHistory />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 4, name: "Air Refresher", time: "25 min", price: 25, icon: <FaTint />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 5, name: "Interior Polishing", time: "15 min", price: 12, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 6, name: "Tire Blacking", time: "10 min", price: 17, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+const additionalServices: ExtraService[] = [
+  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+  {
+    id: 4,
+    name: "Engine Wash",
+    time: "45 min",
+    priceByVehicle: { Sedan: 1850, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
+    icon: <PiEngineFill/>,
+    desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt.",
+  },
+  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+
+  { id: 6, name: "UnderBody Wax", time: "30 min",
+    priceByVehicle: { Sedan: 1600, SUV: 1950, Pickup: 2450, MiniVan: 2800 }, 
+    icon: <FaCar />, 
+    desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
 ];
+
+const hasPriceByVehicle = (extra: ExtraService): extra is Extract<ExtraService, { priceByVehicle: Record<VehicleType, number> }> =>
+  "priceByVehicle" in extra;
+
+const getExtraPrice = (extra: ExtraService, vehicle: VehicleType) => {
+  return hasPriceByVehicle(extra) ? extra.priceByVehicle[vehicle] : extra.price;
+};
 
 // 2. Add this helper function to generate the actual calendar week
 const getWeekDays = () => {
@@ -101,7 +138,7 @@ const getWeekDays = () => {
   }
   return days;
 };
-const timeSlots = ['09:00 am', '10:00 am', '11:00 am', '12:00 pm', '01:00 pm', '02:00 pm', '03:00 pm', '04:00 pm', '05:00 pm'];
+const timeSlots = ['08:00 am','09:00 am', '10:00 am', '11:00 am', '12:00 pm', '01:00 pm', '02:00 pm', '03:00 pm', '04:00 pm', '05:00 pm'];
 
 export default function BookingPage() {
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
@@ -120,7 +157,7 @@ export default function BookingPage() {
   const currentPlan = pricing[vehicle].find(p => p.id === selectedPlanId);
   const extrasTotal = selectedExtras.reduce((total, id) => {
     const extra = additionalServices.find(e => e.id === id);
-    return total + (extra?.price || 0);
+    return total + (extra ? getExtraPrice(extra, vehicle) : 0);
   }, 0);
   const extrasDuration = selectedExtras.reduce((total, id) => {
     const extra = additionalServices.find(e => e.id === id);
@@ -186,9 +223,9 @@ export default function BookingPage() {
                 <h3 className={`${styles.planName} ${oswald.className}`}>{plan.name}</h3>
 
                 <div className={styles.priceContainer}>
-                  <span className={styles.currency}>$</span>
+                  <span className={styles.currency}>LKR.</span>
                   <span className={styles.priceMain}>{plan.price}</span>
-                  <span className={styles.priceCents}>.{plan.cents}</span>
+                  <span className={styles.priceCents}>.{String(plan.cents).padStart(2, "0")}</span>
                 </div>
 
                 <ul className={styles.featureList}>
@@ -237,7 +274,7 @@ export default function BookingPage() {
                     <p>{service.desc}</p>
                     <div className={styles.extraMetaInline}>
                       <span><FaHistory className={styles.metaIcon} /> {service.time}</span>
-                      <span><FaReceipt className={styles.metaIcon} /> ${service.price}</span>
+                      <span><FaReceipt className={styles.metaIcon} /> LKR.{getExtraPrice(service, vehicle)}</span>
                     </div>
                   </div>
                 </div>
@@ -349,7 +386,7 @@ export default function BookingPage() {
               <SummaryCard
                 icon={<FaReceipt />}
                 label="TOTAL PRICE"
-                value={`$${finalTotal}`}
+                value={`LKR.${finalTotal}`}
               />
             </div>
 
@@ -368,6 +405,11 @@ export default function BookingPage() {
                 <div className={styles.formRow}>
                   <input placeholder="First Name *" required />
                   <input placeholder="Last Name" />
+                </div>
+
+                  <div className={styles.formRow}>
+                  <input placeholder="Vehicle Number *" required />
+                  <input placeholder="Vehicle Make & Model" required/>
                 </div>
 
                 <div className={styles.formRow}>

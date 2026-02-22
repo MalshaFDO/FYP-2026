@@ -33,7 +33,7 @@ const HomePage: React.FC = () => {
 
         <div className={styles.heroContent}>
           <span className={styles.heroSubtitle}>MODERN EQUIPMENT</span>
-          <h1 className={styles.heroTitle}>Contactless Car Wash</h1>
+          <h1 className={styles.heroTitle}>Car Wash</h1>
           <p className={styles.heroDescription}>
             A clean car is essential for maintaining its resale value and
             ensuring a presentable appearance on the road.
@@ -68,7 +68,7 @@ const HomePage: React.FC = () => {
 
               <div className={styles.contactInfo}>
                 <span className={styles.label}>Call for booking</span>
-                <span className={styles.phone}>8-800-10-500</span>
+                <span className={styles.phone}> +94 76 824 8676</span>
               </div>
 
               <button className={styles.btnRedSquare}>

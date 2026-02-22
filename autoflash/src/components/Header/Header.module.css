@@ -45,20 +45,22 @@
   color:#e6205b;
   text-shadow: 0 0 10px rgba(227, 30, 36, 0.5);
 }
-
-/* Nav CTA Button */
-.navCTA {
-  background: #e31e24;
-  color: white !important;
-  padding: 8px 20px;
-  border-radius: 4px;
-  font-size: 12px !important;
-  transition: transform 0.2s ease !important;
+.bookingBtn {
+  background: #ff3b3b;
+  color: #ffffff;
+  padding: 10px 22px;
+  border-radius: 50px;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-left: 15px;
 }
 
-.navCTA:hover {
-  transform: scale(1.05);
-  background: #ff2a31;
+.bookingBtn:hover {
+  transform: scale(1.1);
+  background: #e02828;
 }
 
 /* HAMBURGER */
