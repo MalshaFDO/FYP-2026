@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +33,12 @@ interface Plan {
   duration: number;
   features: boolean[];
   dark?: boolean;
+}
+
+interface SlotBooking {
+  bookingDate: string;
+  bookingTime: string;
+  status?: string;
 }
 
 type ExtraService =
@@ -134,6 +140,7 @@ const getWeekDays = () => {
       dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
       isSunday: d.getDay() === 0,
       fullDate: d.toDateString(),
+      isoDate: d.toISOString().split("T")[0],
     });
   }
   return days;
@@ -141,11 +148,48 @@ const getWeekDays = () => {
 const timeSlots = ['08:00 am','09:00 am', '10:00 am', '11:00 am', '12:00 pm', '01:00 pm', '02:00 pm', '03:00 pm', '04:00 pm', '05:00 pm'];
 
 export default function BookingPage() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleModel, setVehicleModel] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [notes, setNotes] = useState("");
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
   const [selectedPlanId, setSelectedPlanId] = useState<number>(3);
   const [selectedExtras, setSelectedExtras] = useState<number[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().getDate().toString());
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
+  const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.bookings)) {
+          setSlotBookings(data.bookings);
+        }
+      } catch (error) {
+        console.error("Fetch slot bookings error:", error);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const formatVehicleNumber = (value: string) => {
+    const cleaned = value
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+    const letters = cleaned.slice(0, 3);
+    const numbers = cleaned.slice(3, 7);
+
+    if (!letters) return "";
+    if (!numbers) return letters;
+    return `${letters} - ${numbers}`;
+  };
 
   const toggleExtra = (id: number) => {
     setSelectedExtras(prev =>
@@ -167,6 +211,76 @@ export default function BookingPage() {
   const finalTotal = (currentPlan?.price || 0) + extrasTotal;
   const bookingDate = selectedDate;
   const bookingTime = selectedTime;
+  const getUsedSlotCount = (date: string, time: string) => {
+    return slotBookings.filter(
+      (booking) =>
+        booking.bookingDate === date &&
+        booking.bookingTime === time &&
+        booking.status !== "Cancelled"
+    ).length;
+  };
+  const selectedTimeUsedSlots = getUsedSlotCount(bookingDate, bookingTime);
+  const isSelectedTimeFull = selectedTimeUsedSlots >= 3;
+  const getSlotStatusText = (usedSlots: number) => {
+    const remainingSlots = Math.max(0, 3 - usedSlots);
+    if (remainingSlots === 0) return "Fully booked";
+    if (remainingSlots === 1) return "1 slot available";
+    if (remainingSlots === 2) return "2 slots available";
+    if (remainingSlots === 3) return "3 slots available";
+    return "Fully booked";
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!firstName || !vehicleNumber || !phone) {
+      alert("Please fill required fields");
+      return;
+    }
+    if (isSelectedTimeFull) {
+      alert(`Selected time (${bookingTime}) is already full. Please choose another hour.`);
+      return;
+    }
+
+    try {
+      const formattedVehicleNumber = formatVehicleNumber(vehicleNumber);
+
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          vehicle,
+          serviceType: currentPlan?.name || "Bodywash",
+          customerName: `${firstName} ${lastName}`,
+          mobile: phone,
+          email,
+          vehicleNumber: formattedVehicleNumber,
+          vehicleModel,
+          bookingDate,
+          bookingTime,
+          totalPrice: finalTotal,
+          notes,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const slotText = data.booking?.hourSlot
+          ? ` (slot ${data.booking.hourSlot}/3 for ${bookingTime})`
+          : "";
+        alert(`Booking successfully created${slotText}!`);
+        window.location.reload();
+      } else {
+        alert(data.error || "Booking failed");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error");
+    }
+  };
 
   return (
     <main className={`${styles.page} ${inter.className}`}>
@@ -299,8 +413,8 @@ export default function BookingPage() {
         {weekDays.map((item) => (
           <div 
             key={item.fullDate} 
-            className={`${styles.dayCol} ${selectedDate === item.date ? styles.dayActive : ""}`}
-            onClick={() => !item.isSunday && setSelectedDate(item.date)}
+            className={`${styles.dayCol} ${selectedDate === item.isoDate ? styles.dayActive : ""}`}
+            onClick={() => !item.isSunday && setSelectedDate(item.isoDate)}
           >
             <span className={styles.dateNum}>{item.date}</span>
             <span className={`${styles.dayName} ${item.isSunday ? styles.sundayRed : ""}`}>
@@ -320,15 +434,33 @@ export default function BookingPage() {
               </div>
             ) : (
               timeSlots.map((time) => {
-                const isSelected = selectedDate === item.date && selectedTime === time;
+                const usedSlots = getUsedSlotCount(item.isoDate, time);
+                const isFull = usedSlots >= 3;
+                const isSelected = selectedDate === item.isoDate && selectedTime === time;
                 return (
                   <div 
                     key={time} 
-                    className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""}`}
-                    onClick={() => setSelectedTime(time)}
+                    className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isFull ? styles.timeFull : ""}`}
+                    onClick={() => {
+                      if (isFull) return;
+                      setSelectedDate(item.isoDate);
+                      setSelectedTime(time);
+                    }}
                   >
                     <span className={styles.timeText}>{time}</span>
-                    {isSelected ? <FaCheck className={styles.timeCheck} /> : <span className={styles.timeDots}>...</span>}
+                    <div className={styles.slotBox}>
+                      {[1, 2, 3].map((slotNo) => (
+                        <div
+                          key={slotNo}
+                          className={`${styles.slotSegment} ${slotNo <= usedSlots ? styles.segmentBooked : styles.segmentOpen}`}
+                        >
+                          {slotNo}
+                        </div>
+                      ))}
+                    </div>
+                    <span className={styles.slotHint}>
+                      {getSlotStatusText(usedSlots)}
+                    </span>
                   </div>
                 );
               })
@@ -401,33 +533,64 @@ export default function BookingPage() {
                 time and fill all required form fields.
               </p>
 
-              <form className={styles.finalForm}>
+              <form className={styles.finalForm} onSubmit={handleSubmit}>
                 <div className={styles.formRow}>
-                  <input placeholder="First Name *" required />
-                  <input placeholder="Last Name" />
+                  <input
+  placeholder="First Name *"
+  required
+  value={firstName}
+  onChange={(e) => setFirstName(e.target.value)}
+/>
+                  <input
+  placeholder="Last Name"
+  value={lastName}
+  onChange={(e) => setLastName(e.target.value)}
+/>
                 </div>
 
                   <div className={styles.formRow}>
-                  <input placeholder="Vehicle Number *" required />
-                  <input placeholder="Vehicle Make & Model" required/>
+                  <input
+  type="text"
+  placeholder="Vehicle Number (e.g. CAA - 1234)"
+  value={vehicleNumber}
+  onChange={(e) => setVehicleNumber(e.target.value)}
+/>
+                  <input
+  placeholder="Vehicle Make & Model"
+  required
+  value={vehicleModel}
+  onChange={(e) => setVehicleModel(e.target.value)}
+/>
                 </div>
 
                 <div className={styles.formRow}>
-                  <input placeholder="Phone Number *" required />
-                  <input placeholder="Email" />
+                 <input
+  placeholder="Phone Number *"
+  required
+  value={phone}
+  onChange={(e) => setPhone(e.target.value)}
+/>
+                 <input
+  placeholder="Email"
+  value={email}
+  onChange={(e) => setEmail(e.target.value)}
+/>
                 </div>
 
-                <textarea
-                  placeholder="Additional information"
-                  rows={4}
-                />
+               <textarea
+  placeholder="Additional information"
+  rows={4}
+  value={notes}
+  onChange={(e) => setNotes(e.target.value)}
+/>
 
                 <button
-                  className={styles.submitBtn}
-                  disabled={!currentPlan || !bookingDate || !bookingTime}
-                >
-                  Send request
-                </button>
+  type="submit"
+  className={styles.submitBtn}
+  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull}
+>
+  Send request
+</button>
               </form>
             </div>
           </div>
@@ -457,3 +620,4 @@ function SummaryCard({
     </div>
   );
 }
+

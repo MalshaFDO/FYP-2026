@@ -294,125 +294,202 @@
 /* =========================================================
    STEP 04 — DATE & TIME INTERACTIVE
 ========================================================= */
-/* --- STEP 04 CALENDAR --- */
+/* Container & Section */
 .dateTimeSection {
+  background: #ffffff; 
   padding: 80px 0;
-  background-color: #ffffff;
+  color: #1a1a1a;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.calendarWrapper {
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
-   max-width: 1250px;
+.containerLarge {
+  max-width: 1500px;
   margin: 0 auto;
+  padding: 0 24px;
 }
 
+.stepTagCenter {
+  text-align: center;
+  color: #ff3e3e; 
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.sectionTitle {
+  text-align: center;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 48px;
+  color: #000;
+}
+
+/* Calendar Table Structure */
+.calendarWrapper {
+  background: #fff;
+  border: 1px solid #e5e7eb; /* Soft grey border */
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+/* Header Row */
 .calendarHeader {
   display: grid;
-  grid-template-columns: repeat(7, 1fr); /* 7 Columns for 7 Days */
-  background-color: #fcfcfc;
-  border-bottom: 1px solid #f0f0f0;
+  grid-template-columns: repeat(7, 1fr);
+  background: #f9fafb;
+  border-bottom: 1px solid #eee;
 }
 
 .dayCol {
-  padding: 25px 10px;
-  text-align: center;
+  padding: 16px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
+  transition: background 0.2s ease;
   border-right: 1px solid #f0f0f0;
-  transition: 0.3s ease;
 }
 
-.dayCol:last-child { border-right: none; }
+.dayCol:last-child {
+  border-right: none;
+}
+
+.dayCol:hover {
+  background: #f3f4f6;
+}
+
+.dayActive {
+  background: #000 !important; /* Black active state looks very premium on white */
+  color: #fff !important;
+}
 
 .dateNum {
-  display: block;
-  font-size: 2rem;
-  font-weight: 800;
-  color: #111;
+  font-size: 1.25rem;
+  font-weight: 700;
   line-height: 1;
 }
 
 .dayName {
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #999;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  margin-top: 5px;
+  font-weight: 600;
+  margin-top: 4px;
+  color: #6b7280;
 }
 
-/* Logic Styling */
-.dayActive { background: #fff; }
-.dayActive .dateNum, .dayActive .dayName { color: #2ecc71; }
-.sundayRed { color: #ff3b3b !important; }
+.dayActive .dayName {
+  color: #d1d5db;
+}
 
+.sundayRed {
+  color: #ef4444;
+}
+
+/* Time Grid Body */
 .calendarBody {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  background: #fff;
 }
 
 .timeCol {
   border-right: 1px solid #f0f0f0;
-  padding: 15px 5px;
-  min-height: 480px;
+  padding: 12px;
+  min-height: 500px;
 }
 
+/* Individual Slot Cards */
 .timeSlot {
-  padding: 12px 0;
-  text-align: center;
-  border-radius: 6px;
+  background: #fcfcfc;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  padding: 10px;
   margin-bottom: 8px;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  transition: 0.2s;
-}
-
-.timeText { font-size: 0.9rem; font-weight: 700; color: #333; }
-.timeDots { color: #2ecc71; font-size: 1.2rem; line-height: 0.1; }
-
-/* --- TIME SLOTS --- */
-.timeSlot {
-  padding: 12px 0;
-  margin: 0 15px 8px 15px;
-  border-radius: 8px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  /* Base border */
-  border: 2px solid transparent;
   transition: all 0.2s ease;
 }
 
-.timeSlot:not(.timeSelected):hover {
-  border: 2px solid #2ecc71;
+.timeSlot:hover:not(.timeFull) {
+  border-color: #000;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
-.timeSelected {
-  background-color: #2ecc71;
-  border: 2px solid #2ecc71;
-  color: #fff !important;
-  flex-direction: row;
-  justify-content: center;
-  gap: 8px;
-}
-.timeCheck { font-size: 0.8rem; color: #fff; }
 
-.closedWrapper {
-  height: 100%;
+.timeSelected {
+  background: #fff;
+  border: 2px solid #ff3e3e !important;
+}
+
+.timeFull {
+  background: #f3f4f6;
+  opacity: 0.5;
+  cursor: not-allowed;
+  border: 1px dashed #d1d5db;
+}
+
+.timeText {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #111;
+}
+
+/* Visualizer Slots [1] [2] [3] */
+.slotBox {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+
+.slotSegment {
+  flex: 1;
+  font-size: 0.6rem;
+  height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 2px;
+  font-weight: 800;
+}
+
+.segmentOpen {
+  background: #e5e7eb;
+  color: #9ca3af;
+}
+
+.segmentBooked {
+  background: #ff3e3e;
+  color: #fff;
+}
+
+.slotHint {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #9ca3af;
+}
+
+/* Sunday/Closed State */
+.closedWrapper {
+  height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 350px;
+  background: #e5e7eb;
 }
 
 .closedLabel {
-  font-size: 1.8rem;
-  font-weight: 900;
-  color: #eee;
+  font-size: 3rem;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #8a8a8a;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 /* =========================================================
    SECTION 5 — SUMMARY

@@ -1,0 +1,82 @@
+.container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: #f8fafc;
+}
+
+.container h2 {
+  font-size: 1.75rem;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* --- Table Styles --- */
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table th {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1.25rem 1rem;
+  text-align: left;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.table td {
+  padding: 1.25rem 1rem;
+  font-size: 0.95rem;
+  color: #cbd5e1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* --- Status Dropdown Styling --- */
+.statusSelect {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: none;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.pending {
+  background-color: #facc15; /* yellow */
+  color: black;
+}
+
+.confirmed {
+  background-color: #3b82f6; /* blue */
+}
+
+.inprogress {
+  background-color: #8b5cf6; /* purple */
+}
+
+.completed {
+  background-color: #22c55e; /* green */
+}
+
+.cancelled {
+  background-color: #ef4444; /* red */
+}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
@@ -49,11 +49,32 @@ export default function FullServicePage() {
     "make_model" | "oil_info" | "quotation" | "details" | "done"
   >("make_model");
 
+  const [bookingData, setBookingData] = useState<any>({
+  vehicle: "",
+  oilGrade: "",
+  mileage: null,
+});
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
     const userMessage = { role: "user" as const, text: input };
     setMessages(prev => [...prev, userMessage]);
+
+    const updatedBookingData = { ...bookingData };
+    if (stage === "make_model") {
+      updatedBookingData.vehicle = input;
+    }
+
+    if (stage === "oil_info") {
+      const mileageMatch = input.match(/\d+/);
+      updatedBookingData.oilGrade = input;
+      if (mileageMatch) {
+        updatedBookingData.mileage = parseInt(mileageMatch[0], 10);
+      }
+    }
+
+    setBookingData(updatedBookingData);
 
     const res = await fetch("/api/ai", {
       method: "POST",
@@ -61,11 +82,12 @@ export default function FullServicePage() {
       body: JSON.stringify({
         message: input,
         stage,
+        serviceType: selectedPlan,
+        bookingData: updatedBookingData,
       }),
     });
 
     const data = await res.json();
-
     const aiMessage = { role: "ai" as const, text: data.reply };
     setMessages(prev => [...prev, aiMessage]);
 
@@ -76,21 +98,6 @@ export default function FullServicePage() {
     setInput("");
   };
 
-  useEffect(() => {
-    if (!isChatOpen) return;
-
-    setMessages([
-      {
-        role: "ai",
-        text: `Welcome to AutoFlash.
-I will assist you with your ${selectedPlan === "full" ? "Full Service" : "Oil Change"}.
-
-Please tell me your vehicle make and model.`
-      }
-    ]);
-    setStage("make_model");
-  }, [isChatOpen, selectedPlan]);
-
   return (
     <main className={`${styles.page} ${inter.className}`}>
       
@@ -98,7 +105,7 @@ Please tell me your vehicle make and model.`
       <section className={styles.heroSection}>
         <div className={styles.contentWrapper}>
           <p className={`${styles.stepTag} ${oswald.className}`}>STEP 01</p>
-          <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Car Type</h1>
+          <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Vehicle Type</h1>
           
           <nav className={styles.carTypeNav}>
             {(['Sedan', 'SUV', 'Pickup', 'MiniVan'] as VehicleType[]).map((type) => (
@@ -293,4 +300,5 @@ Please tell me your vehicle make and model.`
     </main>
   );
 }
+
 
