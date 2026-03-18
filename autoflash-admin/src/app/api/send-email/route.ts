@@ -35,6 +35,30 @@ const toMMDDYYYY = (rawDate: string) => {
   return value;
 };
 
+const formatAdditionalServices = (input: unknown) => {
+  if (!input) return "None";
+
+  if (Array.isArray(input)) {
+    const names = input
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object" && "name" in item) {
+          return String((item as { name?: unknown }).name ?? "").trim();
+        }
+        return "";
+      })
+      .filter(Boolean);
+
+    return names.length ? names.join(", ") : "None";
+  }
+
+  if (typeof input === "string") {
+    return input.trim() || "None";
+  }
+
+  return "None";
+};
+
 export async function POST(req: Request) {
   let to = "";
   let name = "";
@@ -45,6 +69,7 @@ export async function POST(req: Request) {
   let bookingDate = "";
   let bookingTime = "";
   let bookingRef = "";
+  let additionalServices = "None";
 
   try {
     const body = await req.json();
@@ -75,6 +100,7 @@ bookingTime =
       body?.bookingRef?.toString()?.trim?.() ??
       body?.reference?.toString()?.trim?.() ??
       "";
+    additionalServices = formatAdditionalServices(body?.additionalServices);
     bookingDate = toMMDDYYYY(bookingDate);
   } 
   catch {
@@ -139,8 +165,12 @@ bookingTime =
       subject: `Booking Confirmed | Ref: ${bookingRef}`,
       html: `
         <div style="font-family: Arial, sans-serif; background:#f4f4f4; padding:20px;">
-          <div style="max-width:600px; margin:auto; background:#ffffff; padding:25px; border-radius:8px;">
-            <h2 style="color:#e10600;">${greeting}, ${name}</h2>
+          <div style="max-width:600px; margin:auto; background:#ffffff; border-radius:10px; overflow:hidden;">
+            <div style="background:#166534; color:#ffffff; padding:16px 24px; font-weight:700; font-size:16px; letter-spacing:0.4px;">
+              BOOKING CONFIRMED
+            </div>
+            <div style="padding:24px;">
+            <h2 style="color:#166534; margin:0 0 10px;">${greeting}, ${name}</h2>
             <p>Your booking has been successfully confirmed. Below are the details:</p>
 
             <table style="width:100%; border-collapse: collapse; margin-top:15px;">
@@ -174,6 +204,10 @@ bookingTime =
                 <td style="padding:8px; border-bottom:1px solid #eee;">${vehicleNumber}</td>
               </tr>
               <tr>
+                <td style="padding:8px; border-bottom:1px solid #eee;"><strong>Additional Services</strong></td>
+                <td style="padding:8px; border-bottom:1px solid #eee;">${additionalServices}</td>
+              </tr>
+              <tr>
                 <td style="padding:8px; border-bottom:1px solid #eee;"><strong>Venue</strong></td>
                 <td style="padding:8px; border-bottom:1px solid #eee;">${venue}</td>
               </tr>
@@ -183,10 +217,11 @@ bookingTime =
               </tr>
             </table>
 
-            <p style="margin-top:20px;">Please arrive 10 minutes before your scheduled time.</p>
+            <u><b><p style="margin-top:20px; color:#b91c1c" >Please arrive 10 minutes before your scheduled time.</p></b></u>
             <p style="margin-top:30px;">Thank you for choosing <strong>Autoflash</strong>.</p>
             <hr style="margin-top:30px;" />
-            <p style="font-size:12px; color:#777;">If you have any questions, reply to this email or contact us directly.</p>
+            <p style="font-size:12px; color:#777;">If you have any questions, reply to this email or contact us directly At +9476 824 8676.</p>
+            </div>
           </div>
         </div>
       `,

@@ -50,6 +50,34 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
+/* ... (keep your existing styles) */
+
+.additionalBadgeContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 200px; /* Prevents the column from getting too wide */
+}
+
+.serviceBadge {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  white-space: nowrap;
+}
+
+/* Adjusting table layout for more columns */
+.table {
+  table-layout: auto;
+}
+
+.table td {
+  padding: 1rem 0.75rem; /* Slightly tighter padding for more columns */
+}
+
 /* --- Status Dropdown Styling --- */
 .statusSelect {
   padding: 6px 12px;

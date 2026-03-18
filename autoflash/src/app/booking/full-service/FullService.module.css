@@ -176,6 +176,11 @@
   background: #0a0a0a; 
   padding: 100px 0; 
 }
+.containerLarge {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
 
 .sectionTitleLight { 
   text-align: center; 
@@ -292,6 +297,291 @@
   margin-top: 15px;
   color: #666;
   font-size: 0.85rem;
+}
+
+.dateTimeSection {
+  background: #fff;
+  padding: 80px 0px;
+  color: #1a1a1a;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+.calendarWrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.calendarHeader {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dayCol {
+  padding: 12px 6px;
+  text-align: center;
+  border-right: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.dayCol:last-child {
+  border-right: none;
+}
+
+.dayCol:hover {
+  background: #eef2ff;
+}
+
+.dayActive {
+  background: #111827;
+}
+
+.dateNum {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.dayName {
+  display: block;
+  font-size: 0.75rem;
+  color: #475569;
+  text-transform: uppercase;
+}
+
+.dayActive .dateNum,
+.dayActive .dayName {
+  color: #fff;
+}
+
+.sundayRed {
+  color: #ef4444;
+}
+.dayClosed {
+  background: #fee2e2;
+  cursor: not-allowed;
+}
+
+.dayClosed .dateNum,
+.dayClosed .dayName {
+  color: #b91c1c;
+}
+
+.calendarBody {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.timeCol {
+  padding: 8px 4px;
+  border-right: 1px solid #e2e8f0;
+  min-height: 420px;
+}
+
+.timeCol:last-child {
+  border-right: none;
+}
+
+.timeSlot {
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  margin: 0 4px 8px;
+  padding: 8px 6px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.timeSlot:hover:not(.timeFull) {
+  border-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.timeSelected {
+  background: #111827;
+  border-color: #111827;
+}
+
+.timeSelected .timeText,
+.timeSelected .slotHint {
+  color: #fff;
+}
+
+.timeText {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.timeFull {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f1f5f9;
+}
+.timeClosed {
+  opacity: 0.85;
+  cursor: not-allowed;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+.timeClosed .timeText,
+.timeClosed .slotHint {
+  color: #b91c1c;
+}
+
+.slotBox {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.slotSegment {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.segmentBooked {
+  background: #dc2626;
+  color: #fff;
+}
+
+.segmentOpen {
+  background: #bbf7d0;
+  color: #166534;
+}
+
+.slotHint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.68rem;
+  color: #334155;
+}
+
+.closedWrapper {
+  height: 100%;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: repeating-linear-gradient(
+    45deg,
+    #fee2e2,
+    #fee2e2 10px,
+    #fecaca 10px,
+    #fecaca 20px
+  );
+}
+
+.closedLabel {
+  font-size: 3rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ef4444;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* Action Buttons */
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.calendarBtn {
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendarBtn:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+}
+
+.calendarBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.calendarBtn {
+  all: unset; /* Reset default button styles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 50px; /* Pill shape */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1a1a1a;
+  margin: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.calendarBtn:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendarBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.calendarBtn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* Optional: Make the arrows look a bit sharper */
+.calendarBtn span {
+  font-size: 1.1rem;
+  line-height: 0;
+}
+.aiBookingSection {
+  background: #0a0a0a;
+  padding: 70px 0 100px;
 }
 /* ================= AI CHAT INTERFACE ================= */
 .chatOverlay {

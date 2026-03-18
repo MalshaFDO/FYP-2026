@@ -124,7 +124,7 @@ const HomePage: React.FC = () => {
         <div className={styles.container}>
           <h2 className={styles.centerTitle}>Our Services</h2>
           <div className={styles.servicesGrid}>
-            <div className={styles.serviceCard}><h3>Contactless Wash</h3><p>Fast, automated cleaning.</p></div>
+            <div className={styles.serviceCard}><h3>Premium Wash</h3><p>Fast,Perfect cleaning.</p></div>
             <div className={styles.serviceCard}><h3>Full Service</h3><p>Routine inspection & care.</p></div>
             <div className={styles.serviceCard}><h3>Engine Check</h3><p>Advanced diagnostics.</p></div>
             <div className={styles.serviceCard}><h3>Detailing</h3><p>Interior & exterior care.</p></div>

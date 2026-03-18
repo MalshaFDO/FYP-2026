@@ -3,9 +3,18 @@ import mongoose from "mongoose";
 const BookingSchema = new mongoose.Schema({
   vehicle: { type: String },
   serviceType: { type: String },
+  serviceCategory: { type: String, enum: ["bodywash", "fullservice"] },
 
   oilGrade: { type: String },
   mileage: { type: Number },
+  additionalServices: [
+    {
+      id: { type: Number },
+      name: { type: String },
+      time: { type: String },
+      price: { type: Number },
+    },
+  ],
 
   customerName: { type: String },
   mobile: { type: String },

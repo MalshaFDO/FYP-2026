@@ -3,11 +3,33 @@
 import { useEffect, useState } from "react";
 import styles from "./bookings.module.css";
 
-const formatServiceType = (serviceType?: string) => {
-  const key = serviceType?.trim().toLowerCase();
+const parseJsonSafely = async (res: Response) => {
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+};
+
+const formatServiceType = (serviceType?: any) => {
+  const raw =
+    typeof serviceType === "string"
+      ? serviceType
+      : typeof serviceType?.name === "string"
+      ? serviceType.name
+      : "";
+  const key = raw.trim().toLowerCase();
   if (key === "full") return "Full Service";
   if (key === "oil") return "Oil Change";
-  return serviceType || "";
+  return raw || "";
+};
+
+const getServiceLabel = (service: any) => {
+  if (typeof service === "string") return service;
+  if (!service || typeof service !== "object") return "";
+
+  const name = typeof service.name === "string" ? service.name : "";
+  if (name) return name;
+
+  const id = service.id || service._id;
+  return id ? String(id) : "";
 };
 
 const normalizeServiceText = (service: string) =>
@@ -66,6 +88,13 @@ const formatWhatsappPhone = (mobile?: string) => {
   if (raw.startsWith("+")) return raw.substring(1);
   return raw;
 };
+const formatSmsPhone = (mobile?: string) => {
+  const raw = mobile?.toString().trim() || "";
+  if (!raw) return "";
+  if (raw.startsWith("0")) return "94" + raw.substring(1);
+  if (raw.startsWith("+")) return raw.substring(1);
+  return raw;
+};
 const buildBookingRef = (booking: any) =>
   booking?.bookingRef ||
   booking?.reference ||
@@ -77,9 +106,25 @@ export default function BookingsPage() {
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    fetch("/api/bookings")
-      .then((res) => res.json())
-      .then((data) => setBookings(data));
+    const loadBookings = async () => {
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await parseJsonSafely(res);
+
+        if (!res.ok) {
+          console.error("Failed to load bookings:", data);
+          setBookings([]);
+          return;
+        }
+
+        setBookings(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load bookings:", error);
+        setBookings([]);
+      }
+    };
+
+    loadBookings();
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
@@ -95,10 +140,12 @@ export default function BookingsPage() {
       const bookingRef = buildBookingRef(booking);
       const bookingDate = booking.bookingDate || booking.date || "";
       const bookingTime = booking.bookingTime || "";
+      const serviceLabel = formatServiceType(booking.serviceType);
       const payload = {
         bookingRef,
         name: booking.customerName,
-        service: booking.serviceType,
+        service: serviceLabel,
+        additionalServices: booking.additionalServices ?? [],
         vehicleNumber: booking.vehicleNumber ?? booking.vehicle ?? "Not provided",
         price: booking.totalPrice ?? booking.price ?? booking.amount ?? "Not provided",
         venue: booking.venue ?? "Autoflash Service Center",
@@ -127,6 +174,23 @@ export default function BookingsPage() {
             template: "confirm",
           }),
         });
+
+        const smsPhone = formatSmsPhone(booking.mobile);
+        if (smsPhone) {
+          await fetch("/api/send-sms", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: smsPhone,
+              name: booking.customerName,
+              vehicleNumber: booking.vehicleNumber ?? booking.vehicle ?? "",
+              bookingDate,
+              bookingTime,
+              service: serviceLabel,
+              bookingRef,
+            }),
+          });
+        }
       }
 
       if (status === "Cancelled") {
@@ -148,6 +212,28 @@ export default function BookingsPage() {
             template: "cancel",
           }),
         });
+
+        const smsPhone = formatSmsPhone(booking.mobile);
+        if (smsPhone) {
+          const smsMessage = `Mr. ${booking.customerName},
+
+Your booking has been cancelled.
+
+Ref: ${bookingRef}
+
+If this is a mistake, please contact us.
+
+Thank you for choosing AutoFlash.`;
+
+          await fetch("/api/send-sms", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              phone: smsPhone,
+              message: smsMessage,
+            }),
+          });
+        }
       }
     }
 
@@ -232,36 +318,58 @@ export default function BookingsPage() {
         <thead>
           <tr>
             <th>Customer</th>
-            <th>Mobile</th>
             <th>Vehicle</th>
-            <th>Vehicle No</th>
             <th>Service</th>
-            <th>Date</th>
+            <th>Additional Services</th> 
+            <th>Date</th>                 
+            <th>Time</th>                 
             <th>Status</th>
           </tr>
         </thead>
 
-        <tbody>
+       <tbody>
           {filteredBookings.map((booking) => (
             <tr key={booking._id}>
-              <td>{formatCustomerName(booking.customerName)}</td>
-              <td>{booking.mobile}</td>
-              <td>{booking.vehicle}</td>
-              <td>{formatVehicleNumber(booking.vehicleNumber)}</td>
+              <td>
+                <div style={{ fontWeight: '500' }}>{formatCustomerName(booking.customerName)}</div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{booking.mobile}</div>
+              </td>
+              <td>
+        <div style={{ fontWeight: "500", color: "#f8fafc" }}>
+          {booking.vehicle} {booking.vehicleModel ? `- ${booking.vehicleModel}` : ""}
+        </div>
+        <div style={{ fontSize: "0.85rem", color: "#6366f1", marginTop: "2px" }}>
+          {formatVehicleNumber(booking.vehicleNumber)}
+        </div>
+      </td>
               <td>{formatServiceType(booking.serviceType)}</td>
-              <td>{formatBookingTime(booking)}</td>
+              
+              {/* Additional Services Display */}
+              <td>
+                <div className={styles.additionalBadgeContainer}>
+                  {booking.additionalServices && booking.additionalServices.length > 0 ? (
+                    booking.additionalServices.map((service: any, index: number) => (
+                      <span key={index} className={styles.serviceBadge}>
+                        {getServiceLabel(service) || "Unnamed Service"}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ color: "#475569", fontSize: "0.85rem" }}>None</span>
+                  )}
+                </div>
+              </td>
+
+              {/* Split Date and Time */}
+              <td>{booking.bookingDate || booking.date || "-"}</td>
+              <td>{booking.bookingTime || booking.time || "-"}</td>
+
               <td>
                 <select
                   className={`${styles.statusSelect} ${
-                    booking.status === "Pending"
-                      ? styles.pending
-                      : booking.status === "Confirmed"
-                      ? styles.confirmed
-                      : booking.status === "In Progress"
-                      ? styles.inprogress
-                      : booking.status === "Completed"
-                      ? styles.completed
-                      : styles.cancelled
+                    booking.status === "Pending" ? styles.pending :
+                    booking.status === "Confirmed" ? styles.confirmed :
+                    booking.status === "In Progress" ? styles.inprogress :
+                    booking.status === "Completed" ? styles.completed : styles.cancelled
                   }`}
                   value={booking.status}
                   onChange={(e) => updateStatus(booking._id, e.target.value)}

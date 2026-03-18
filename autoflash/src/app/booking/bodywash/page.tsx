@@ -39,6 +39,7 @@ interface SlotBooking {
   bookingDate: string;
   bookingTime: string;
   status?: string;
+  serviceCategory?: "bodywash" | "fullservice";
 }
 
 type ExtraService =
@@ -80,7 +81,7 @@ const pricing: Record<VehicleType, Plan[]> = {
     { id: 1, name: "Quick Wash", price: 900, cents: 0, time: "15 min", duration: 15, features: [true, false, false, false] },
     { id: 2, name: "Bodywash & Vacuum", price: 1450, cents: 0, time: "30 min", duration: 30, features: [true, true, false, false] },
     { id: 3, name: "Wash, Vacuum & WAX", price: 1950, cents: 0, time: "45 min", duration: 45, features: [true, true, true, false] },
-    { id: 4, name: "Full Bodaywash", price: 3600, cents: 0, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
+    { id: 4, name: "Full Bodywash", price: 3600, cents: 0, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
   ],
   SUV: [
     { id: 1, name: "Quick Wash", price: 1100, cents: 0, time: "20 min", duration: 20, features: [true, false, false, false] },
@@ -103,23 +104,23 @@ const pricing: Record<VehicleType, Plan[]> = {
 };
 
 const additionalServices: ExtraService[] = [
-  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
-  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Cleans, conditions, and protects leather from cracks and fading." },
+  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Water-repellent coating improving visibility during rain on glass surfaces." },
+  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Eliminates sticky tar spots from paint without damaging finish." },
   {
     id: 4,
     name: "Engine Wash",
     time: "45 min",
     priceByVehicle: { Sedan: 1850, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
     icon: <PiEngineFill/>,
-    desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt.",
+    desc: "Removes dirt and grease from engine for better performance.",
   },
-  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Restores clarity by removing oxidation and yellowing from headlights." },
 
   { id: 6, name: "UnderBody Wax", time: "30 min",
     priceByVehicle: { Sedan: 1600, SUV: 1950, Pickup: 2450, MiniVan: 2800 }, 
     icon: <FaCar />, 
-    desc: "Nulla vel tempus diam. Nunc vulputate, quam sit amet commodo tincidunt." },
+    desc: "Protective coating preventing rust and corrosion underneath vehicle." },
 ];
 
 const hasPriceByVehicle = (extra: ExtraService): extra is Extract<ExtraService, { priceByVehicle: Record<VehicleType, number> }> =>
@@ -129,12 +130,17 @@ const getExtraPrice = (extra: ExtraService, vehicle: VehicleType) => {
   return hasPriceByVehicle(extra) ? extra.priceByVehicle[vehicle] : extra.price;
 };
 
-// 2. Add this helper function to generate the actual calendar week
-const getWeekDays = () => {
+// Generates a week starting from today plus `offset * 7` days.
+const getWeekDays = (offset: number) => {
   const days = [];
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() + offset * 7);
+
   for (let i = 0; i < 7; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+
     days.push({
       date: d.getDate().toString().padStart(2, '0'),
       dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
@@ -143,11 +149,13 @@ const getWeekDays = () => {
       isoDate: d.toISOString().split("T")[0],
     });
   }
+
   return days;
 };
 const timeSlots = ['08:00 am','09:00 am', '10:00 am', '11:00 am', '12:00 pm', '01:00 pm', '02:00 pm', '03:00 pm', '04:00 pm', '05:00 pm'];
 
 export default function BookingPage() {
+  const BODYWASH_SLOTS = 3;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
@@ -161,6 +169,12 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [now, setNow] = useState(() => new Date());
+  const [closedSlots, setClosedSlots] = useState<
+    { date: string; startTime: string; endTime: string; reason?: string }[]
+  >([]);
+  // 0 = current week, 1 = next week
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -176,6 +190,11 @@ export default function BookingPage() {
     };
 
     fetchBookings();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(timer);
   }, []);
 
   const formatVehicleNumber = (value: string) => {
@@ -197,7 +216,7 @@ export default function BookingPage() {
     );
   };
 
-  const weekDays = getWeekDays();
+  const weekDays = getWeekDays(weekOffset);
   const currentPlan = pricing[vehicle].find(p => p.id === selectedPlanId);
   const extrasTotal = selectedExtras.reduce((total, id) => {
     const extra = additionalServices.find(e => e.id === id);
@@ -208,21 +227,51 @@ export default function BookingPage() {
     const minutes = extra?.time ? parseInt(extra.time, 10) : 0;
     return total + (Number.isFinite(minutes) ? minutes : 0);
   }, 0);
+  const selectedExtraDetails = selectedExtras
+    .map((id) => additionalServices.find((extra) => extra.id === id))
+    .filter((extra): extra is ExtraService => Boolean(extra))
+    .map((extra) => ({
+      id: extra.id,
+      name: extra.name,
+      time: extra.time,
+      price: getExtraPrice(extra, vehicle),
+    }));
   const finalTotal = (currentPlan?.price || 0) + extrasTotal;
   const bookingDate = selectedDate;
   const bookingTime = selectedTime;
+  const parseTimeSlot = (date: string, time: string) => {
+    const [clock, meridiemRaw] = time.split(" ");
+    const [hourRaw, minuteRaw] = clock.split(":").map(Number);
+    const meridiem = meridiemRaw.toLowerCase();
+    let hour = hourRaw;
+
+    if (meridiem === "pm" && hour !== 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+
+    const slotDateTime = new Date(`${date}T00:00:00`);
+    slotDateTime.setHours(hour, minuteRaw || 0, 0, 0);
+    return slotDateTime;
+  };
+  const isPastSlot = (date: string, time: string) => {
+    const slotDateTime = parseTimeSlot(date, time);
+    const currentHourStart = new Date(now);
+    currentHourStart.setMinutes(0, 0, 0);
+    return slotDateTime < currentHourStart;
+  };
   const getUsedSlotCount = (date: string, time: string) => {
     return slotBookings.filter(
       (booking) =>
         booking.bookingDate === date &&
         booking.bookingTime === time &&
+        booking.serviceCategory === "bodywash" &&
         booking.status !== "Cancelled"
     ).length;
   };
   const selectedTimeUsedSlots = getUsedSlotCount(bookingDate, bookingTime);
-  const isSelectedTimeFull = selectedTimeUsedSlots >= 3;
+  const isSelectedTimeFull = selectedTimeUsedSlots >= BODYWASH_SLOTS;
+  const isSelectedTimePast = isPastSlot(bookingDate, bookingTime);
   const getSlotStatusText = (usedSlots: number) => {
-    const remainingSlots = Math.max(0, 3 - usedSlots);
+    const remainingSlots = Math.max(0, BODYWASH_SLOTS - usedSlots);
     if (remainingSlots === 0) return "Fully booked";
     if (remainingSlots === 1) return "1 slot available";
     if (remainingSlots === 2) return "2 slots available";
@@ -241,11 +290,15 @@ export default function BookingPage() {
       alert(`Selected time (${bookingTime}) is already full. Please choose another hour.`);
       return;
     }
+    if (isSelectedTimePast) {
+      alert(`Selected time (${bookingTime}) is unavailable because it has already passed. Please choose another hour.`);
+      return;
+    }
 
     try {
       const formattedVehicleNumber = formatVehicleNumber(vehicleNumber);
-
-      const res = await fetch("/api/bookings", {
+       
+      const res = await fetch("/api/bookings?type=bodywash", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -253,6 +306,7 @@ export default function BookingPage() {
         body: JSON.stringify({
           vehicle,
           serviceType: currentPlan?.name || "Bodywash",
+          additionalServices: selectedExtraDetails,
           customerName: `${firstName} ${lastName}`,
           mobile: phone,
           email,
@@ -269,7 +323,7 @@ export default function BookingPage() {
 
       if (res.ok && data.success) {
         const slotText = data.booking?.hourSlot
-          ? ` (slot ${data.booking.hourSlot}/3 for ${bookingTime})`
+          ? ` (slot ${data.booking.hourSlot}/${BODYWASH_SLOTS} for ${bookingTime})`
           : "";
         alert(`Booking successfully created${slotText}!`);
         window.location.reload();
@@ -281,6 +335,44 @@ export default function BookingPage() {
       alert("Server error");
     }
   };
+const [closedDays, setClosedDays] = useState<
+  { date: string; reason?: string }[]
+>([]);
+
+useEffect(() => {
+  const fetchClosedDays = async () => {
+    const res = await fetch("/api/admin/closed-days");
+    const data = await res.json();
+    if (data.success && Array.isArray(data.days)) {
+      setClosedDays(
+        data.days.map((d: { date: string; reason?: string }) => ({
+          date: d.date,
+          reason: d.reason,
+        }))
+      );
+    }
+  };
+
+  fetchClosedDays();
+}, []);
+
+useEffect(() => {
+  const fetchClosedSlots = async () => {
+    try {
+      const res = await fetch("/api/admin/closed-slots");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.slots)) {
+        setClosedSlots(data.slots);
+      }
+    } catch (error) {
+      console.error("Fetch closed slots error:", error);
+    }
+  };
+
+  fetchClosedSlots();
+}, []);
+
+
 
   return (
     <main className={`${styles.page} ${inter.className}`}>
@@ -401,48 +493,88 @@ export default function BookingPage() {
         </div>
       </section>
 
+<p className={styles.weekLabel}>
+  {weekOffset === 0 ? "This Week" : "Next Week"}
+</p>
      {/* STEP 04 - DATE AND TIME */}
 <section className={styles.dateTimeSection}>
   <div className={styles.containerLarge}>
     <p className={styles.stepTagCenter}>STEP 04</p>
     <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
-
+    <div className={styles.calendarNav}>
+</div>
     <div className={styles.calendarWrapper}>
       {/* Header Row */}
       <div className={styles.calendarHeader}>
-        {weekDays.map((item) => (
+        {weekDays.map((item) => {
+          const closedDayObj = closedDays.find(
+            (d) => d.date === item.isoDate
+          );
+          const isClosedDay = item.isSunday || !!closedDayObj;
+
+          return (
           <div 
             key={item.fullDate} 
-            className={`${styles.dayCol} ${selectedDate === item.isoDate ? styles.dayActive : ""}`}
-            onClick={() => !item.isSunday && setSelectedDate(item.isoDate)}
+            className={`${styles.dayCol} ${selectedDate === item.isoDate ? styles.dayActive : ""} ${isClosedDay ? styles.dayClosed : ""}`}
+            onClick={() => {
+              if (isClosedDay) return;
+              setSelectedDate(item.isoDate);
+            }}
           >
             <span className={styles.dateNum}>{item.date}</span>
-            <span className={`${styles.dayName} ${item.isSunday ? styles.sundayRed : ""}`}>
+            <span className={`${styles.dayName} ${isClosedDay ? styles.sundayRed : ""}`}>
               {item.dayName}
             </span>
           </div>
-        ))}
+        );
+        })}
       </div>
 
       {/* Time Grid Body */}
       <div className={styles.calendarBody}>
         {weekDays.map((item) => (
           <div key={item.fullDate} className={styles.timeCol}>
-            {item.isSunday ? (
-              <div className={styles.closedWrapper}>
-                <span className={styles.closedLabel}>Closed</span>
-              </div>
-            ) : (
-              timeSlots.map((time) => {
+            {(() => {
+  const closedDayObj = closedDays.find(
+    (d) => d.date === item.isoDate
+  );
+
+  const isClosedDay = item.isSunday || !!closedDayObj;
+
+  if (isClosedDay) {
+    return (
+      <div className={styles.closedWrapper}>
+        <span className={styles.closedLabel}>
+          {item.isSunday
+            ? "Closed"
+            : closedDayObj?.reason || "Closed"}
+        </span>
+      </div>
+    );
+  }
+
+  return timeSlots.map((time) => {
                 const usedSlots = getUsedSlotCount(item.isoDate, time);
-                const isFull = usedSlots >= 3;
+                const isFull = usedSlots >= BODYWASH_SLOTS;
+                const isPast = isPastSlot(item.isoDate, time);
+                const slotDateTime = parseTimeSlot(item.isoDate, time);
+                const isAdminClosed = closedSlots.some((slot) => {
+                  if (slot.date !== item.isoDate) return false;
+
+                  const start = parseTimeSlot(slot.date, slot.startTime);
+                  const end = parseTimeSlot(slot.date, slot.endTime);
+
+                  return slotDateTime >= start && slotDateTime < end;
+                });
+                const isUnavailable = isFull || isPast || isAdminClosed;
+                const isBlocked = isFull || isPast;
                 const isSelected = selectedDate === item.isoDate && selectedTime === time;
                 return (
                   <div 
                     key={time} 
-                    className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isFull ? styles.timeFull : ""}`}
+                    className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
                     onClick={() => {
-                      if (isFull) return;
+                      if (isUnavailable) return;
                       setSelectedDate(item.isoDate);
                       setSelectedTime(time);
                     }}
@@ -459,17 +591,35 @@ export default function BookingPage() {
                       ))}
                     </div>
                     <span className={styles.slotHint}>
-                      {getSlotStatusText(usedSlots)}
+                      {isAdminClosed ? "Closed" : isPast ? "Unavailable" : getSlotStatusText(usedSlots)}
                     </span>
                   </div>
                 );
-              })
-            )}
+              });
+            })()}
           </div>
         ))}
       </div>
     </div>
   </div>
+
+     <div className={styles.buttonContainer}>
+  <button 
+    onClick={() => setWeekOffset(0)} 
+    disabled={weekOffset === 0} 
+    className={styles.calendarBtn}
+  >
+    <span>⬅</span> This Week
+  </button>
+
+  <button 
+    onClick={() => setWeekOffset(1)} 
+    disabled={weekOffset === 1} 
+    className={styles.calendarBtn}
+  >
+    Next Week <span>➡</span>
+  </button>
+</div>
 </section>
       {/* ================= STEP 05 ================= */}
       <section className={styles.summarySection}>
@@ -584,10 +734,10 @@ export default function BookingPage() {
   onChange={(e) => setNotes(e.target.value)}
 />
 
-                <button
+<button
   type="submit"
   className={styles.submitBtn}
-  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull}
+  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
 >
   Send request
 </button>

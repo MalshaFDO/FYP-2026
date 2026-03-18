@@ -327,169 +327,304 @@
 }
 
 /* Calendar Table Structure */
-.calendarWrapper {
+.dateTimeSection {
   background: #fff;
-  border: 1px solid #e5e7eb; /* Soft grey border */
-  border-radius: 12px;
+  padding: 60px 0px;
+  color: #1a1a1a;
+  font-family: 'Inter', -apple-system, sans-serif;
+}
+
+.calendarWrapper {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  background: #f8fafc;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
 /* Header Row */
 .calendarHeader {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   background: #f9fafb;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .dayCol {
   padding: 16px 8px;
+  text-align: center;
+  border-right: 1px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
-  cursor: pointer;
-  transition: background 0.2s ease;
-  border-right: 1px solid #f0f0f0;
 }
 
 .dayCol:last-child {
   border-right: none;
 }
 
-.dayCol:hover {
-  background: #f3f4f6;
+.dayCol:hover:not(.dayActive) {
+  background: #eef2ff;
 }
 
 .dayActive {
-  background: #000 !important; /* Black active state looks very premium on white */
+  background: #111827 !important;
   color: #fff !important;
 }
 
 .dateNum {
+  display: block;
   font-size: 1.25rem;
   font-weight: 700;
-  line-height: 1;
+  color: #0f172a;
 }
 
 .dayName {
+  display: block;
   font-size: 0.7rem;
+  color: #475569;
   text-transform: uppercase;
   font-weight: 600;
   margin-top: 4px;
-  color: #6b7280;
 }
 
+.dayActive .dateNum,
 .dayActive .dayName {
-  color: #d1d5db;
+  color: #fff;
 }
 
 .sundayRed {
   color: #ef4444;
 }
+.dayClosed {
+  background: #fee2e2;
+  cursor: not-allowed;
+}
+
+.dayClosed .dateNum,
+.dayClosed .dayName {
+  color: #b91c1c;
+}
 
 /* Time Grid Body */
 .calendarBody {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   background: #fff;
 }
 
 .timeCol {
-  border-right: 1px solid #f0f0f0;
-  padding: 12px;
-  min-height: 500px;
+  padding: 12px 6px;
+  border-right: 1px solid #e2e8f0;
+  min-height: 450px;
+}
+
+.timeCol:last-child {
+  border-right: none;
 }
 
 /* Individual Slot Cards */
 .timeSlot {
-  background: #fcfcfc;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  padding: 10px;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
   margin-bottom: 8px;
+  padding: 10px 8px;
+  text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .timeSlot:hover:not(.timeFull) {
-  border-color: #000;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  border-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
 }
 
 .timeSelected {
-  background: #fff;
-  border: 2px solid #ff3e3e !important;
+  background: #111827;
+  border-color: #111827;
 }
 
-.timeFull {
-  background: #f3f4f6;
-  opacity: 0.5;
-  cursor: not-allowed;
-  border: 1px dashed #d1d5db;
+.timeSelected .timeText,
+.timeSelected .slotHint {
+  color: #fff;
 }
-
 .timeText {
   display: block;
   font-size: 0.85rem;
   font-weight: 700;
+  color: #0f172a;
   margin-bottom: 6px;
-  color: #111;
+}
+
+.timeFull {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f1f5f9;
+  border: 1px dashed #cbd5e1;
+}
+.timeClosed {
+  opacity: 0.85;
+  cursor: not-allowed;
+  background: #fee2e2;
+  border: 1px solid #ef4444;
+}
+
+.timeClosed .timeText,
+.timeClosed .slotHint {
+  color: #b91c1c;
 }
 
 /* Visualizer Slots [1] [2] [3] */
 .slotBox {
   display: flex;
-  gap: 3px;
-  margin-bottom: 4px;
+  justify-content: center;
+  gap: 4px;
+  margin: 6px 0;
 }
 
 .slotSegment {
-  flex: 1;
-  font-size: 0.6rem;
-  height: 14px;
-  display: flex;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 2px;
+  font-size: 0.65rem;
   font-weight: 800;
-}
-
-.segmentOpen {
-  background: #e5e7eb;
-  color: #9ca3af;
+  transition: background 0.2s ease;
 }
 
 .segmentBooked {
-  background: #ff3e3e;
+  background: #ef4444;
   color: #fff;
 }
 
+.segmentOpen {
+  background: #bbf7d0;
+  color: #166534;
+}
+
 .slotHint {
-  font-size: 0.6rem;
-  text-transform: uppercase;
+  display: block;
+  font-size: 0.65rem;
   font-weight: 700;
-  color: #9ca3af;
+  text-transform: uppercase;
+  color: #64748b;
 }
 
 /* Sunday/Closed State */
 .closedWrapper {
   height: 100%;
+  min-height: 400px;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
-  padding-top: 350px;
-  background: #e5e7eb;
+  background: repeating-linear-gradient(
+    45deg,
+    #fee2e2,
+    #fee2e2 10px,
+    #fecaca 10px,
+    #fecaca 20px
+  );
 }
-
 .closedLabel {
+
   font-size: 3rem;
   text-transform: uppercase;
   font-weight: 800;
   letter-spacing: 1px;
-  color: #8a8a8a;
+  color: #ef4444;
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+}
+
+/* Action Buttons */
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.calendarBtn {
+  background: #111827;
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendarBtn:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+}
+
+.calendarBtn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.buttonContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.calendarBtn {
+  all: unset; /* Reset default button styles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border-radius: 50px; /* Pill shape */
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  color: #1a1a1a;
+  margin: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.calendarBtn:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendarBtn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.calendarBtn:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* Optional: Make the arrows look a bit sharper */
+.calendarBtn span {
+  font-size: 1.1rem;
+  line-height: 0;
 }
 /* =========================================================
    SECTION 5 — SUMMARY

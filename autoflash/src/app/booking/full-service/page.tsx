@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
@@ -10,6 +10,19 @@ const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
+interface SlotBooking {
+  bookingDate: string;
+  bookingTime: string;
+  status?: string;
+  serviceCategory?: "bodywash" | "fullservice";
+}
+interface BookingData {
+  vehicle: string;
+  oilGrade: string;
+  mileage: number | null;
+  bookingDate: string;
+  bookingTime: string;
+}
 
 const carImages: Record<VehicleType, string> = {
   Sedan: "/01.png",
@@ -18,10 +31,61 @@ const carImages: Record<VehicleType, string> = {
   MiniVan: "/04.png",
 };
 
+const getWeekDays = (offset: number) => {
+  const days = [];
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() + offset * 7);
+
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startDate);
+    d.setDate(startDate.getDate() + i);
+
+    days.push({
+      date: d.getDate().toString().padStart(2, '0'),
+      dayName: d.toLocaleDateString('en-US', { weekday: 'long' }),
+      isSunday: d.getDay() === 0,
+      fullDate: d.toDateString(),
+      isoDate: d.toISOString().split("T")[0],
+    });
+  }
+
+  return days;
+};
+
+const timeSlots = [
+  '08:00 am',
+  '09:00 am',
+  '10:00 am',
+  '11:00 am',
+  '12:00 pm',
+  '01:00 pm',
+  '02:00 pm',
+  '03:00 pm',
+  '04:00 pm',
+  '05:00 pm',
+];
+
+const getFirstOpenDayIso = (offset: number) => {
+  const firstOpenDay = getWeekDays(offset).find((day) => !day.isSunday);
+  return firstOpenDay?.isoDate || new Date().toISOString().split("T")[0];
+};
+
 export default function FullServicePage() {
+  const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
   const [selectedPlan, setSelectedPlan] = useState<string>("full"); 
   const [extras, setExtras] = useState<number[]>([]);
+  const [selectedDate, setSelectedDate] = useState(getFirstOpenDayIso(0));
+  const [selectedTime, setSelectedTime] = useState('02:00 pm');
+  const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [now, setNow] = useState(() => new Date());
+  const [closedSlots, setClosedSlots] = useState<
+    { date: string; startTime: string; endTime: string; reason?: string }[]
+  >([]);
+  const [closedDays, setClosedDays] = useState<
+    { date: string; reason?: string }[]
+  >([]);
 
   const toggleExtra = (id: number) => {
     setExtras(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -49,11 +113,111 @@ export default function FullServicePage() {
     "make_model" | "oil_info" | "quotation" | "details" | "done"
   >("make_model");
 
-  const [bookingData, setBookingData] = useState<any>({
-  vehicle: "",
-  oilGrade: "",
-  mileage: null,
-});
+  const [bookingData, setBookingData] = useState<BookingData>({
+    vehicle: "",
+    oilGrade: "",
+    mileage: null,
+    bookingDate: selectedDate,
+    bookingTime: selectedTime,
+  });
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch("/api/bookings");
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.bookings)) {
+          setSlotBookings(data.bookings);
+        }
+      } catch (error) {
+        console.error("Fetch slot bookings error:", error);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const fetchClosedSlots = async () => {
+      try {
+        const res = await fetch("/api/admin/closed-slots");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.slots)) {
+          setClosedSlots(data.slots);
+        }
+      } catch (error) {
+        console.error("Fetch closed slots error:", error);
+      }
+    };
+
+    fetchClosedSlots();
+  }, []);
+
+  useEffect(() => {
+    const fetchClosedDays = async () => {
+      try {
+        const res = await fetch("/api/admin/closed-days");
+        const data = await res.json();
+        if (data.success && Array.isArray(data.days)) {
+          setClosedDays(
+            data.days.map((d: { date: string; reason?: string }) => ({
+              date: d.date,
+              reason: d.reason,
+            }))
+          );
+        }
+      } catch (error) {
+        console.error("Fetch closed days error:", error);
+      }
+    };
+
+    fetchClosedDays();
+  }, []);
+
+  const weekDays = getWeekDays(weekOffset);
+
+  const parseTimeSlot = (date: string, time: string) => {
+    const [clock, meridiemRaw] = time.split(" ");
+    const [hourRaw, minuteRaw] = clock.split(":").map(Number);
+    const meridiem = meridiemRaw.toLowerCase();
+    let hour = hourRaw;
+
+    if (meridiem === "pm" && hour !== 12) hour += 12;
+    if (meridiem === "am" && hour === 12) hour = 0;
+
+    const slotDateTime = new Date(`${date}T00:00:00`);
+    slotDateTime.setHours(hour, minuteRaw || 0, 0, 0);
+    return slotDateTime;
+  };
+
+  const isPastSlot = (date: string, time: string) => {
+    const slotDateTime = parseTimeSlot(date, time);
+    const currentHourStart = new Date(now);
+    currentHourStart.setMinutes(0, 0, 0);
+    return slotDateTime < currentHourStart;
+  };
+
+  const getUsedSlotCount = (date: string, time: string) => {
+    return slotBookings.filter(
+      (booking) =>
+        booking.bookingDate === date &&
+        booking.bookingTime === time &&
+        booking.serviceCategory === "fullservice" &&
+        booking.status !== "Cancelled"
+    ).length;
+  };
+
+  const getSlotStatusText = (usedSlots: number) => {
+    const remainingSlots = Math.max(0, FULLSERVICE_SLOTS - usedSlots);
+    if (remainingSlots === 0) return "Fully booked";
+    if (remainingSlots === 1) return "1 slot available";
+    return "2 slots available";
+  };
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -61,10 +225,15 @@ export default function FullServicePage() {
     const userMessage = { role: "user" as const, text: input };
     setMessages(prev => [...prev, userMessage]);
 
-    const updatedBookingData = { ...bookingData };
-    if (stage === "make_model") {
-      updatedBookingData.vehicle = input;
-    }
+    const updatedBookingData = {
+      ...bookingData,
+      bookingDate: selectedDate,
+      bookingTime: selectedTime,
+    };
+
+      if (stage === "make_model") {
+        updatedBookingData.vehicle = input;
+      }
 
     if (stage === "oil_info") {
       const mileageMatch = input.match(/\d+/);
@@ -75,7 +244,6 @@ export default function FullServicePage() {
     }
 
     setBookingData(updatedBookingData);
-
     const res = await fetch("/api/ai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -232,18 +400,141 @@ export default function FullServicePage() {
             )}
           </AnimatePresence>
 
-          {/* FINAL AI ACTION BUTTON */}
-          <div className={styles.aiActionWrapper}>
-             <button
-                 className={styles.aiQuoteBtn}
-                   onClick={() => setIsChatOpen(true)} >
-  <FaRobot className={styles.botIcon} />
-  GENERATE AI QUOTE FOR MY {vehicle.toUpperCase()}
-</button>
+        </div>
+      </section>
+      <section className={styles.dateTimeSection}>
+        <div className={styles.containerLarge}>
+          <p className={styles.stepTagCenter}>STEP 04</p>
+          <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
 
-             <p className={styles.aiHint}>
-                Our AI will ask for specific oil grades and vehicle details in the next step.
-             </p>
+          <div className={styles.calendarWrapper}>
+            <div className={styles.calendarHeader}>
+              {weekDays.map((item) => {
+                const closedDayObj = closedDays.find(
+                  (d) => d.date === item.isoDate
+                );
+                const isClosedDay = item.isSunday || !!closedDayObj;
+
+                return (
+                <div
+                  key={item.fullDate}
+                  className={`${styles.dayCol} ${selectedDate === item.isoDate ? styles.dayActive : ""} ${isClosedDay ? styles.dayClosed : ""}`}
+                  onClick={() => {
+                    if (isClosedDay) return;
+                    setSelectedDate(item.isoDate);
+                  }}
+                >
+                  <span className={styles.dateNum}>{item.date}</span>
+                  <span className={`${styles.dayName} ${isClosedDay ? styles.sundayRed : ""}`}>
+                    {item.dayName}
+                  </span>
+                </div>
+                );
+              })}
+            </div>
+
+            <div className={styles.calendarBody}>
+              {weekDays.map((item) => (
+                <div key={item.fullDate} className={styles.timeCol}>
+                  {(() => {
+                    const closedDayObj = closedDays.find(
+                      (d) => d.date === item.isoDate
+                    );
+                    const isClosedDay = item.isSunday || !!closedDayObj;
+
+                    if (isClosedDay) {
+                      return (
+                        <div className={styles.closedWrapper}>
+                          <span className={styles.closedLabel}>
+                            {item.isSunday ? "Closed" : closedDayObj?.reason || "Closed"}
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    return timeSlots.map((time) => {
+                        const usedSlots = getUsedSlotCount(item.isoDate, time);
+                        const isFull = usedSlots >= FULLSERVICE_SLOTS;
+                        const isPast = isPastSlot(item.isoDate, time);
+                        const slotDateTime = parseTimeSlot(item.isoDate, time);
+                        const isAdminClosed = closedSlots.some((slot) => {
+                          if (slot.date !== item.isoDate) return false;
+
+                          const start = parseTimeSlot(slot.date, slot.startTime);
+                          const end = parseTimeSlot(slot.date, slot.endTime);
+
+                          return slotDateTime >= start && slotDateTime < end;
+                        });
+                        const isUnavailable = isFull || isPast || isAdminClosed;
+                        const isBlocked = isFull || isPast;
+                        const isSelected = selectedDate === item.isoDate && selectedTime === time;
+
+                        return (
+                          <div
+                            key={time}
+                            className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
+                            onClick={() => {
+                              if (isUnavailable) return;
+                              setSelectedDate(item.isoDate);
+                              setSelectedTime(time);
+                            }}
+                          >
+                            <span className={styles.timeText}>{time}</span>
+                            <div className={styles.slotBox}>
+                              {[1, 2].map((slotNo) => (
+                                <div
+                                  key={slotNo}
+                                  className={`${styles.slotSegment} ${slotNo <= usedSlots ? styles.segmentBooked : styles.segmentOpen}`}
+                                >
+                                  {slotNo}
+                                </div>
+                              ))}
+                            </div>
+                            <span className={styles.slotHint}>
+                              {isAdminClosed ? "Closed" : isPast ? "Unavailable" : getSlotStatusText(usedSlots)}
+                            </span>
+                          </div>
+                        );
+                    });
+                  })()}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+       <div className={styles.buttonContainer}>
+  <button 
+    onClick={() => setWeekOffset(0)} 
+    disabled={weekOffset === 0} 
+    className={styles.calendarBtn}
+  >
+    <span>⬅</span> This Week
+  </button>
+
+  <button 
+    onClick={() => setWeekOffset(1)} 
+    disabled={weekOffset === 1} 
+    className={styles.calendarBtn}
+  >
+    Next Week <span>➡</span>
+  </button>
+</div>
+      </section>
+
+      <section className={styles.aiBookingSection}>
+        <div className={styles.containerLarge}>
+          <p className={styles.stepTagCenter}>STEP 05</p>
+          <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Get AI Quote and Confirm</h2>
+          <div className={styles.aiActionWrapper}>
+            <button className={styles.aiQuoteBtn} onClick={() => setIsChatOpen(true)}>
+              <FaRobot className={styles.botIcon} />
+              GENERATE AI QUOTE FOR MY {vehicle.toUpperCase()}
+            </button>
+
+            <p className={styles.aiHint}>
+              Selected slot: {selectedDate} at {selectedTime}
+            </p>
           </div>
         </div>
       </section>
@@ -300,5 +591,3 @@ export default function FullServicePage() {
     </main>
   );
 }
-
-

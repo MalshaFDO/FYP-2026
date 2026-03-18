@@ -7,9 +7,17 @@ const generateBookingRef = () =>
 
 // GET all bookings
 export async function GET() {
-  await connectDB();
-  const bookings = await Booking.find().sort({ createdAt: -1 });
-  return NextResponse.json(bookings);
+  try {
+    await connectDB();
+    const bookings = await Booking.find().sort({ createdAt: -1 });
+    return NextResponse.json(bookings);
+  } catch (error) {
+    console.error("Fetch admin bookings error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to fetch bookings" },
+      { status: 500 }
+    );
+  }
 }
 
 // CREATE booking
@@ -59,11 +67,26 @@ export async function POST(req: Request) {
 
 // UPDATE booking status
 export async function PATCH(req: Request) {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const { id, status } = await req.json();
+    const { id, status } = await req.json();
 
-  await Booking.findByIdAndUpdate(id, { status });
+    if (!id || !status) {
+      return NextResponse.json(
+        { success: false, error: "Booking id and status are required" },
+        { status: 400 }
+      );
+    }
 
-  return NextResponse.json({ message: "Status updated" });
+    await Booking.findByIdAndUpdate(id, { status });
+
+    return NextResponse.json({ success: true, message: "Status updated" });
+  } catch (error) {
+    console.error("Update booking status error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to update booking status" },
+      { status: 500 }
+    );
+  }
 }

@@ -6,6 +6,14 @@ const BookingSchema = new mongoose.Schema(
     vehicleNumber: String,
     oilGrade: String,
     serviceType: String,
+    additionalServices: [
+      {
+        id: Number,
+        name: String,
+        time: String,
+        price: Number,
+      },
+    ],
     customerName: String,
     mobile: String,
     email: String,

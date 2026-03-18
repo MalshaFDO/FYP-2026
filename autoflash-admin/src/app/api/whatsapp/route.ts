@@ -34,6 +34,28 @@ const toMMDDYYYY = (rawDate: string) => {
   return value;
 };
 
+const formatAdditionalServices = (input: unknown) => {
+  if (!input) return "None";
+
+  if (Array.isArray(input)) {
+    const names = input
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object" && "name" in item) {
+          return String((item as { name?: unknown }).name ?? "").trim();
+        }
+        return "";
+      })
+      .filter(Boolean);
+
+    return names.length ? names.join(", ") : "None";
+  }
+
+  if (typeof input === "string") return input.trim() || "None";
+
+  return "None";
+};
+
 export async function POST(req: Request) {
   let body: any;
 
@@ -46,8 +68,6 @@ export async function POST(req: Request) {
   const phone = body?.phone?.toString()?.trim?.() ?? "";
   const name = body?.name?.toString()?.trim?.() ?? "";
   const service = body?.service?.toString()?.trim?.() ?? "";
-
-  // Accept multiple aliases and treat these as optional.
   const vehicleNumber =
     body?.vehicleNumber?.toString()?.trim?.() ??
     body?.vehicle?.toString()?.trim?.() ??
@@ -63,6 +83,7 @@ export async function POST(req: Request) {
     body?.bookingRef?.toString()?.trim?.() ??
     body?.reference?.toString()?.trim?.() ??
     "";
+  const additionalServices = formatAdditionalServices(body?.additionalServices);
   const template = body?.template?.toString()?.trim?.().toLowerCase?.() ?? "confirm";
 
   const missing: string[] = [];
@@ -98,34 +119,34 @@ export async function POST(req: Request) {
   const bookingTime = time || "To be confirmed";
 
   const whatsappMessage = `
-${greeting} ${name} 👋
+${greeting} ${name}
 
-🚗 *AUTOFALSH BOOKING CONFIRMED*
+AUTOFALSH BOOKING CONFIRMED
 
-━━━━━━━━━━━━━━
-📌 *Ref:* ${bookingRef}
-🛠 *Service:* ${service}
-📅 *Date:* ${bookingDate}
-⏰ *Time:* ${bookingTime}
-🚘 *Vehicle Number:* ${vehicleNumber}
-📍 *Venue:* ${venue}
-💰 *Total:* Rs. ${price}
-━━━━━━━━━━━━━━
+Ref: ${bookingRef}
+Service: ${service}
+Date: ${bookingDate}
+Time: ${bookingTime}
+Vehicle Number: ${vehicleNumber}
+Add-ons: ${additionalServices}
+Venue: ${venue}
+Total: Rs. ${price}
 
 Please arrive 10 minutes before your appointment.
 
-Thank you for choosing *Autoflash* 🙌
+Thank you for choosing Autoflash.
 `;
 
-const cancelMessage = `
-${greeting} ${name} 👋
+  const cancelMessage = `
+${greeting} ${name}
 
-🚫 *Your Autoflash Booking Has Been Cancelled*
+Your Autoflash Booking Has Been Cancelled
 
-📌 Ref: ${bookingRef}
-🛠 Service: ${service}
-📅 Date: ${bookingDate}
-⏰ Time: ${bookingTime}
+Ref: ${bookingRef}
+Service: ${service}
+Date: ${bookingDate}
+Time: ${bookingTime}
+Add-ons: ${additionalServices}
 
 If this was a mistake or you'd like to reschedule,
 please contact us.

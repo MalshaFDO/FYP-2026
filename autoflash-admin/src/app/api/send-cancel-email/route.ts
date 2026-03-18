@@ -1,6 +1,30 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
+const formatAdditionalServices = (input: unknown) => {
+  if (!input) return "None";
+
+  if (Array.isArray(input)) {
+    const names = input
+      .map((item) => {
+        if (typeof item === "string") return item.trim();
+        if (item && typeof item === "object" && "name" in item) {
+          return String((item as { name?: unknown }).name ?? "").trim();
+        }
+        return "";
+      })
+      .filter(Boolean);
+
+    return names.length ? names.join(", ") : "None";
+  }
+
+  if (typeof input === "string") {
+    return input.trim() || "None";
+  }
+
+  return "None";
+};
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -26,6 +50,7 @@ export async function POST(req: Request) {
       body?.bookingRef?.toString()?.trim?.() ??
       body?.reference?.toString()?.trim?.() ??
       "";
+    const additionalServices = formatAdditionalServices(body?.additionalServices);
 
     if (!to || !name || !service || !bookingRef) {
       return NextResponse.json(
@@ -96,6 +121,10 @@ export async function POST(req: Request) {
             <tr>
               <td style="padding:8px; border-bottom:1px solid #eee;"><strong>Time</strong></td>
               <td style="padding:8px; border-bottom:1px solid #eee;">${bookingTime}</td>
+            </tr>
+            <tr>
+              <td style="padding:8px; border-bottom:1px solid #eee;"><strong>Additional Services</strong></td>
+              <td style="padding:8px; border-bottom:1px solid #eee;">${additionalServices}</td>
             </tr>
           </table>
 
