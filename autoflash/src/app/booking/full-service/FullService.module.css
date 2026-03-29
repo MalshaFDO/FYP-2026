@@ -730,6 +730,32 @@
   background: #d32f2f;
   transform: scale(1.05);
 }
+
+.pdfActions {
+  margin-top: 10px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.pdfActionButton,
+.pdfActionLink {
+  color: #60a5fa;
+  text-decoration: underline;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.pdfActionButton:hover,
+.pdfActionLink:hover {
+  color: #93c5fd;
+}
+
 /* =========================================================
    RESPONSIVE DESIGN
 ========================================================= */

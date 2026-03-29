@@ -19,9 +19,13 @@ interface SlotBooking {
 interface BookingData {
   vehicle: string;
   oilGrade: string;
+  oilBrand?: string;
   mileage: number | null;
   bookingDate: string;
   bookingTime: string;
+  customerName?: string;
+  mobile?: string;
+  vehicleNumber?: string;
 }
 
 const carImages: Record<VehicleType, string> = {
@@ -108,10 +112,23 @@ export default function FullServicePage() {
   ];
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
+  const [cloudinaryPdfUrl, setCloudinaryPdfUrl] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [stage, setStage] = useState<
-    "make_model" | "oil_info" | "quotation" | "details" | "done"
-  >("make_model");
+    | "start"
+    | "make_model"
+    | "oil_info"
+    | "oil_brand"
+    | "generate_pdf"
+    | "quotation"
+    | "confirm_slot"
+    | "details_name"
+    | "details_mobile"
+    | "details_vehicle"
+    | "done"
+  >("start");
 
   const [bookingData, setBookingData] = useState<BookingData>({
     vehicle: "",
@@ -219,6 +236,62 @@ export default function FullServicePage() {
     return "2 slots available";
   };
 
+  const openChat = async () => {
+    setIsChatOpen(true);
+
+    if (messages.length > 0 || stage !== "start") {
+      return;
+    }
+
+    setPdfUrl(null);
+    setPdfDownloadUrl(null);
+    setCloudinaryPdfUrl(null);
+
+    const initialBookingData = {
+      ...bookingData,
+      bookingDate: selectedDate,
+      bookingTime: selectedTime,
+    };
+
+    setBookingData(initialBookingData);
+
+    const res = await fetch("/api/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        stage: "start",
+        serviceType: selectedPlan,
+        bookingData: initialBookingData,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.reply) {
+      setMessages([{ role: "ai", text: data.reply }]);
+    }
+
+    if (data.pdfUrl) {
+      setPdfUrl(data.pdfUrl);
+    }
+
+    if (data.pdfDownloadUrl) {
+      setPdfDownloadUrl(data.pdfDownloadUrl);
+    }
+
+    if (data.cloudinaryPdfUrl) {
+      setCloudinaryPdfUrl(data.cloudinaryPdfUrl);
+    }
+
+    if (data.bookingData) {
+      setBookingData(data.bookingData);
+    }
+
+    if (data.nextStage) {
+      setStage(data.nextStage);
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -231,16 +304,38 @@ export default function FullServicePage() {
       bookingTime: selectedTime,
     };
 
-      if (stage === "make_model") {
-        updatedBookingData.vehicle = input;
-      }
+    if (stage === "make_model") {
+      updatedBookingData.vehicle = input;
+    }
 
     if (stage === "oil_info") {
+      const oilGradeMatch = input.match(/\b\d{1,2}w-\d{2}\b/i);
       const mileageMatch = input.match(/\d+/);
-      updatedBookingData.oilGrade = input;
-      if (mileageMatch) {
-        updatedBookingData.mileage = parseInt(mileageMatch[0], 10);
+
+      if (oilGradeMatch) {
+        updatedBookingData.oilGrade = oilGradeMatch[0].toUpperCase();
       }
+
+      if (mileageMatch) {
+        const mileage = parseInt(mileageMatch[0], 10);
+        updatedBookingData.mileage = mileage;
+
+        if (!oilGradeMatch) {
+          updatedBookingData.oilGrade = mileage >= 100000 ? "10W-40" : "5W-30";
+        }
+      }
+    }
+
+    if (stage === "details_name") {
+      updatedBookingData.customerName = input.trim();
+    }
+
+    if (stage === "details_mobile") {
+      updatedBookingData.mobile = input.trim();
+    }
+
+    if (stage === "details_vehicle") {
+      updatedBookingData.vehicleNumber = input.trim();
     }
 
     setBookingData(updatedBookingData);
@@ -258,6 +353,22 @@ export default function FullServicePage() {
     const data = await res.json();
     const aiMessage = { role: "ai" as const, text: data.reply };
     setMessages(prev => [...prev, aiMessage]);
+
+    if (data.pdfUrl) {
+      setPdfUrl(data.pdfUrl);
+    }
+
+    if (data.pdfDownloadUrl) {
+      setPdfDownloadUrl(data.pdfDownloadUrl);
+    }
+
+    if (data.cloudinaryPdfUrl) {
+      setCloudinaryPdfUrl(data.cloudinaryPdfUrl);
+    }
+
+    if (data.bookingData) {
+      setBookingData(data.bookingData);
+    }
 
     if (data.nextStage) {
       setStage(data.nextStage);
@@ -502,7 +613,6 @@ export default function FullServicePage() {
             </div>
           </div>
         </div>
-
        <div className={styles.buttonContainer}>
   <button 
     onClick={() => setWeekOffset(0)} 
@@ -527,7 +637,7 @@ export default function FullServicePage() {
           <p className={styles.stepTagCenter}>STEP 05</p>
           <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Get AI Quote and Confirm</h2>
           <div className={styles.aiActionWrapper}>
-            <button className={styles.aiQuoteBtn} onClick={() => setIsChatOpen(true)}>
+            <button className={styles.aiQuoteBtn} onClick={openChat}>
               <FaRobot className={styles.botIcon} />
               GENERATE AI QUOTE FOR MY {vehicle.toUpperCase()}
             </button>
@@ -570,6 +680,27 @@ export default function FullServicePage() {
               {msg.text}
             </div>
           ))}
+
+          {pdfUrl && (
+            <div className={styles.pdfActions}>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.pdfActionButton}
+              >
+                View quotation
+              </a>
+              <a
+                href={cloudinaryPdfUrl ?? pdfDownloadUrl ?? pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.pdfActionLink}
+              >
+                Download quotation
+              </a>
+            </div>
+          )}
         </div>
 
         <div className={styles.chatInputArea}>
@@ -586,7 +717,7 @@ export default function FullServicePage() {
       </motion.div>
     </motion.div>
   )}
-</AnimatePresence>
+      </AnimatePresence>
 
     </main>
   );

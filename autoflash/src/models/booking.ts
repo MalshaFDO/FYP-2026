@@ -6,6 +6,7 @@ const BookingSchema = new mongoose.Schema({
   serviceCategory: { type: String, enum: ["bodywash", "fullservice"] },
 
   oilGrade: { type: String },
+  oilBrand: { type: String },
   mileage: { type: Number },
   additionalServices: [
     {

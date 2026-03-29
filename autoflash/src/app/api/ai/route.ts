@@ -1,21 +1,15 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Booking from "@/models/booking";
-import ClosedDay from "@/models/closedDay";
-import ClosedSlot from "@/models/ClosedSlot";
 import { calculateServiceQuote } from "@/lib/pricing";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const FULLSERVICE_SLOT_LIMIT = 2;
+import { generateQuotationPDF } from "@/lib/generateQuote";
+import cloudinary from "@/lib/cloudinary";
 
 function normalizeServiceType(serviceType?: string) {
   if (!serviceType) return "Full Service (AI)";
-
   const key = serviceType.trim().toLowerCase();
   if (key === "full") return "Full Service";
   if (key === "oil") return "Oil Change";
-
   return serviceType;
 }
 
@@ -37,14 +31,19 @@ export async function POST(req: Request) {
   try {
     const {
       message = "",
-      stage = "make_model", 
+      stage = "start",
       serviceType,
       bookingData = {},
     } = await req.json();
 
-    let reply = "";
-    let nextStage = stage;
-    // ===== STAGE 1 =====
+    if (stage === "start") {
+      return NextResponse.json({
+        reply: "Hi! Welcome to AutoFlash. How can I assist you today?",
+        nextStage: "make_model",
+        bookingData,
+      });
+    }
+
     if (stage === "make_model") {
       const validVehicle = message.trim().split(" ").length >= 2;
 
@@ -52,233 +51,309 @@ export async function POST(req: Request) {
         return NextResponse.json({
           reply: "Please provide your vehicle make and model. Example: Toyota Axio",
           nextStage: "make_model",
+          bookingData,
         });
       }
 
       bookingData.vehicle = message;
-      reply = "Thank you. Could you please confirm the oil grade used during your previous service? If unsure, provide your current mileage.";
-      nextStage = "oil_info";
+
+      return NextResponse.json({
+        reply:
+          "Got it. What oil grade was used in your last service? If you're not sure, just tell me your current mileage.",
+        nextStage: "oil_info",
+        bookingData,
+      });
     }
 
-    // ===== STAGE 2 =====
-   else if (stage === "oil_info") {
-  let recommendedOil = "";
+    if (stage === "oil_info") {
+      let recommendedOil = "";
+      let userProvidedOil = false;
 
-  const gradeMatch = message.match(/\b\d{1,2}w-\d{2}\b/i);
-  if (gradeMatch) {
-    recommendedOil = gradeMatch[0].toUpperCase();
-  }
+      const gradeMatch = message.match(/\b\d{1,2}w-\d{2}\b/i);
+      if (gradeMatch) {
+        recommendedOil = gradeMatch[0].toUpperCase();
+        userProvidedOil = true;
+      }
 
-  const mileageMatch = message.match(/\d+/);
-  if (!recommendedOil && mileageMatch) {
-    const mileage = parseInt(mileageMatch[0], 10);
-    recommendedOil = mileage >= 100000 ? "10W-40" : "5W-30";
-  }
+      const mileageMatch = message.match(/\d+/);
 
-  if (mileageMatch) {
-    bookingData.mileage = parseInt(mileageMatch[0], 10);
-  }
+      if (!userProvidedOil && mileageMatch) {
+        const mileage = parseInt(mileageMatch[0], 10);
+        bookingData.mileage = mileage;
+        recommendedOil = mileage >= 100000 ? "10W-40" : "5W-30";
+      }
 
-  bookingData.oilGrade = recommendedOil || "5W-30";
+      bookingData.oilGrade = recommendedOil || "5W-30";
 
-  // ✅ NEW: Dynamic Pricing
-  const quote = calculateServiceQuote({
-    oilGrade: bookingData.oilGrade,
-    vehicle: bookingData.vehicle,
-  });
+      const reply = userProvidedOil
+        ? `Great. We'll proceed with ${bookingData.oilGrade} fully synthetic oil.`
+        : `Based on your mileage, I recommend ${bookingData.oilGrade} fully synthetic oil.`;
 
-  // Store for later use (PDF + DB)
-  bookingData.quote = quote;
+      return NextResponse.json({
+        reply: `${reply}
 
-  const hasSelectedSlot = Boolean(
-    bookingData.bookingDate && bookingData.bookingTime
-  );
+Please select your preferred oil brand:
 
-  reply = `Based on your information, I recommend ${bookingData.oilGrade} fully synthetic oil.
+1. Toyota
+2. Mobil
+3. Castrol
+4. Honda`,
+        nextStage: "oil_brand",
+        bookingData,
+      });
+    }
 
-Here is your quotation:
+    if (stage === "oil_brand") {
+      const msg = message.toLowerCase();
 
-Engine Oil - LKR ${quote.oilPrice}
+      let selectedBrand = "";
+
+      if (msg.includes("1") || msg.includes("toyota")) {
+        selectedBrand = "toyota";
+      } else if (msg.includes("2") || msg.includes("mobil")) {
+        selectedBrand = "mobil";
+      } else if (msg.includes("3") || msg.includes("castrol")) {
+        selectedBrand = "castrol";
+      } else if (msg.includes("4") || msg.includes("honda")) {
+        selectedBrand = "honda";
+      } else {
+        return NextResponse.json({
+          reply: "Please select a valid option: Toyota, Mobil, Castrol, or Honda.",
+          nextStage: "oil_brand",
+          bookingData,
+        });
+      }
+
+      bookingData.oilBrand = selectedBrand;
+
+      const quote = calculateServiceQuote({
+        oilGrade: bookingData.oilGrade,
+        vehicle: bookingData.vehicle,
+        brand: selectedBrand,
+      });
+
+      bookingData.quote = quote;
+
+      return NextResponse.json({
+        reply: `Great. You selected ${selectedBrand.toUpperCase()} oil.
+
+Oil Required: ${quote.liters}L
+
+Engine Oil (${quote.liters}L) - LKR ${quote.oilPrice}
 Oil Filter - LKR ${quote.oilFilter}
 Service Charge - LKR ${quote.serviceCharge}
 
 Total: LKR ${quote.total}
 
-${
-  hasSelectedSlot
-    ? `Your selected slot is ${bookingData.bookingDate} at ${bookingData.bookingTime}.`
-    : "Please select your preferred date and time on the calendar."
-}
+Generating your quotation...`,
+        nextStage: "generate_pdf",
+        bookingData,
+      });
+    }
 
-Would you like to proceed with booking?`;
+    if (stage === "generate_pdf") {
+      const quote = calculateServiceQuote({
+        oilGrade: bookingData.oilGrade,
+        vehicle: bookingData.vehicle,
+        brand: bookingData.oilBrand || "mobil",
+      });
 
-  nextStage = "quotation";
-}
+      const pdfBytes = await generateQuotationPDF({
+        customerName: "Preview",
+        mobile: "N/A",
+        vehicle: bookingData.vehicle,
+        vehicleNumber: "N/A",
+        oilBrand: bookingData.oilBrand,
+        oilGrade: bookingData.oilGrade,
+        bookingDate: bookingData.bookingDate,
+        bookingTime: bookingData.bookingTime,
+        quote,
+      });
 
-    // ===== STAGE 3 =====
-      else if (stage === "quotation") {
-        if (message.toLowerCase().includes("yes")) {
-          reply = "Please provide your Name, Mobile Number, and Vehicle Number to confirm the booking. Example: Malsha Fernando 0771234567 CAA-1234";
-          nextStage = "details";
-        } else {
-          reply = "No problem. Let me know if you need anything else.";
-          nextStage = "done";
-        }
-      }
-    // ===== STAGE 4 =====
-    else if (stage === "details") {
-      console.log("DETAILS STAGE HIT");
-      console.log("Booking Data:", bookingData);
-      console.log("Service Type:", serviceType);
+      const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
 
-      await connectDB();
+      const uploadRes = await cloudinary.uploader.upload(base64File, {
+        resource_type: "image",
+        folder: "autoflash/quotations",
+      });
 
-      // Get booking date
-      const bookingDate =
-        bookingData.bookingDate || new Date().toISOString().split("T")[0];
-      const bookingTime = bookingData.bookingTime || "10:00 am";
+      const publicId = uploadRes.public_id;
+      const securePdfUrl = uploadRes.secure_url;
+      const fallbackPdfUrl = `/api/quotation?publicId=${encodeURIComponent(publicId)}`;
+      const pdfUrl = securePdfUrl || fallbackPdfUrl;
+      const pdfDownloadUrl = publicId
+        ? cloudinary.url(publicId, {
+            secure: true,
+            resource_type: "image",
+            type: "upload",
+            format: "pdf",
+            flags: "attachment",
+          })
+        : securePdfUrl || `${fallbackPdfUrl}&download=1`;
 
-      // Check if admin closed this date
-      const closed = await ClosedDay.findOne({ date: bookingDate });
+      bookingData.quote = quote;
 
-      if (closed) {
+      return NextResponse.json({
+        reply: "Your quotation is ready. Please review it below.",
+        pdfUrl,
+        pdfDownloadUrl,
+        cloudinaryPdfUrl: securePdfUrl || null,
+        nextStage: "quotation",
+        bookingData,
+      });
+    }
+
+    if (stage === "quotation") {
+      const quote = calculateServiceQuote({
+        oilGrade: bookingData.oilGrade,
+        vehicle: bookingData.vehicle,
+        brand: bookingData.oilBrand || "mobil",
+      });
+
+      return NextResponse.json({
+        reply: `Your total service cost is LKR ${quote.total}.
+
+Your selected slot is ${bookingData.bookingDate} at ${bookingData.bookingTime}.
+
+Is this date and time convenient for you?`,
+        nextStage: "confirm_slot",
+        bookingData,
+      });
+    }
+
+    if (stage === "confirm_slot") {
+      const msg = message.toLowerCase();
+
+      if (
+        msg.includes("yes") ||
+        msg.includes("yeah") ||
+        msg.includes("yep") ||
+        msg.includes("sure") ||
+        msg.includes("ok")
+      ) {
         return NextResponse.json({
-          reply: `Sorry, bookings are closed on this date: ${closed.reason}`,
-          nextStage: "done",
+          reply: "Great. What is your name?",
+          nextStage: "details_name",
+          bookingData,
         });
       }
 
-      const closedSlots = await ClosedSlot.find({
-        date: bookingDate,
+      return NextResponse.json({
+        reply: "No problem. Please select another date and time.",
+        nextStage: "quotation",
+        bookingData,
       });
+    }
 
-      for (const slot of closedSlots) {
+    if (stage === "details_name") {
+      bookingData.customerName = message.trim();
+
+      return NextResponse.json({
+        reply: "Great. Please enter your mobile number.",
+        nextStage: "details_mobile",
+        bookingData,
+      });
+    }
+
+    if (stage === "details_mobile") {
+      const mobileMatch = message.match(/0\d{9}/);
+
+      if (!mobileMatch) {
+        return NextResponse.json({
+          reply: "Please enter a valid mobile number. Example: 0771234567",
+          nextStage: "details_mobile",
+          bookingData,
+        });
+      }
+
+      bookingData.mobile = mobileMatch[0];
+
+      return NextResponse.json({
+        reply: "Perfect. Now enter your vehicle number. Example: CAK-6494",
+        nextStage: "details_vehicle",
+        bookingData,
+      });
+    }
+
+    if (stage === "details_vehicle") {
+      try {
+        await connectDB();
+
+        const bookingDate = bookingData.bookingDate;
+        const bookingTime = bookingData.bookingTime;
+
         const slotDateTime = parseTimeSlot(bookingDate, bookingTime);
-        const start = parseTimeSlot(bookingDate, slot.startTime);
-        const end = parseTimeSlot(bookingDate, slot.endTime);
 
-        if (slotDateTime >= start && slotDateTime < end) {
+        if (slotDateTime < new Date()) {
           return NextResponse.json({
-            error: `This time is closed: ${slot.reason ?? "Closed"}`,
+            reply: "You cannot book a past time slot.",
+            nextStage: "quotation",
+            bookingData,
           });
         }
-      }
 
-
-      // Simple parsing (you can improve later)
-      const parts = message.trim().split(" ");
-      if (parts.length < 3) {
-        return NextResponse.json({
-          reply: "Please provide Name, Mobile Number, and Vehicle Number.",
-          nextStage: "details",
+        const existingCount = await Booking.countDocuments({
+          bookingDate,
+          bookingTime,
+          serviceCategory: "fullservice",
+          status: { $ne: "Cancelled" },
         });
-      }
 
-      const vehicleNumber = parts[parts.length - 1];
-      const mobile = parts[parts.length - 2];
+        const vehicleMatch = message.match(/[A-Z]{2,3}-?\d{3,4}/i);
 
-      // Normalize format
-      let formattedVehicleNumber = vehicleNumber
-        ?.toUpperCase()
-        .replace(/[^A-Z0-9]/g, "");
+        let vehicleNumber = vehicleMatch![0]
+          .toUpperCase()
+          .replace(/[^A-Z0-9]/g, "");
 
-      if (formattedVehicleNumber) {
-        const match = formattedVehicleNumber.match(/^([A-Z]+)(\d+)$/);
+        const match = vehicleNumber.match(/^([A-Z]+)(\d+)$/);
+        if (match) vehicleNumber = `${match[1]}-${match[2]}`;
 
-        if (match) {
-          const letters = match[1];
-          const numbers = match[2];
-          formattedVehicleNumber = `${letters}-${numbers}`;
-        }
-      }
+        const quote = calculateServiceQuote({
+          oilGrade: bookingData.oilGrade,
+          vehicle: bookingData.vehicle,
+          brand: bookingData.oilBrand || "mobil",
+        });
 
-        const formattedMobileNumber = mobile?.replace(/\D/g, "");
+        await Booking.create({
+          vehicle: bookingData.vehicle,
+          serviceType: normalizeServiceType(serviceType),
+          serviceCategory: "fullservice",
+          oilGrade: bookingData.oilGrade,
+          oilBrand: bookingData.oilBrand,
+          mileage: bookingData.mileage,
+          customerName: bookingData.customerName,
+          mobile: bookingData.mobile,
+          vehicleNumber,
+          bookingDate,
+          bookingTime,
+          hourSlot: existingCount + 1,
+          totalPrice: quote.total,
+          status: "Pending",
+        });
 
-      // Count existing full service bookings
-      const existingCount = await Booking.countDocuments({
-        bookingDate,
-        bookingTime,
-        serviceCategory: "fullservice",
-        status: { $ne: "Cancelled" },
-      });
-
-      if (existingCount >= FULLSERVICE_SLOT_LIMIT) {
         return NextResponse.json({
-          reply:
-            "Sorry, this time slot is fully booked for Full Service. Please choose another time.",
+          reply: `Thank you ${bookingData.customerName}. Your booking is confirmed for ${bookingDate} at ${bookingTime}.`,
           nextStage: "done",
+          bookingData,
         });
+      } catch (error) {
+        console.error(error);
+
+        return NextResponse.json(
+          {
+            reply: "Something went wrong. Please try again.",
+            nextStage: "details_vehicle",
+            bookingData,
+          },
+          { status: 500 },
+        );
       }
-
-      const customerName = parts.slice(0, parts.length - 2).join(" ");
-      const quoteTotal = 14000;
-
-      await Booking.create({
-        vehicle: bookingData.vehicle,
-        serviceType: normalizeServiceType(serviceType),
-        serviceCategory: "fullservice",
-        oilGrade: bookingData.oilGrade,
-        mileage: bookingData.mileage,
-        customerName,
-        mobile: formattedMobileNumber || mobile,
-        vehicleNumber: formattedVehicleNumber || vehicleNumber,
-        bookingDate: bookingData.bookingDate || new Date().toISOString().split("T")[0],
-        bookingTime: bookingData.bookingTime || "10:00 am",
-        hourSlot: existingCount + 1,
-        totalPrice: quoteTotal,
-        status: "Pending",
-      });
-      reply = `Thank you ${customerName}. Your booking has been successfully created. Our team will contact you shortly.`;
-      nextStage = "done";
     }
-    else {
-      reply = "Session reset. Please provide your vehicle make and model to start a new booking.";
-      nextStage = "make_model";
-    }
-
-    // ===== Gemini Formatting Layer =====
-    const model = genAI.getGenerativeModel({
-      model: "gemini-flash-latest",
-    });
-
-   const formatted = await model.generateContent({
-  contents: [
-    {
-      role: "user",
-      parts: [
-        {
-          text: `
-You are AutoFlash AI, a professional automotive service advisor in Sri Lanka.
-
-Customer Vehicle: ${bookingData.vehicle}
-Mileage: ${bookingData.mileage}
-Oil Grade: ${bookingData.oilGrade}
-
-Your responsibilities:
-- Guide customers through booking
-- Recommend correct oil types
-- Provide clear quotations in LKR
-- Keep responses short and professional
-
-Rules:
-- Do NOT mention AI
-- Do NOT give multiple options
-- Keep under 5 lines
-- If bookingDate and bookingTime are present, confirm the selected slot and do NOT ask for date/time
-
-Message:
-${reply}
-          `,
-        },
-      ],
-    },
-  ],
-});
-    const response = await formatted.response;
 
     return NextResponse.json({
-      reply: response.text(),
-      nextStage,
+      reply: "I couldn't understand that request.",
+      nextStage: stage,
+      bookingData,
     });
   } catch (error) {
     console.error(error);

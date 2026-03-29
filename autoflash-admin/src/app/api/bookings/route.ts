@@ -5,16 +5,24 @@ import Booking from "@/models/booking";
 const generateBookingRef = () =>
   `AF-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 10)}`;
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Unknown error";
+
 // GET all bookings
 export async function GET() {
   try {
     await connectDB();
-    const bookings = await Booking.find().sort({ createdAt: -1 });
+    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
     return NextResponse.json(bookings);
   } catch (error) {
     console.error("Fetch admin bookings error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to fetch bookings" },
+      {
+        success: false,
+        error: "Failed to fetch bookings",
+        details:
+          process.env.NODE_ENV === "development" ? getErrorMessage(error) : undefined,
+      },
       { status: 500 }
     );
   }
@@ -59,7 +67,12 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error("Create booking error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create booking" },
+      {
+        success: false,
+        error: "Failed to create booking",
+        details:
+          process.env.NODE_ENV === "development" ? getErrorMessage(error) : undefined,
+      },
       { status: 500 }
     );
   }
@@ -85,7 +98,12 @@ export async function PATCH(req: Request) {
   } catch (error) {
     console.error("Update booking status error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update booking status" },
+      {
+        success: false,
+        error: "Failed to update booking status",
+        details:
+          process.env.NODE_ENV === "development" ? getErrorMessage(error) : undefined,
+      },
       { status: 500 }
     );
   }

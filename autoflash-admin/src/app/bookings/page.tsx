@@ -5,7 +5,16 @@ import styles from "./bookings.module.css";
 
 const parseJsonSafely = async (res: Response) => {
   const text = await res.text();
-  return text ? JSON.parse(text) : null;
+
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { raw: text };
+  }
 };
 
 const formatServiceType = (serviceType?: any) => {
@@ -108,11 +117,15 @@ export default function BookingsPage() {
   useEffect(() => {
     const loadBookings = async () => {
       try {
-        const res = await fetch("/api/bookings");
+        const res = await fetch("/api/bookings", { cache: "no-store" });
         const data = await parseJsonSafely(res);
 
         if (!res.ok) {
-          console.error("Failed to load bookings:", data);
+          console.error("Failed to load bookings:", {
+            status: res.status,
+            statusText: res.statusText,
+            data,
+          });
           setBookings([]);
           return;
         }

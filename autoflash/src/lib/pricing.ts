@@ -1,55 +1,41 @@
-type PricingInput = {
-  oilGrade: string;
-  vehicle?: string;
-};
-
-type PricingOutput = {
-  oilPrice: number;
-  oilFilter: number;
-  serviceCharge: number;
-  total: number;
-};
+import { vehicleOilCapacity } from "./vehicleOilData";
+import { oilPricing } from "./oilPricing";
 
 export function calculateServiceQuote({
   oilGrade,
   vehicle,
-}: PricingInput): PricingOutput {
-  let oilPrice = 8500;
+  brand = "mobil",
+}: {
+  oilGrade: string;
+  vehicle?: string;
+  brand?: keyof typeof oilPricing;
+}) {
+  const key = vehicle?.toLowerCase() || "";
 
-  // 🔧 Oil grade pricing logic
-  switch (oilGrade) {
-    case "10W-40":
-      oilPrice = 9000;
+  // 🔥 Get liters
+  let liters = 3.5; // default fallback
+
+  for (const v in vehicleOilCapacity) {
+    if (key.includes(v)) {
+      liters = vehicleOilCapacity[v];
       break;
-    case "5W-30":
-      oilPrice = 8500;
-      break;
-    case "0W-20":
-      oilPrice = 9500;
-      break;
-    default:
-      oilPrice = 8500;
-  }
-
-  // 🚗 Vehicle-based adjustment (premium cars)
-  if (vehicle) {
-    const v = vehicle.toLowerCase();
-
-    if (v.includes("bmw") || v.includes("benz") || v.includes("audi")) {
-      oilPrice += 3000;
-    }
-
-    if (v.includes("hybrid")) {
-      oilPrice += 1500;
     }
   }
+
+  // 🔥 Get price per liter
+  const brandPrices = oilPricing[brand] || {};
+  const pricePerLiter = brandPrices[oilGrade] || 3500;
+
+  const oilPrice = liters * pricePerLiter;
 
   const oilFilter = 2500;
   const serviceCharge = 3000;
 
-  const total = oilPrice + oilFilter + serviceCharge;
+  const total = Math.round(oilPrice + oilFilter + serviceCharge);
 
   return {
+    liters,
+    pricePerLiter,
     oilPrice,
     oilFilter,
     serviceCharge,
