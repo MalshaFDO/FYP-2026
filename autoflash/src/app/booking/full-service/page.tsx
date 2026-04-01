@@ -144,8 +144,12 @@ const getFirstAvailableDayIso = (
   offset: number,
   closedDays: { date: string; reason?: string }[]
 ) => {
-  const firstAvailableDay = getWeekDays(offset).find(
-    (day) => !day.isSunday && !closedDays.some((closedDay) => closedDay.date === day.isoDate)
+    const firstAvailableDay = getWeekDays(offset).find(
+    (day) =>
+      !day.isSunday &&
+      !closedDays.some(
+        (closedDay: { date: string; reason?: string }) => closedDay.date === day.isoDate
+      )
   );
 
   return firstAvailableDay?.isoDate || getWeekDays(offset)[0]?.isoDate || new Date().toISOString().split("T")[0];
@@ -308,10 +312,13 @@ export default function FullServicePage() {
 
           const visibleWeek = getWeekDays(weekOffset);
           const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
-          const selectedDayClosed =
+            const selectedDayClosed =
             !!selectedDayInWeek &&
             (selectedDayInWeek.isSunday ||
-              nextClosedDays.some((closedDay) => closedDay.date === selectedDayInWeek.isoDate));
+              nextClosedDays.some(
+                (closedDay: { date: string; reason?: string }) =>
+                  closedDay.date === selectedDayInWeek.isoDate
+              ));
 
           if (!selectedDayInWeek || selectedDayClosed) {
             setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));

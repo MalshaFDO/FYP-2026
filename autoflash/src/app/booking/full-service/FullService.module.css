@@ -297,6 +297,8 @@
   margin-top: 15px;
   color: #666;
   font-size: 0.85rem;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 
 .dateTimeSection {
@@ -957,11 +959,16 @@
     text-align: center;
   }
   .buttonContainer {
+    width: 100%;
+    max-width: min(100%, 420px);
+    margin: 24px auto 0;
     padding: 0 24px;
+    box-sizing: border-box;
   }
   .calendarBtn {
     width: 100%;
     max-width: 220px;
+    box-sizing: border-box;
   }
   .chatOverlay {
     padding: 12px;
@@ -1021,6 +1028,7 @@
   .aiQuoteBtn {
     font-size: 0.92rem;
     padding: 16px 18px;
+    box-sizing: border-box;
   }
   .timeCol {
     padding: 14px;
@@ -1042,9 +1050,25 @@
   .buttonContainer {
     flex-direction: column;
     gap: 12px;
+    padding: 0 16px;
   }
   .calendarBtn {
-    max-width: none;
+    max-width: 100%;
+    min-height: 52px;
+    padding: 14px 18px;
+    font-size: 0.95rem;
+  }
+  .aiBookingSection {
+    padding: 56px 0 104px;
+  }
+  .aiActionWrapper {
+    margin-top: 40px;
+    padding: 0 16px;
+  }
+  .aiHint {
+    color: #9ca3af;
+    font-size: 0.82rem;
+    line-height: 1.5;
   }
   .chatContainer {
     height: 82vh;
