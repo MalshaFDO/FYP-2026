@@ -2,6 +2,11 @@ import mongoose from "mongoose";
 
 const quotationSchema = new mongoose.Schema(
   {
+    quotationNumber: {
+      type: String,
+      required: true,
+      unique: true,
+    },
     customerName: String,
     mobile: String,
     vehicle: String,

@@ -61,10 +61,10 @@ type ExtraService =
     };
 
 const featureLabels = [
-  "Quick Wash",
-  "Bodywash & Vacuum",
-  "Wash, Vacuum & WAX",
-  "Full BodyWash"
+  "BodyWash",
+  "Vacuum",
+  "WAX",
+  "UnderBodyWash"
 ];
 
 /* ---------------- DATA ---------------- */
@@ -111,7 +111,7 @@ const additionalServices: ExtraService[] = [
     id: 4,
     name: "Engine Wash",
     time: "45 min",
-    priceByVehicle: { Sedan: 1850, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
+    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
     icon: <PiEngineFill/>,
     desc: "Removes dirt and grease from engine for better performance.",
   },

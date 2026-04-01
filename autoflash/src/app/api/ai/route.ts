@@ -1,23 +1,29 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Booking from "@/models/booking";
+import Quotation from "@/models/Quotation";
 import { calculateServiceQuote } from "@/lib/pricing";
+import { getServiceItems } from "@/lib/getServiceItems";
 import { generateQuotationPDF } from "@/lib/generateQuote";
 import cloudinary from "@/lib/cloudinary";
 
+// --- Helpers ---
+
+const sendResponse = (reply: string, nextStage: string, bookingData: any, extras = {}) => 
+  NextResponse.json({ reply, nextStage, bookingData, ...extras });
+
 function normalizeServiceType(serviceType?: string) {
-  if (!serviceType) return "Full Service (AI)";
-  const key = serviceType.trim().toLowerCase();
+  const key = serviceType?.trim().toLowerCase();
   if (key === "full") return "Full Service";
   if (key === "oil") return "Oil Change";
-  return serviceType;
+  return serviceType || "Full Service (AI)";
 }
 
 function parseTimeSlot(date: string, time: string) {
   const [clock, meridiemRaw] = time.split(" ");
   const [hourRaw, minuteRaw] = clock.split(":").map(Number);
-  const meridiem = meridiemRaw.toLowerCase();
   let hour = hourRaw;
+  const meridiem = meridiemRaw.toLowerCase();
 
   if (meridiem === "pm" && hour !== 12) hour += 12;
   if (meridiem === "am" && hour === 12) hour = 0;
@@ -27,336 +33,251 @@ function parseTimeSlot(date: string, time: string) {
   return slotDateTime;
 }
 
-export async function POST(req: Request) {
-  try {
-    const {
-      message = "",
-      stage = "start",
-      serviceType,
-      bookingData = {},
-    } = await req.json();
+function buildQuote(bookingData: any) {
+  const isSelectedService = bookingData.vehicleType && Array.isArray(bookingData.services) && bookingData.services.length > 0;
+  
+  const oilBrandLabel = String(bookingData.oilBrand ?? "Mobil")
+    .trim()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 
-    if (stage === "start") {
-      return NextResponse.json({
-        reply: "Hi! Welcome to AutoFlash. How can I assist you today?",
-        nextStage: "make_model",
-        bookingData,
-      });
+  const oilQuote = calculateServiceQuote({
+    oilGrade: bookingData.oilGrade,
+    vehicle: bookingData.vehicle,
+    brand: bookingData.oilBrand || "mobil",
+  });
+
+  if (isSelectedService) {
+    const orderedServices = (bookingData.services as string[]).filter(
+      (service) => service !== "oilChange" && service !== "oilFilter"
+    );
+    const serviceQuote = getServiceItems({
+      vehicleType: bookingData.vehicleType,
+      selectedServices: orderedServices,
+    });
+
+    if (!bookingData.oilGrade) return serviceQuote;
+
+    const primaryServices = serviceQuote.items.filter(
+      (item: any) => item.name === "Full Service" || item.name === "Engine Wash"
+    );
+    const remainingServices = serviceQuote.items.filter(
+      (item: any) => item.name !== "Full Service" && item.name !== "Engine Wash"
+    );
+
+    return {
+      items: [
+        ...primaryServices,
+        { name: `Engine Oil (${oilBrandLabel} ${bookingData.oilGrade}, ${oilQuote.liters}L)`, price: oilQuote.oilPrice },
+        { name: "Genuine Oil Filter Replacement", price: oilQuote.oilFilter },
+        ...remainingServices,
+      ],
+      total: serviceQuote.total + oilQuote.oilPrice + oilQuote.oilFilter,
+    };
+  }
+
+  return {
+    items: [
+      { name: `Engine Oil Service (${oilBrandLabel} ${bookingData.oilGrade}, ${oilQuote.liters}L)`, price: oilQuote.oilPrice },
+      { name: "Genuine Oil Filter Replacement", price: oilQuote.oilFilter },
+      { name: "Standard Service Labor Charge", price: oilQuote.serviceCharge },
+    ],
+    total: oilQuote.total,
+  };
+}
+
+// --- Stage Handlers ---
+
+const STAGE_HANDLERS: Record<string, Function> = {
+  start: (msg: string, data: any) => 
+    sendResponse("Hi! Welcome to AutoFlash. How can I assist you today?", "make_model", data),
+
+  make_model: (msg: string, data: any) => {
+    if (msg.trim().split(" ").length < 2) {
+      return sendResponse("Please provide your vehicle make and model. Example: Toyota Axio", "make_model", data);
+    }
+    data.vehicle = msg;
+    return sendResponse("Got it. What oil grade was used in your last service? (Or tell me your mileage)", "oil_info", data);
+  },
+
+  oil_info: (msg: string, data: any) => {
+    const gradeMatch = msg.match(/\b\d{1,2}w-\d{2}\b/i);
+    const mileageMatch = msg.match(/\d+/);
+    
+    if (gradeMatch) {
+      data.oilGrade = gradeMatch[0].toUpperCase();
+    } else if (mileageMatch) {
+      const mileage = parseInt(mileageMatch[0], 10);
+      data.mileage = mileage;
+      data.oilGrade = mileage >= 100000 ? "10W-40" : "5W-30";
+    } else {
+      data.oilGrade = "5W-30";
     }
 
-    if (stage === "make_model") {
-      const validVehicle = message.trim().split(" ").length >= 2;
+    const reply = `Recommended: ${data.oilGrade} fully synthetic oil.\n\nPlease select a brand:\n1. Toyota\n2. Mobil\n3. Castrol\n4. Honda`;
+    return sendResponse(reply, "oil_brand", data);
+  },
 
-      if (!validVehicle) {
-        return NextResponse.json({
-          reply: "Please provide your vehicle make and model. Example: Toyota Axio",
-          nextStage: "make_model",
-          bookingData,
-        });
-      }
+  oil_brand: (msg: string, data: any) => {
+    const brands: Record<string, string> = { "1": "toyota", "2": "mobil", "3": "castrol", "4": "honda" };
+    const selected = Object.entries(brands).find(([k, v]) => msg.toLowerCase().includes(k) || msg.toLowerCase().includes(v))?.[1];
 
-      bookingData.vehicle = message;
-
-      return NextResponse.json({
-        reply:
-          "Got it. What oil grade was used in your last service? If you're not sure, just tell me your current mileage.",
-        nextStage: "oil_info",
-        bookingData,
-      });
+    if (!selected) {
+      return sendResponse("Please select a valid option: Toyota, Mobil, Castrol, or Honda.", "oil_brand", data);
     }
 
-    if (stage === "oil_info") {
-      let recommendedOil = "";
-      let userProvidedOil = false;
+    data.oilBrand = selected;
+    return sendResponse("Please review and adjust your service selection below.", "select_services", data);  },
 
-      const gradeMatch = message.match(/\b\d{1,2}w-\d{2}\b/i);
-      if (gradeMatch) {
-        recommendedOil = gradeMatch[0].toUpperCase();
-        userProvidedOil = true;
-      }
+  select_services: (msg: string, data: any) =>
+    sendResponse("Please review and adjust your service selection below.", "select_services", data),
 
-      const mileageMatch = message.match(/\d+/);
+  generate_quote: async (msg: string, data: any) => {
+    await connectDB();
+    const quote = buildQuote(data);
+    const count = await Quotation.countDocuments();
+    const qNum = `Quotation No. ${String(count + 1).padStart(2, "0")}`;
 
-      if (!userProvidedOil && mileageMatch) {
-        const mileage = parseInt(mileageMatch[0], 10);
-        bookingData.mileage = mileage;
-        recommendedOil = mileage >= 100000 ? "10W-40" : "5W-30";
-      }
+    const pdfBytes = await generateQuotationPDF({
+      ...data,
+      quote,
+      quotationNumber: qNum,
+      customerName: data.customerName || "Preview",
+    });
 
-      bookingData.oilGrade = recommendedOil || "5W-30";
+    const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
 
-      const reply = userProvidedOil
-        ? `Great. We'll proceed with ${bookingData.oilGrade} fully synthetic oil.`
-        : `Based on your mileage, I recommend ${bookingData.oilGrade} fully synthetic oil.`;
+    const uploadRes = await cloudinary.uploader.upload(base64File, {
+      resource_type: "raw",
+      folder: "autoflash/quotations",
+      public_id: `Quote_${Date.now()}`,
+      format: "pdf",
+    });
 
-      return NextResponse.json({
-        reply: `${reply}
-
-Please select your preferred oil brand:
-
-1. Toyota
-2. Mobil
-3. Castrol
-4. Honda`,
-        nextStage: "oil_brand",
-        bookingData,
-      });
-    }
-
-    if (stage === "oil_brand") {
-      const msg = message.toLowerCase();
-
-      let selectedBrand = "";
-
-      if (msg.includes("1") || msg.includes("toyota")) {
-        selectedBrand = "toyota";
-      } else if (msg.includes("2") || msg.includes("mobil")) {
-        selectedBrand = "mobil";
-      } else if (msg.includes("3") || msg.includes("castrol")) {
-        selectedBrand = "castrol";
-      } else if (msg.includes("4") || msg.includes("honda")) {
-        selectedBrand = "honda";
-      } else {
-        return NextResponse.json({
-          reply: "Please select a valid option: Toyota, Mobil, Castrol, or Honda.",
-          nextStage: "oil_brand",
-          bookingData,
-        });
-      }
-
-      bookingData.oilBrand = selectedBrand;
-
-      const quote = calculateServiceQuote({
-        oilGrade: bookingData.oilGrade,
-        vehicle: bookingData.vehicle,
-        brand: selectedBrand,
-      });
-
-      bookingData.quote = quote;
-
-      return NextResponse.json({
-        reply: `Great. You selected ${selectedBrand.toUpperCase()} oil.
-
-Oil Required: ${quote.liters}L
-
-Engine Oil (${quote.liters}L) - LKR ${quote.oilPrice}
-Oil Filter - LKR ${quote.oilFilter}
-Service Charge - LKR ${quote.serviceCharge}
-
-Total: LKR ${quote.total}
-
-Generating your quotation...`,
-        nextStage: "generate_pdf",
-        bookingData,
-      });
-    }
-
-    if (stage === "generate_pdf") {
-      const quote = calculateServiceQuote({
-        oilGrade: bookingData.oilGrade,
-        vehicle: bookingData.vehicle,
-        brand: bookingData.oilBrand || "mobil",
-      });
-
-      const pdfBytes = await generateQuotationPDF({
-        customerName: "Preview",
-        mobile: "N/A",
-        vehicle: bookingData.vehicle,
-        vehicleNumber: "N/A",
-        oilBrand: bookingData.oilBrand,
-        oilGrade: bookingData.oilGrade,
-        bookingDate: bookingData.bookingDate,
-        bookingTime: bookingData.bookingTime,
-        quote,
-      });
-
-      const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
-
-      const uploadRes = await cloudinary.uploader.upload(base64File, {
-        resource_type: "image",
-        folder: "autoflash/quotations",
-      });
-
-      const publicId = uploadRes.public_id;
-      const securePdfUrl = uploadRes.secure_url;
-      const fallbackPdfUrl = `/api/quotation?publicId=${encodeURIComponent(publicId)}`;
-      const pdfUrl = securePdfUrl || fallbackPdfUrl;
-      const pdfDownloadUrl = publicId
-        ? cloudinary.url(publicId, {
-            secure: true,
-            resource_type: "image",
-            type: "upload",
-            format: "pdf",
-            flags: "attachment",
-          })
-        : securePdfUrl || `${fallbackPdfUrl}&download=1`;
-
-      bookingData.quote = quote;
-
-      return NextResponse.json({
-        reply: "Your quotation is ready. Please review it below.",
-        pdfUrl,
-        pdfDownloadUrl,
-        cloudinaryPdfUrl: securePdfUrl || null,
-        nextStage: "quotation",
-        bookingData,
-      });
-    }
-
-    if (stage === "quotation") {
-      const quote = calculateServiceQuote({
-        oilGrade: bookingData.oilGrade,
-        vehicle: bookingData.vehicle,
-        brand: bookingData.oilBrand || "mobil",
-      });
-
-      return NextResponse.json({
-        reply: `Your total service cost is LKR ${quote.total}.
-
-Your selected slot is ${bookingData.bookingDate} at ${bookingData.bookingTime}.
-
-Is this date and time convenient for you?`,
-        nextStage: "confirm_slot",
-        bookingData,
-      });
-    }
-
-    if (stage === "confirm_slot") {
-      const msg = message.toLowerCase();
-
-      if (
-        msg.includes("yes") ||
-        msg.includes("yeah") ||
-        msg.includes("yep") ||
-        msg.includes("sure") ||
-        msg.includes("ok")
-      ) {
-        return NextResponse.json({
-          reply: "Great. What is your name?",
-          nextStage: "details_name",
-          bookingData,
-        });
-      }
-
-      return NextResponse.json({
-        reply: "No problem. Please select another date and time.",
-        nextStage: "quotation",
-        bookingData,
-      });
-    }
-
-    if (stage === "details_name") {
-      bookingData.customerName = message.trim();
-
-      return NextResponse.json({
-        reply: "Great. Please enter your mobile number.",
-        nextStage: "details_mobile",
-        bookingData,
-      });
-    }
-
-    if (stage === "details_mobile") {
-      const mobileMatch = message.match(/0\d{9}/);
-
-      if (!mobileMatch) {
-        return NextResponse.json({
-          reply: "Please enter a valid mobile number. Example: 0771234567",
-          nextStage: "details_mobile",
-          bookingData,
-        });
-      }
-
-      bookingData.mobile = mobileMatch[0];
-
-      return NextResponse.json({
-        reply: "Perfect. Now enter your vehicle number. Example: CAK-6494",
-        nextStage: "details_vehicle",
-        bookingData,
-      });
-    }
-
-    if (stage === "details_vehicle") {
-      try {
-        await connectDB();
-
-        const bookingDate = bookingData.bookingDate;
-        const bookingTime = bookingData.bookingTime;
-
-        const slotDateTime = parseTimeSlot(bookingDate, bookingTime);
-
-        if (slotDateTime < new Date()) {
-          return NextResponse.json({
-            reply: "You cannot book a past time slot.",
-            nextStage: "quotation",
-            bookingData,
-          });
-        }
-
-        const existingCount = await Booking.countDocuments({
-          bookingDate,
-          bookingTime,
-          serviceCategory: "fullservice",
-          status: { $ne: "Cancelled" },
-        });
-
-        const vehicleMatch = message.match(/[A-Z]{2,3}-?\d{3,4}/i);
-
-        let vehicleNumber = vehicleMatch![0]
-          .toUpperCase()
-          .replace(/[^A-Z0-9]/g, "");
-
-        const match = vehicleNumber.match(/^([A-Z]+)(\d+)$/);
-        if (match) vehicleNumber = `${match[1]}-${match[2]}`;
-
-        const quote = calculateServiceQuote({
-          oilGrade: bookingData.oilGrade,
-          vehicle: bookingData.vehicle,
-          brand: bookingData.oilBrand || "mobil",
-        });
-
-        await Booking.create({
-          vehicle: bookingData.vehicle,
-          serviceType: normalizeServiceType(serviceType),
-          serviceCategory: "fullservice",
-          oilGrade: bookingData.oilGrade,
-          oilBrand: bookingData.oilBrand,
-          mileage: bookingData.mileage,
-          customerName: bookingData.customerName,
-          mobile: bookingData.mobile,
-          vehicleNumber,
-          bookingDate,
-          bookingTime,
-          hourSlot: existingCount + 1,
-          totalPrice: quote.total,
-          status: "Pending",
-        });
-
-        return NextResponse.json({
-          reply: `Thank you ${bookingData.customerName}. Your booking is confirmed for ${bookingDate} at ${bookingTime}.`,
-          nextStage: "done",
-          bookingData,
-        });
-      } catch (error) {
-        console.error(error);
-
-        return NextResponse.json(
-          {
-            reply: "Something went wrong. Please try again.",
-            nextStage: "details_vehicle",
-            bookingData,
-          },
-          { status: 500 },
-        );
-      }
-    }
+    await Quotation.create({
+      ...data,
+      quotationNumber: qNum,
+      totalPrice: quote.total,
+      pdfUrl: uploadRes.secure_url,
+      status: "generated",
+    });
 
     return NextResponse.json({
-      reply: "I couldn't understand that request.",
-      nextStage: stage,
-      bookingData,
+      pdfUrl: uploadRes.secure_url,
+      nextStage: "done",
+      quotationNumber: qNum,
+      bookingData: {
+        ...data,
+        quote,
+        quotationNumber: qNum,
+      },
     });
+  },
+
+  generate_pdf: async (msg: string, data: any) => {
+    await connectDB();
+    const quote = data.quote ?? buildQuote(data);
+    const count = await Quotation.countDocuments();
+    const qNum = `Quotation No. ${String(count + 1).padStart(2, "0")}`;
+
+    const pdfBytes = await generateQuotationPDF({ ...data, quotationNumber: qNum, quote, customerName: "Preview" });
+    const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
+
+    let securePdfUrl = null;
+    try {
+      const upload = await cloudinary.uploader.upload(base64File, {
+        resource_type: "raw",
+        folder: "autoflash/quotations",
+        public_id: `Quote_${Date.now()}`,
+        format: "pdf",
+      });
+      securePdfUrl = upload.secure_url;
+    } catch (e) {
+      console.error("PDF Upload Error", e);
+    }
+
+    await Quotation.create({ ...data, quotationNumber: qNum, totalPrice: quote.total, pdfUrl: securePdfUrl, status: "generated" });
+    
+    data.quotationNumber = qNum;
+    data.quote = quote;
+    return sendResponse("Your quotation is ready. Review it below.", "quotation", data, { 
+      pdfUrl: securePdfUrl || base64File, 
+      quotationNumber: qNum 
+    });
+  },
+
+  quotation: (msg: string, data: any) => {
+    const reply = `Your total service cost is LKR ${data.quote.total}.\nYour selected appointment is ${data.bookingDate} at ${data.bookingTime}.\n\nWould you like to confirm this booking?`;
+    return sendResponse(reply, "confirm_slot", data);
+  },
+
+  confirm_slot: (msg: string, data: any) => {
+    const isAffirmative = /yes|yeah|yep|sure|ok/i.test(msg);
+    return isAffirmative 
+      ? sendResponse("Thank you. May I have your name, please?", "details_name", data)
+      : sendResponse("Certainly. Please review the quotation and select a more convenient date and time.", "quotation", data);
+  },
+
+  details_name: (msg: string, data: any) => {
+    data.customerName = msg.trim();
+    return sendResponse(`Thank you, ${data.customerName}. Could you please share your mobile number?`, "details_mobile", data);
+  },
+
+  details_mobile: (msg: string, data: any) => {
+    const match = msg.match(/0\d{9}/);
+    if (!match) return sendResponse("Please enter a valid 10-digit mobile number, for example 0771234567.", "details_mobile", data);
+    data.mobile = match[0];
+    return sendResponse("Lastly, could you please provide your vehicle registration number? For example: CAK-6494.", "details_vehicle", data);
+  },
+
+  details_vehicle: async (msg: string, data: any, serviceType: string) => {
+    try {
+      await connectDB();
+      const slotDateTime = parseTimeSlot(data.bookingDate, data.bookingTime);
+      if (slotDateTime < new Date()) return sendResponse("You cannot book a past slot.", "quotation", data);
+
+      const vehicleNum = msg.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^([A-Z]+)(\d+)$/, "$1-$2");
+      const count = await Booking.countDocuments({ bookingDate: data.bookingDate, bookingTime: data.bookingTime });
+
+      await Booking.create({
+        ...data,
+        vehicleNumber: vehicleNum,
+        serviceType: normalizeServiceType(serviceType),
+        serviceCategory: "fullservice",
+        hourSlot: count + 1,
+        totalPrice: data.quote.total,
+        status: "Pending",
+      });
+
+      return sendResponse(`Your booking has been confirmed successfully. We look forward to seeing you on ${data.bookingDate} at ${data.bookingTime}.`, "done", data);
+    } catch (err) {
+      return NextResponse.json({ reply: "We encountered a system issue while saving your booking. Please try again.", nextStage: "details_vehicle", bookingData: data }, { status: 500 });
+    }
+  },
+
+  done: (msg: string, data: any) =>
+    sendResponse(
+      "You're very welcome. If you need any further assistance, we're always happy to help.",
+      "done",
+      data,
+    )
+};
+
+// --- Main Entry ---
+
+export async function POST(req: Request) {
+  try {
+    const { message = "", stage = "start", serviceType, bookingData = {} } = await req.json();
+    const handler = STAGE_HANDLERS[stage];
+
+    if (handler) {
+      return await handler(message, bookingData, serviceType);
+    }
+
+    return sendResponse("I’m sorry, something went wrong in the conversation flow. Let’s start again.", "start", {});
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "AI failed" }, { status: 500 });
+    console.error("Critical AI Route Error:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+

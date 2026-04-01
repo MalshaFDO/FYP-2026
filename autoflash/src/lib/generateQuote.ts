@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 
 type QuotationPdfData = {
+  quotationNumber?: string;
   customerName: string;
   mobile: string;
   vehicle: string;
@@ -12,10 +13,10 @@ type QuotationPdfData = {
   bookingDate?: string;
   bookingTime?: string;
   quote: {
-    liters: number;
-    oilPrice: number;
-    oilFilter: number;
-    serviceCharge: number;
+    items: Array<{
+      name: string;
+      price: number;
+    }>;
     total: number;
   };
 };
@@ -26,10 +27,6 @@ export async function generateQuotationPDF(data: QuotationPdfData) {
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const boldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const oilBrandLabel = String(data.oilBrand ?? "Mobil")
-    .trim()
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-
   // --- Helpers ---
   const sanitizePdfText = (value: unknown) =>
     String(value ?? "")
@@ -48,12 +45,30 @@ export async function generateQuotationPDF(data: QuotationPdfData) {
     hour12: true,
   });
 
-  const drawRow = (label: string, value: string, yPos: number, isBold = false) => {
+  const drawRow = (
+    label: string,
+    value: string,
+    yPos: number,
+    isBold = false,
+    color = rgb(0, 0, 0),
+  ) => {
     const activeFont = isBold ? boldFont : font;
-    page.drawText(sanitizePdfText(label), { x: 70, y: yPos, size: 10, font: activeFont });
+    page.drawText(sanitizePdfText(label), {
+      x: 70,
+      y: yPos,
+      size: 10,
+      font: activeFont,
+      color,
+    });
     const valText = sanitizePdfText(value);
     const textWidth = activeFont.widthOfTextAtSize(valText, 10);
-    page.drawText(valText, { x: 530 - textWidth, y: yPos, size: 10, font: activeFont });
+    page.drawText(valText, {
+      x: 530 - textWidth,
+      y: yPos,
+      size: 10,
+      font: activeFont,
+      color,
+    });
   };
 
   // 1. Header & Logo (Bigger Logo)
@@ -76,10 +91,22 @@ export async function generateQuotationPDF(data: QuotationPdfData) {
   // 2. Document Info Bar
   page.drawRectangle({ x: 0, y: 660, width: 600, height: 30, color: rgb(0.96, 0.96, 0.96) });
   page.drawText("SERVICE QUOTATION", { x: 50, y: 670, size: 14, font: boldFont });
+
+  if (data.quotationNumber) {
+    const quoteNumberLabel = data.quotationNumber;
+    const quoteNumberWidth = boldFont.widthOfTextAtSize(quoteNumberLabel, 10);
+    page.drawText(quoteNumberLabel, {
+      x: 550 - quoteNumberWidth,
+      y: 671,
+      size: 10,
+      font: boldFont,
+      color: rgb(0.15, 0.15, 0.2),
+    });
+  }
   
   const genLabel = `Generated: ${generatedAt}`;
   const genWidth = font.widthOfTextAtSize(genLabel, 9);
-  page.drawText(genLabel, { x: 550 - genWidth, y: 670, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
+  page.drawText(genLabel, { x: 550 - genWidth, y: 648, size: 9, font, color: rgb(0.3, 0.3, 0.3) });
 
   // 3. Information Grid
   let y = 620;
@@ -101,15 +128,17 @@ export async function generateQuotationPDF(data: QuotationPdfData) {
   page.drawText("AMOUNT (LKR)", { x: 450, y, size: 10, font: boldFont, color: rgb(1, 1, 1) });
 
   y -= 25;
-  drawRow(
-    `Engine Oil Service (${oilBrandLabel} ${data.oilGrade}, ${data.quote.liters}L)`,
-    data.quote.oilPrice.toLocaleString(),
-    y,
-  );
-  y -= 20;
-  drawRow("Genuine Oil Filter Replacement", data.quote.oilFilter.toLocaleString(), y);
-  y -= 20;
-  drawRow("Standard Service Labor Charge", data.quote.serviceCharge.toLocaleString(), y);
+  data.quote.items.forEach((item) => {
+    const isFree = item.name.toLowerCase().includes("scan");
+    drawRow(
+      item.name,
+      isFree ? "FREE" : `LKR ${item.price}`,
+      y,
+      false,
+      isFree ? rgb(1, 0, 0) : rgb(0, 0, 0),
+    );
+    y -= 20;
+  });
 
   // 5. Total Section
   y -= 15;
@@ -128,7 +157,7 @@ export async function generateQuotationPDF(data: QuotationPdfData) {
   page.drawLine({ start: { x: 50, y }, end: { x: 550, y }, thickness: 0.5, color: rgb(0.7, 0.7, 0.7) });
   
   y -= 20;
-  page.drawText("Note: This quotation is valid for 14 days and based on the current service requirements.", { x: 50, y, size: 8, font });
+  page.drawText("Note: This quotation is valid for 14 days and based on the current service requirements.", { x: 50, y, size: 8, font});
   
   const footerText = "Thank you for your business!";
   const footWidth = font.widthOfTextAtSize(footerText, 12);

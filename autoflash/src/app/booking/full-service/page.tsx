@@ -5,11 +5,13 @@ import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
 import styles from "./FullService.module.css";
+import { calculateServiceQuote } from "@/lib/pricing";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
+type PricingVehicleType = "sedan" | "suv" | "pickup" | "minivan";
 interface SlotBooking {
   bookingDate: string;
   bookingTime: string;
@@ -18,6 +20,8 @@ interface SlotBooking {
 }
 interface BookingData {
   vehicle: string;
+  vehicleType?: PricingVehicleType;
+  services?: string[];
   oilGrade: string;
   oilBrand?: string;
   mileage: number | null;
@@ -26,7 +30,19 @@ interface BookingData {
   customerName?: string;
   mobile?: string;
   vehicleNumber?: string;
+  quotationNumber?: string;
+  quote?: {
+    items: Array<{ name: string; price: number }>;
+    total: number;
+  };
 }
+
+type ServiceOption = {
+  key: string;
+  label: string;
+  locked?: boolean;
+  free?: boolean;
+};
 
 const carImages: Record<VehicleType, string> = {
   Sedan: "/01.png",
@@ -34,6 +50,56 @@ const carImages: Record<VehicleType, string> = {
   Pickup: "/03.png",
   MiniVan: "/04.png",
 };
+
+const pricingVehicleTypeMap: Record<VehicleType, PricingVehicleType> = {
+  Sedan: "sedan",
+  SUV: "suv",
+  Pickup: "pickup",
+  MiniVan: "minivan",
+};
+
+const serviceList: ServiceOption[] = [
+  { key: "fullService", label: "Full Service", locked: true },
+  { key: "engineWash", label: "Engine Wash" },
+  { key: "oilChange", label: "Oil Change", locked: true },
+  { key: "oilFilter", label: "Oil Filter", locked: true },
+
+  { key: "brakeService", label: "Brake Service", locked: true },
+  { key: "caliperGrease", label: "Caliper Grease", locked: true },
+  { key: "brakeCaliperLube", label: "Brake Caliper Lube", locked: true },
+  { key: "brakeDrumCleaning", label: "Brake Drum Cleaning", locked: true },
+  { key: "sumpWasher", label: "Sump Washer", locked: true },
+  { key: "chemicalCost", label: "Chemical Cost", locked: true },
+
+  { key: "underBodyWash", label: "Under Body Wash" },
+  { key: "windowWasher", label: "Window Washer Fluid" },
+  { key: "rexine", label: "Rexine" },
+  { key: "interiorFumigation", label: "Interior Fumigation" },
+  { key: "n2", label: "Nitrogen (N2)" },
+
+  { key: "scanReport", label: "Scan Report (FREE)", locked: true, free: true },
+] as const;
+
+const fullServicePackageKeys = serviceList.map((service) => service.key);
+
+const extraServiceMap: Record<number, string | undefined> = {
+  6: "engineWash",
+};
+
+function getSelectedServiceKeys(selectedPlan: string, extras: number[]) {
+  const keys = new Set<string>();
+
+  if (selectedPlan === "full") {
+    fullServicePackageKeys.forEach((key) => keys.add(key));
+  }
+
+  extras.forEach((id) => {
+    const key = extraServiceMap[id];
+    if (key) keys.add(key);
+  });
+
+  return Array.from(keys);
+}
 
 const getWeekDays = (offset: number) => {
   const days = [];
@@ -73,6 +139,12 @@ const getFirstOpenDayIso = (offset: number) => {
   const firstOpenDay = getWeekDays(offset).find((day) => !day.isSunday);
   return firstOpenDay?.isoDate || new Date().toISOString().split("T")[0];
 };
+
+function toTitleCase(value?: string) {
+  return String(value ?? "Mobil")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
 
 export default function FullServicePage() {
   const FULLSERVICE_SLOTS = 2;
@@ -115,12 +187,21 @@ export default function FullServicePage() {
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
   const [cloudinaryPdfUrl, setCloudinaryPdfUrl] = useState<string | null>(null);
+  const [quotationNumber, setQuotationNumber] = useState<string | null>(null);
+  const [selectedServices, setSelectedServices] = useState(
+    serviceList.map((s) => s.key)
+  );
+  const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
+  const [hasPromptedQuotationConfirmation, setHasPromptedQuotationConfirmation] =
+    useState(false);
   const [input, setInput] = useState("");
   const [stage, setStage] = useState<
     | "start"
     | "make_model"
     | "oil_info"
     | "oil_brand"
+    | "select_services"
+    | "generate_quote"
     | "generate_pdf"
     | "quotation"
     | "confirm_slot"
@@ -137,6 +218,27 @@ export default function FullServicePage() {
     bookingDate: selectedDate,
     bookingTime: selectedTime,
   });
+
+  const oilQuotePreview =
+    bookingData.oilGrade && bookingData.vehicle
+      ? calculateServiceQuote({
+          oilGrade: bookingData.oilGrade,
+          vehicle: bookingData.vehicle,
+          brand: (bookingData.oilBrand as "toyota" | "mobil" | "castrol" | "honda") || "mobil",
+        })
+      : null;
+
+  const getServiceLabel = (service: ServiceOption) => {
+    if (service.key === "oilChange" && oilQuotePreview && bookingData.oilGrade) {
+      return `Engine Oil (${toTitleCase(bookingData.oilBrand)} ${bookingData.oilGrade}, ${oilQuotePreview.liters}L)`;
+    }
+
+    if (service.key === "oilFilter") {
+      return "Genuine Oil Filter Replacement";
+    }
+
+    return service.label;
+  };
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -235,6 +337,78 @@ export default function FullServicePage() {
     if (remainingSlots === 1) return "1 slot available";
     return "2 slots available";
   };
+  const toggleService = (service: ServiceOption) => {
+    if (service.locked) return;
+
+    setSelectedServices((prev) =>
+      prev.includes(service.key)
+        ? prev.filter((item) => item !== service.key)
+        : [...prev, service.key]
+    );
+  };
+
+  const handleConfirmServices = async () => {
+    setIsGeneratingQuote(true);
+    setHasPromptedQuotationConfirmation(false);
+    const servicesToSubmit = selectedServices.filter(
+      (service) => service !== "oilFilter"
+    );
+
+    try {
+      const res = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          stage: "generate_quote",
+          bookingData: {
+            ...bookingData,
+            vehicleType: pricingVehicleTypeMap[vehicle],
+            services: servicesToSubmit,
+          },
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.pdfUrl) {
+        setPdfUrl(data.pdfUrl);
+      }
+
+      if (data.pdfDownloadUrl) {
+        setPdfDownloadUrl(data.pdfDownloadUrl);
+      }
+
+      if (data.cloudinaryPdfUrl) {
+        setCloudinaryPdfUrl(data.cloudinaryPdfUrl);
+      }
+
+      if (data.quotationNumber) {
+        setQuotationNumber(data.quotationNumber);
+      }
+
+      if (data.bookingData) {
+        setBookingData(data.bookingData);
+      }
+
+      if (data.nextStage) {
+        setStage(data.nextStage);
+      }
+    } finally {
+      setIsGeneratingQuote(false);
+    }
+  };
+
+  const handleQuotationOpen = () => {
+    if (hasPromptedQuotationConfirmation) {
+      return;
+    }
+
+    const confirmationPrompt = `Please confirm your booking for ${bookingData.bookingDate} at ${bookingData.bookingTime}. Is this convenient for you?`;
+
+    setMessages((prev) => [...prev, { role: "ai", text: confirmationPrompt }]);
+    setStage("confirm_slot");
+    setHasPromptedQuotationConfirmation(true);
+  };
 
   const openChat = async () => {
     setIsChatOpen(true);
@@ -246,9 +420,12 @@ export default function FullServicePage() {
     setPdfUrl(null);
     setPdfDownloadUrl(null);
     setCloudinaryPdfUrl(null);
+    setQuotationNumber(null);
 
     const initialBookingData = {
       ...bookingData,
+      vehicleType: pricingVehicleTypeMap[vehicle],
+      services: selectedServices,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
     };
@@ -283,6 +460,10 @@ export default function FullServicePage() {
       setCloudinaryPdfUrl(data.cloudinaryPdfUrl);
     }
 
+    if (data.quotationNumber) {
+      setQuotationNumber(data.quotationNumber);
+    }
+
     if (data.bookingData) {
       setBookingData(data.bookingData);
     }
@@ -300,6 +481,8 @@ export default function FullServicePage() {
 
     const updatedBookingData = {
       ...bookingData,
+      vehicleType: pricingVehicleTypeMap[vehicle],
+      services: selectedServices,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
     };
@@ -364,6 +547,10 @@ export default function FullServicePage() {
 
     if (data.cloudinaryPdfUrl) {
       setCloudinaryPdfUrl(data.cloudinaryPdfUrl);
+    }
+
+    if (data.quotationNumber) {
+      setQuotationNumber(data.quotationNumber);
     }
 
     if (data.bookingData) {
@@ -681,18 +868,59 @@ export default function FullServicePage() {
             </div>
           ))}
 
+
+          {stage === "select_services" && (
+            <div className={styles.serviceBox}>
+              {serviceList.map((service) => (
+                <label key={service.key} className={styles.serviceOption}>
+                  <input
+                    type="checkbox"
+                    checked={selectedServices.includes(service.key)}
+                    disabled={service.locked}
+                    onChange={() => toggleService(service)}
+                  />
+                  <span
+                    className={service.free ? styles.serviceFreeLabel : ""}
+                  >
+                    {getServiceLabel(service)}
+                  </span>
+                  {service.locked && (
+                    <span className={styles.serviceRequired}>(Required)</span>
+                  )}
+                </label>
+              ))}
+
+              <button
+                className={styles.serviceContinueButton}
+                disabled={isGeneratingQuote}
+                onClick={handleConfirmServices}
+              >
+                {isGeneratingQuote ? "Generating quotation..." : "Continue"}
+              </button>
+              {isGeneratingQuote && (
+                <div className={styles.serviceProgress}>
+                  Please wait while we generate your quotation PDF.
+                </div>
+              )}
+            </div>
+          )}
+
           {pdfUrl && (
             <div className={styles.pdfActions}>
+              {quotationNumber && (
+                <div className={styles.pdfLabel}>{quotationNumber}</div>
+              )}
               <a
                 href={pdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.pdfActionButton}
+                onClick={handleQuotationOpen}
               >
                 View quotation
               </a>
               <a
-                href={cloudinaryPdfUrl ?? pdfDownloadUrl ?? pdfUrl}
+                href={pdfDownloadUrl ?? pdfUrl ?? cloudinaryPdfUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={styles.pdfActionLink}
@@ -703,17 +931,19 @@ export default function FullServicePage() {
           )}
         </div>
 
-        <div className={styles.chatInputArea}>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your response..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter") sendMessage();
-            }}
-          />
-          <button onClick={sendMessage}>Send</button>
-        </div>
+        {stage !== "select_services" && (
+          <div className={styles.chatInputArea}>
+            <input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Type your response..."
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendMessage();
+              }}
+            />
+            <button onClick={sendMessage}>Send</button>
+          </div>
+        )}
       </motion.div>
     </motion.div>
   )}
@@ -722,3 +952,17 @@ export default function FullServicePage() {
     </main>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

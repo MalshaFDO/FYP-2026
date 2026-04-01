@@ -4,13 +4,14 @@ import cloudinary from "@/lib/cloudinary";
 export async function GET(req: NextRequest) {
   const assetUrl = req.nextUrl.searchParams.get("url");
   const publicId = req.nextUrl.searchParams.get("publicId");
+  const requestedFileName = req.nextUrl.searchParams.get("filename");
   const shouldDownload = req.nextUrl.searchParams.get("download") === "1";
 
   if (!assetUrl && !publicId) {
     return NextResponse.json({ error: "Missing quotation reference" }, { status: 400 });
   }
 
-  let sourceUrl: string;
+  let sourceUrls: string[];
 
   if (assetUrl) {
     try {
@@ -18,33 +19,53 @@ export async function GET(req: NextRequest) {
       if (!parsedUrl.hostname.endsWith("cloudinary.com")) {
         return NextResponse.json({ error: "Invalid quotation URL" }, { status: 400 });
       }
-      sourceUrl = assetUrl;
+      sourceUrls = [assetUrl];
     } catch {
       return NextResponse.json({ error: "Invalid quotation URL" }, { status: 400 });
     }
   } else {
-    sourceUrl = cloudinary.url(publicId!, {
-      secure: true,
-      resource_type: "raw",
-      type: "upload",
-      format: "pdf",
-    });
+    sourceUrls = [
+      cloudinary.url(publicId!, {
+        secure: true,
+        resource_type: "image",
+        type: "upload",
+        format: "pdf",
+      }),
+      cloudinary.url(publicId!, {
+        secure: true,
+        resource_type: "raw",
+        type: "upload",
+        format: "pdf",
+      }),
+    ];
   }
 
-  const upstream = await fetch(sourceUrl);
+  let upstream: Response | null = null;
+  let sourceUrl = sourceUrls[0];
 
-  if (!upstream.ok) {
+  for (const candidateUrl of sourceUrls) {
+    const response = await fetch(candidateUrl);
+    if (response.ok) {
+      upstream = response;
+      sourceUrl = candidateUrl;
+      break;
+    }
+  }
+
+  if (!upstream) {
     return NextResponse.json(
       { error: "Unable to fetch quotation PDF" },
-      { status: upstream.status },
+      { status: 404 },
     );
   }
 
   const pdfBuffer = await upstream.arrayBuffer();
-  const fileName =
+  const fileName = (
+    requestedFileName ||
     publicId?.split("/").pop() ||
     sourceUrl?.split("/").pop()?.split("?")[0]?.replace(/\.pdf$/i, "") ||
-    "quotation";
+    "quotation"
+  ).replace(/[^\w\s.-]/g, "").trim() || "quotation";
 
   return new NextResponse(pdfBuffer, {
     headers: {
