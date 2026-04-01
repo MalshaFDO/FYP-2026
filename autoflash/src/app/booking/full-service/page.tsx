@@ -319,7 +319,7 @@ export default function FullServicePage() {
                 (closedDay: { date: string; reason?: string }) =>
                   closedDay.date === selectedDayInWeek.isoDate
               ));
-
+              
           if (!selectedDayInWeek || selectedDayClosed) {
             setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
           }

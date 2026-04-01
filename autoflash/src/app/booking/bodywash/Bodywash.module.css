@@ -6,6 +6,7 @@
   flex-direction: column;
   min-height: 100vh;
   background-color: #ffffff;
+  overflow-x: clip;
 }
 
 /* =========================================================
@@ -818,7 +819,7 @@
   .summaryGrid { grid-template-columns: 1fr; }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .heroSection {
     height: auto;
     min-height: 560px;
@@ -892,21 +893,27 @@
     border: none;
     overflow: visible;
     box-shadow: none;
+    width: 100%;
+    max-width: 100%;
   }
   .mobileDaySelector {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(84px, 1fr));
+    display: flex;
     gap: 10px;
     margin-bottom: 16px;
     padding-bottom: 6px;
+    width: 100%;
+    max-width: 100%;
     overflow-x: auto;
+    overflow-y: hidden;
     scrollbar-width: thin;
+    box-sizing: border-box;
   }
   .mobileDayChip {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
     gap: 4px;
+    flex: 0 0 84px;
     min-width: 84px;
     padding: 12px 10px;
     border: 1px solid #dbe3ee;
@@ -949,6 +956,8 @@
   .calendarBody {
     display: block;
     background: transparent;
+    width: 100%;
+    max-width: 100%;
   }
   .timeCol {
     display: none;
@@ -957,6 +966,9 @@
     border: 1px solid #e2e8f0;
     border-radius: 18px;
     background: #f8fafc;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
   .timeColSelected {
     display: block;
@@ -1004,14 +1016,16 @@
   }
   .buttonContainer {
     width: 100%;
-    max-width: min(100%, 420px);
+    max-width: 100%;
     margin: 24px auto 0;
-    padding: 0 24px;
+    padding: 0 20px;
     box-sizing: border-box;
   }
   .calendarBtn {
     width: 100%;
-    max-width: 220px;
+    max-width: 100%;
+    min-height: 50px;
+    padding: 14px 18px;
     box-sizing: border-box;
   }
 }
@@ -1048,11 +1062,8 @@
   .timeCol {
     padding: 14px;
   }
-  .mobileDaySelector {
-    grid-template-columns: repeat(7, minmax(76px, 1fr));
-    gap: 8px;
-  }
   .mobileDayChip {
+    flex-basis: 76px;
     min-width: 76px;
     padding: 11px 9px;
   }
@@ -1068,7 +1079,6 @@
     padding: 0 16px;
   }
   .calendarBtn {
-    max-width: 100%;
     min-height: 52px;
     padding: 14px 18px;
     font-size: 0.95rem;
