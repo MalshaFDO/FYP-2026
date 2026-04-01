@@ -375,6 +375,10 @@
   grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
+.mobileDayHeader {
+  display: none;
+}
+
 .timeCol {
   padding: 8px 4px;
   border-right: 1px solid #e2e8f0;
@@ -772,37 +776,228 @@
 }
 
 @media (max-width: 768px) {
-  .heroSection { height: 70vh; padding-top: 40px; }
-  .heroTitle { font-size: 2.5rem; }
-  .carTypeNav { gap: 0.5rem; padding: 6px 10px; }
-  .typeBtn { padding: 10px 18px; font-size: 0.9rem; }
-  .plansSection { padding: 140px 0 80px; }
-  .additionalSection { padding: 90px 0; }
+  .heroSection {
+    height: auto;
+    min-height: 560px;
+    padding: 40px 0 180px;
+  }
+  .contentWrapper {
+    width: 100%;
+    padding: 0 20px;
+  }
+  .heroTitle { font-size: clamp(2.2rem, 8vw, 2.8rem); }
+  .carTypeNav {
+    gap: 0.5rem;
+    padding: 8px;
+    border-radius: 24px;
+  }
+  .typeBtn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 130px;
+    padding: 11px 16px;
+    font-size: 0.9rem;
+  }
+  .carContainer {
+    bottom: -36px;
+    padding: 0 16px;
+  }
+  .displayCar {
+    width: 100%;
+    max-width: 720px;
+  }
+  .planSection { padding: 100px 0 72px; }
+  .addonsSection { padding: 72px 0; }
   .dateTimeSection { padding: 60px 0; }
-  .summarySection { padding: 70px 0; }
-  .plansGrid, .additionalGrid, .infoCards { grid-template-columns: 1fr; }
-  .displayCar { width: 95%; }
-  .featureList li { padding-left: 5%; }
-  .cardInternal { flex-direction: column; align-items: flex-start; }
-  .extraMetaInline { flex-direction: column; gap: 8px; }
-  .contactFormBox { padding: 35px; }
-  .formRow { flex-direction: column; }
-  .calendarHeader, .calendarBody { grid-template-columns: repeat(7, minmax(0, 1fr)); }
-  .dayCol { padding: 14px 6px; }
-  .dateNum { font-size: 1.4rem; }
-  .timeCol { padding: 10px 4px; min-height: 360px; }
-  .timeSlot { margin: 0 6px 8px 6px; }
+  .aiBookingSection { padding: 56px 0 72px; }
+  .planGrid,
+  .addonsGrid {
+    grid-template-columns: 1fr;
+  }
+  .planCard,
+  .addonBox {
+    padding: 24px 20px;
+  }
+  .sectionTitle,
+  .sectionTitleLight {
+    font-size: clamp(2rem, 7vw, 2.5rem);
+    margin-bottom: 36px;
+  }
+  .featureList li {
+    align-items: flex-start;
+  }
+  .addonInfo h4 {
+    font-size: 1rem;
+  }
+  .aiQuoteBtn {
+    width: 100%;
+    justify-content: center;
+    padding: 18px 24px;
+    font-size: 0.98rem;
+    line-height: 1.3;
+  }
+  .calendarWrapper {
+    background: transparent;
+    border: none;
+    overflow: visible;
+  }
+  .calendarHeader {
+    display: none;
+  }
+  .calendarBody {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .timeCol {
+    min-height: 0;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    background: #f8fafc;
+  }
+  .mobileDayHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #dbe3ee;
+  }
+  .mobileDayActive {
+    color: #111827;
+  }
+  .mobileDayDate {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+  }
+  .mobileDayName {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.08em;
+  }
+  .timeSlot {
+    margin: 0 0 10px;
+    padding: 12px 10px;
+  }
+  .closedWrapper {
+    min-height: 88px;
+    border-radius: 12px;
+  }
+  .closedLabel {
+    writing-mode: initial;
+    transform: none;
+    font-size: 1.2rem;
+    text-align: center;
+  }
+  .buttonContainer {
+    padding: 0 24px;
+  }
+  .calendarBtn {
+    width: 100%;
+    max-width: 220px;
+  }
+  .chatOverlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+  .chatContainer {
+    max-width: none;
+    height: min(78vh, 680px);
+    border-radius: 22px 22px 0 0;
+  }
+  .chatBody {
+    padding: 18px;
+  }
+  .chatInputArea {
+    padding: 14px;
+  }
+  .chatInputArea button {
+    padding: 0 18px;
+  }
+  .serviceOption {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 600px) {
-  .heroSection { height: 65vh; }
-  .heroTitle { font-size: 2.1rem; }
-  .sectionTitle, .sectionTitleLight { font-size: 2.2rem; }
-  .planCard { padding: 28px 18px; }
-  .priceMain { font-size: 3.2rem; }
-  .currency, .priceCents { font-size: 1.2rem; }
-  .summaryGrid { gap: 24px; }
-  .contactHeading { font-size: 1.6rem; }
+  .containerLarge {
+    padding: 0 16px;
+  }
+  .heroSection {
+    min-height: 520px;
+    padding: 32px 0 150px;
+  }
+  .stepTag,
+  .stepTagCenter {
+    letter-spacing: 0.24em;
+  }
+  .heroTitle { font-size: 2rem; }
+  .typeBtn {
+    flex-basis: 100%;
+    min-width: 0;
+  }
+  .planCard {
+    padding: 24px 16px;
+  }
+  .quoteBadge {
+    width: 100%;
+    text-align: center;
+  }
+  .addonBox {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .addonCircle {
+    align-self: flex-end;
+  }
+  .aiQuoteBtn {
+    font-size: 0.92rem;
+    padding: 16px 18px;
+  }
+  .timeCol {
+    padding: 14px;
+  }
+  .timeText {
+    font-size: 0.78rem;
+  }
+  .slotHint {
+    font-size: 0.65rem;
+  }
+  .buttonContainer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .calendarBtn {
+    max-width: none;
+  }
+  .chatContainer {
+    height: 82vh;
+  }
+  .chatHeader {
+    padding: 16px 18px;
+  }
+  .chatHeader h3 {
+    font-size: 1rem;
+  }
+  .chatInputArea {
+    flex-direction: column;
+  }
+  .chatInputArea button {
+    min-height: 46px;
+  }
+  .pdfActions {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .serviceContinueButton {
+    width: 100%;
+    align-self: stretch;
+    text-align: center;
+  }
 }
  
 .serviceBox {

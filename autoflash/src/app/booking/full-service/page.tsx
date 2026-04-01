@@ -734,6 +734,12 @@ export default function FullServicePage() {
             <div className={styles.calendarBody}>
               {weekDays.map((item) => (
                 <div key={item.fullDate} className={styles.timeCol}>
+                  <div
+                    className={`${styles.mobileDayHeader} ${selectedDate === item.isoDate ? styles.mobileDayActive : ""}`}
+                  >
+                    <span className={styles.mobileDayDate}>{item.date}</span>
+                    <span className={styles.mobileDayName}>{item.dayName}</span>
+                  </div>
                   {(() => {
                     const closedDayObj = closedDays.find(
                       (d) => d.date === item.isoDate
