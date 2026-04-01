@@ -159,7 +159,11 @@ const getFirstAvailableDayIso = (
   closedDays: { date: string; reason?: string }[]
 ) => {
   const firstAvailableDay = getWeekDays(offset).find(
-    (day) => !day.isSunday && !closedDays.some((closedDay) => closedDay.date === day.isoDate)
+    (day) =>
+      !day.isSunday &&
+      !closedDays.some(
+        (closedDay: { date: string; reason?: string }) => closedDay.date === day.isoDate
+      )
   );
 
   return firstAvailableDay?.isoDate || getWeekDays(offset)[0]?.isoDate || new Date().toISOString().split("T")[0];
@@ -371,7 +375,10 @@ useEffect(() => {
       const selectedDayClosed =
         !!selectedDayInWeek &&
         (selectedDayInWeek.isSunday ||
-          nextClosedDays.some((closedDay) => closedDay.date === selectedDayInWeek.isoDate));
+          nextClosedDays.some(
+            (closedDay: { date: string; reason?: string }) =>
+              closedDay.date === selectedDayInWeek.isoDate
+          ));
 
       if (!selectedDayInWeek || selectedDayClosed) {
         setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
