@@ -140,6 +140,17 @@ const getFirstOpenDayIso = (offset: number) => {
   return firstOpenDay?.isoDate || new Date().toISOString().split("T")[0];
 };
 
+const getFirstAvailableDayIso = (
+  offset: number,
+  closedDays: { date: string; reason?: string }[]
+) => {
+  const firstAvailableDay = getWeekDays(offset).find(
+    (day) => !day.isSunday && !closedDays.some((closedDay) => closedDay.date === day.isoDate)
+  );
+
+  return firstAvailableDay?.isoDate || getWeekDays(offset)[0]?.isoDate || new Date().toISOString().split("T")[0];
+};
+
 function toTitleCase(value?: string) {
   return String(value ?? "Mobil")
     .trim()
@@ -162,6 +173,11 @@ export default function FullServicePage() {
   const [closedDays, setClosedDays] = useState<
     { date: string; reason?: string }[]
   >([]);
+
+  const updateWeekOffset = (offset: number) => {
+    setWeekOffset(offset);
+    setSelectedDate(getFirstAvailableDayIso(offset, closedDays));
+  };
 
   const toggleExtra = (id: number) => {
     setExtras(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
@@ -283,12 +299,23 @@ export default function FullServicePage() {
         const res = await fetch("/api/admin/closed-days");
         const data = await res.json();
         if (data.success && Array.isArray(data.days)) {
-          setClosedDays(
-            data.days.map((d: { date: string; reason?: string }) => ({
-              date: d.date,
-              reason: d.reason,
-            }))
-          );
+          const nextClosedDays = data.days.map((d: { date: string; reason?: string }) => ({
+            date: d.date,
+            reason: d.reason,
+          }));
+
+          setClosedDays(nextClosedDays);
+
+          const visibleWeek = getWeekDays(weekOffset);
+          const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
+          const selectedDayClosed =
+            !!selectedDayInWeek &&
+            (selectedDayInWeek.isSunday ||
+              nextClosedDays.some((closedDay) => closedDay.date === selectedDayInWeek.isoDate));
+
+          if (!selectedDayInWeek || selectedDayClosed) {
+            setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
+          }
         }
       } catch (error) {
         console.error("Fetch closed days error:", error);
@@ -706,6 +733,30 @@ export default function FullServicePage() {
           <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
 
           <div className={styles.calendarWrapper}>
+            <div className={styles.mobileDaySelector}>
+              {weekDays.map((item) => {
+                const closedDayObj = closedDays.find((d) => d.date === item.isoDate);
+                const isClosedDay = item.isSunday || !!closedDayObj;
+
+                return (
+                  <button
+                    key={`mobile-${item.fullDate}`}
+                    type="button"
+                    className={`${styles.mobileDayChip} ${selectedDate === item.isoDate ? styles.mobileDayChipActive : ""} ${isClosedDay ? styles.mobileDayChipClosed : ""}`}
+                    onClick={() => {
+                      if (isClosedDay) return;
+                      setSelectedDate(item.isoDate);
+                    }}
+                  >
+                    <span className={styles.mobileDayChipDate}>{item.date}</span>
+                    <span className={styles.mobileDayChipName}>{item.dayName.slice(0, 3)}</span>
+                    <span className={styles.mobileDayChipMeta}>
+                      {isClosedDay ? "Closed" : "Open"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
             <div className={styles.calendarHeader}>
               {weekDays.map((item) => {
                 const closedDayObj = closedDays.find(
@@ -731,9 +782,12 @@ export default function FullServicePage() {
               })}
             </div>
 
-            <div className={styles.calendarBody}>
-              {weekDays.map((item) => (
-                <div key={item.fullDate} className={styles.timeCol}>
+              <div className={styles.calendarBody}>
+                {weekDays.map((item) => (
+                <div
+                  key={item.fullDate}
+                  className={`${styles.timeCol} ${selectedDate === item.isoDate ? styles.timeColSelected : ""}`}
+                >
                   <div
                     className={`${styles.mobileDayHeader} ${selectedDate === item.isoDate ? styles.mobileDayActive : ""}`}
                   >
@@ -808,7 +862,7 @@ export default function FullServicePage() {
         </div>
        <div className={styles.buttonContainer}>
   <button 
-    onClick={() => setWeekOffset(0)} 
+    onClick={() => updateWeekOffset(0)} 
     disabled={weekOffset === 0} 
     className={styles.calendarBtn}
   >
@@ -816,7 +870,7 @@ export default function FullServicePage() {
   </button>
 
   <button 
-    onClick={() => setWeekOffset(1)} 
+    onClick={() => updateWeekOffset(1)} 
     disabled={weekOffset === 1} 
     className={styles.calendarBtn}
   >

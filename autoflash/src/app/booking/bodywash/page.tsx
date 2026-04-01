@@ -154,6 +154,17 @@ const getWeekDays = (offset: number) => {
 };
 const timeSlots = ['08:00 am','09:00 am', '10:00 am', '11:00 am', '12:00 pm', '01:00 pm', '02:00 pm', '03:00 pm', '04:00 pm', '05:00 pm'];
 
+const getFirstAvailableDayIso = (
+  offset: number,
+  closedDays: { date: string; reason?: string }[]
+) => {
+  const firstAvailableDay = getWeekDays(offset).find(
+    (day) => !day.isSunday && !closedDays.some((closedDay) => closedDay.date === day.isoDate)
+  );
+
+  return firstAvailableDay?.isoDate || getWeekDays(offset)[0]?.isoDate || new Date().toISOString().split("T")[0];
+};
+
 export default function BookingPage() {
   const BODYWASH_SLOTS = 3;
   const [firstName, setFirstName] = useState("");
@@ -174,6 +185,10 @@ export default function BookingPage() {
   const [closedSlots, setClosedSlots] = useState<
     { date: string; startTime: string; endTime: string; reason?: string }[]
   >([]);
+  const updateWeekOffset = (offset: number) => {
+    setWeekOffset(offset);
+    setSelectedDate(getFirstAvailableDayIso(offset, closedDays));
+  };
   // 0 = current week, 1 = next week
 
   useEffect(() => {
@@ -344,12 +359,23 @@ useEffect(() => {
     const res = await fetch("/api/admin/closed-days");
     const data = await res.json();
     if (data.success && Array.isArray(data.days)) {
-      setClosedDays(
-        data.days.map((d: { date: string; reason?: string }) => ({
-          date: d.date,
-          reason: d.reason,
-        }))
-      );
+      const nextClosedDays = data.days.map((d: { date: string; reason?: string }) => ({
+        date: d.date,
+        reason: d.reason,
+      }));
+
+      setClosedDays(nextClosedDays);
+
+      const visibleWeek = getWeekDays(weekOffset);
+      const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
+      const selectedDayClosed =
+        !!selectedDayInWeek &&
+        (selectedDayInWeek.isSunday ||
+          nextClosedDays.some((closedDay) => closedDay.date === selectedDayInWeek.isoDate));
+
+      if (!selectedDayInWeek || selectedDayClosed) {
+        setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
+      }
     }
   };
 
@@ -504,6 +530,30 @@ useEffect(() => {
     <div className={styles.calendarNav}>
 </div>
     <div className={styles.calendarWrapper}>
+      <div className={styles.mobileDaySelector}>
+        {weekDays.map((item) => {
+          const closedDayObj = closedDays.find((d) => d.date === item.isoDate);
+          const isClosedDay = item.isSunday || !!closedDayObj;
+
+          return (
+            <button
+              key={`mobile-${item.fullDate}`}
+              type="button"
+              className={`${styles.mobileDayChip} ${selectedDate === item.isoDate ? styles.mobileDayChipActive : ""} ${isClosedDay ? styles.mobileDayChipClosed : ""}`}
+              onClick={() => {
+                if (isClosedDay) return;
+                setSelectedDate(item.isoDate);
+              }}
+            >
+              <span className={styles.mobileDayChipDate}>{item.date}</span>
+              <span className={styles.mobileDayChipName}>{item.dayName.slice(0, 3)}</span>
+              <span className={styles.mobileDayChipMeta}>
+                {isClosedDay ? "Closed" : "Open"}
+              </span>
+            </button>
+          );
+        })}
+      </div>
       {/* Header Row */}
       <div className={styles.calendarHeader}>
         {weekDays.map((item) => {
@@ -533,7 +583,10 @@ useEffect(() => {
       {/* Time Grid Body */}
       <div className={styles.calendarBody}>
         {weekDays.map((item) => (
-          <div key={item.fullDate} className={styles.timeCol}>
+          <div
+            key={item.fullDate}
+            className={`${styles.timeCol} ${selectedDate === item.isoDate ? styles.timeColSelected : ""}`}
+          >
             <div
               className={`${styles.mobileDayHeader} ${selectedDate === item.isoDate ? styles.mobileDayActive : ""}`}
             >
@@ -611,7 +664,7 @@ useEffect(() => {
 
      <div className={styles.buttonContainer}>
   <button 
-    onClick={() => setWeekOffset(0)} 
+    onClick={() => updateWeekOffset(0)} 
     disabled={weekOffset === 0} 
     className={styles.calendarBtn}
   >
@@ -619,7 +672,7 @@ useEffect(() => {
   </button>
 
   <button 
-    onClick={() => setWeekOffset(1)} 
+    onClick={() => updateWeekOffset(1)} 
     disabled={weekOffset === 1} 
     className={styles.calendarBtn}
   >

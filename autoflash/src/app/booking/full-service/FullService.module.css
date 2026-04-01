@@ -312,6 +312,10 @@
   background: #f8fafc;
 }
 
+.mobileDaySelector {
+  display: none;
+}
+
 .calendarHeader {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -383,6 +387,10 @@
   padding: 8px 4px;
   border-right: 1px solid #e2e8f0;
   min-height: 420px;
+}
+
+.timeColSelected {
+  display: block;
 }
 
 .timeCol:last-child {
@@ -840,19 +848,72 @@
     border: none;
     overflow: visible;
   }
+  .mobileDaySelector {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(84px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+    padding-bottom: 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .mobileDayChip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    min-width: 84px;
+    padding: 12px 10px;
+    border: 1px solid #dbe3ee;
+    border-radius: 16px;
+    background: #fff;
+    color: #111827;
+    text-align: left;
+  }
+  .mobileDayChipActive {
+    background: #111827;
+    border-color: #111827;
+    color: #fff;
+  }
+  .mobileDayChipClosed {
+    background: #fff1f2;
+    border-color: #fecdd3;
+    color: #be123c;
+    opacity: 0.8;
+  }
+  .mobileDayChipDate {
+    font-size: 1.1rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .mobileDayChipName {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .mobileDayChipMeta {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: inherit;
+    opacity: 0.85;
+  }
   .calendarHeader {
     display: none;
   }
   .calendarBody {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    display: block;
   }
   .timeCol {
+    display: none;
     min-height: 0;
     padding: 16px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid #dbe3ee;
     border-radius: 18px;
     background: #f8fafc;
+  }
+  .timeColSelected {
+    display: block;
   }
   .mobileDayHeader {
     display: flex;
@@ -883,13 +944,16 @@
     padding: 12px 10px;
   }
   .closedWrapper {
-    min-height: 88px;
+    min-height: 120px;
     border-radius: 12px;
+    padding: 20px 16px;
+    background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%);
   }
   .closedLabel {
     writing-mode: initial;
     transform: none;
-    font-size: 1.2rem;
+    font-size: 1rem;
+    line-height: 1.4;
     text-align: center;
   }
   .buttonContainer {
@@ -960,6 +1024,14 @@
   }
   .timeCol {
     padding: 14px;
+  }
+  .mobileDaySelector {
+    grid-template-columns: repeat(7, minmax(76px, 1fr));
+    gap: 8px;
+  }
+  .mobileDayChip {
+    min-width: 76px;
+    padding: 11px 9px;
   }
   .timeText {
     font-size: 0.78rem;
