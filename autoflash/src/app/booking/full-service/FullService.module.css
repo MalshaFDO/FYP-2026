@@ -77,6 +77,22 @@
   max-width: 1100px;
   filter: drop-shadow(0 40px 50px rgba(0,0,0,0.7));
 }
+
+.mobileVehicleLabel {
+  display: none;
+}
+
+.mobileVehicleBadge {
+  display: none;
+}
+
+.mobileVehicleControls {
+  display: none;
+}
+
+.mobileSwipeHint {
+  display: none;
+}
 /* ================= SERVICE CARDS ================= */
 .planSection { 
   padding: 180px 0 100px; 
@@ -758,14 +774,18 @@
 @media (max-width: 900px) {
   .heroSection {
     height: auto;
-    min-height: 560px;
-    padding: 40px 0 180px;
+    min-height: 0;
+    padding: 36px 0 0;
+    overflow: visible;
   }
   .contentWrapper {
     width: 100%;
     padding: 0 20px;
   }
-  .heroTitle { font-size: clamp(2.2rem, 8vw, 2.8rem); }
+  .heroTitle {
+    font-size: clamp(2.15rem, 8vw, 2.75rem);
+    margin-bottom: 0;
+  }
   .carTypeNav {
     display: none;
   }
@@ -774,16 +794,59 @@
     font-size: 0.9rem;
   }
   .carContainer {
-    bottom: -36px;
+    position: relative;
+    bottom: auto;
+    margin-top: 18px;
+    margin-bottom: -96px;
     padding: 0 16px;
     pointer-events: auto;
     touch-action: pan-y;
+    flex-direction: column;
+    align-items: center;
   }
   .displayCar {
-    width: 100%;
-    max-width: 720px;
+    width: 94%;
+    max-width: 700px;
   }
-  .planSection { padding: 100px 0 72px; }
+  .mobileVehicleControls {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 0;
+  }
+  .mobileVehicleBadge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 126px;
+    padding: 10px 22px;
+    border-radius: 999px;
+    background: rgba(28, 28, 34, 0.94);
+    border: 2px solid rgba(185, 28, 28, 0.95);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.14), 0 0 18px rgba(220, 38, 38, 0.22);
+  }
+  .mobileVehicleLabel {
+    display: inline-flex;
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .mobileSwipeHint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 12px;
+    font-size: 0.5rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: none;
+    color: rgba(107, 114, 128, 0.88);
+  }
+  .planSection { padding: 168px 0 72px; }
   .addonsSection { padding: 72px 0; }
   .dateTimeSection { padding: 60px 0; }
   .aiBookingSection { padding: 56px 0 72px; }
@@ -843,7 +906,7 @@
     border: 1px solid #dbe3ee;
     border-radius: 16px;
     background: #111827;
-    color: #ffffff;
+    color: #fff;
     font-size: 1.4rem;
     font-weight: 700;
     cursor: pointer;
@@ -996,16 +1059,42 @@
     padding: 0 16px;
   }
   .heroSection {
-    min-height: 520px;
-    padding: 32px 0 150px;
+    min-height: 0;
+    padding: 30px 0 0;
   }
   .stepTag,
   .stepTagCenter {
     letter-spacing: 0.24em;
   }
   .heroTitle { font-size: 2rem; }
+  .carContainer {
+    margin-top: 8px;
+    margin-bottom: -88px;
+  }
+  .displayCar {
+    width: 94%;
+    max-width: none;
+  }
+  .mobileVehicleControls {
+    margin-top: 0;
+  }
+  .mobileVehicleBadge {
+    min-width: 120px;
+    padding: 9px 18px;
+  }
+  .mobileVehicleLabel {
+    color: #ffffff;
+    font-size: 0.82rem;
+  }
+  .mobileSwipeHint {
+    font-size: 0.46rem;
+    margin-top: 10px;
+  }
   .planCard {
     padding: 24px 16px;
+  }
+  .planSection {
+    padding-top: 152px;
   }
   .quoteBadge {
     width: 100%;

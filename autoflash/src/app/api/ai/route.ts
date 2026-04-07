@@ -35,6 +35,19 @@ function parseTimeSlot(date: string, time: string) {
 
 function buildQuote(bookingData: any) {
   const isSelectedService = bookingData.vehicleType && Array.isArray(bookingData.services) && bookingData.services.length > 0;
+  const isOilChangePackage = String(bookingData.serviceType ?? "").toLowerCase() === "oil";
+  const additionalServices = Array.isArray(bookingData.additionalServices)
+    ? bookingData.additionalServices
+        .filter((service: any) => service && service.name)
+        .map((service: any) => ({
+          name: String(service.name),
+          price: Number(service.price) || 0,
+        }))
+    : [];
+  const additionalServicesTotal = additionalServices.reduce(
+    (sum: number, item: { price: number }) => sum + item.price,
+    0,
+  );
   
   const oilBrandLabel = String(bookingData.oilBrand ?? "Mobil")
     .trim()
@@ -45,6 +58,18 @@ function buildQuote(bookingData: any) {
     vehicle: bookingData.vehicle,
     brand: bookingData.oilBrand || "mobil",
   });
+
+  if (isOilChangePackage) {
+    return {
+      items: [
+        { name: `Engine Oil (${oilBrandLabel} ${bookingData.oilGrade}, ${oilQuote.liters}L)`, price: oilQuote.oilPrice },
+        { name: "Genuine Oil Filter Replacement", price: oilQuote.oilFilter },
+        { name: "Oil Change Labor Charge", price: oilQuote.serviceCharge },
+        ...additionalServices,
+      ],
+      total: oilQuote.total + additionalServicesTotal,
+    };
+  }
 
   if (isSelectedService) {
     const orderedServices = (bookingData.services as string[]).filter(
@@ -70,8 +95,9 @@ function buildQuote(bookingData: any) {
         { name: `Engine Oil (${oilBrandLabel} ${bookingData.oilGrade}, ${oilQuote.liters}L)`, price: oilQuote.oilPrice },
         { name: "Genuine Oil Filter Replacement", price: oilQuote.oilFilter },
         ...remainingServices,
+        ...additionalServices,
       ],
-      total: serviceQuote.total + oilQuote.oilPrice + oilQuote.oilFilter,
+      total: serviceQuote.total + oilQuote.oilPrice + oilQuote.oilFilter + additionalServicesTotal,
     };
   }
 
@@ -80,8 +106,9 @@ function buildQuote(bookingData: any) {
       { name: `Engine Oil Service (${oilBrandLabel} ${bookingData.oilGrade}, ${oilQuote.liters}L)`, price: oilQuote.oilPrice },
       { name: "Genuine Oil Filter Replacement", price: oilQuote.oilFilter },
       { name: "Standard Service Labor Charge", price: oilQuote.serviceCharge },
+      ...additionalServices,
     ],
-    total: oilQuote.total,
+    total: oilQuote.total + additionalServicesTotal,
   };
 }
 
@@ -243,6 +270,7 @@ const STAGE_HANDLERS: Record<string, Function> = {
         vehicleNumber: vehicleNum,
         serviceType: normalizeServiceType(serviceType),
         serviceCategory: "fullservice",
+        additionalServices: data.additionalServices ?? [],
         hourSlot: count + 1,
         totalPrice: data.quote.total,
         status: "Pending",

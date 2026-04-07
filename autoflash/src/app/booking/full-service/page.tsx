@@ -727,6 +727,12 @@ export default function FullServicePage() {
               transition={{ duration: 0.5 }}
             />
           </AnimatePresence>
+          <div className={styles.mobileVehicleControls}>
+            <div className={styles.mobileVehicleBadge}>
+              <span className={styles.mobileVehicleLabel}>{vehicle}</span>
+            </div>
+          </div>
+          <span className={styles.mobileSwipeHint}>Swipe For Change Vehicle Type</span>
         </div>
       </section>
 

@@ -482,6 +482,12 @@ useEffect(() => {
               transition={{ duration: 0.5 }}
             />
           </AnimatePresence>
+          <div className={styles.mobileVehicleControls}>
+            <div className={styles.mobileVehicleBadge}>
+              <span className={styles.mobileVehicleLabel}>{vehicle}</span>
+            </div>
+          </div>
+          <span className={styles.mobileSwipeHint}>Swipe For Change Vehicle Type</span>
         </div>
       </section>
 
@@ -720,23 +726,23 @@ useEffect(() => {
     </div>
   </div>
 
-     <div className={styles.buttonContainer}>
-  <button 
-    onClick={() => updateWeekOffset(0)} 
-    disabled={isThisWeek} 
-    className={styles.calendarBtn}
-  >
-    This Week
-  </button>
+      <div className={styles.buttonContainer}>
+        <button
+          onClick={() => updateWeekOffset(0)}
+          disabled={weekOffset === 0}
+          className={styles.calendarBtn}
+        >
+          <span>⬅</span> This Week
+        </button>
 
-  <button 
-    onClick={() => updateWeekOffset(1)} 
-    disabled={isNextWeek} 
-    className={styles.calendarBtn}
-  >
-    Next Week
-  </button>
-</div>
+        <button
+          onClick={() => updateWeekOffset(1)}
+          disabled={weekOffset === 1}
+          className={styles.calendarBtn}
+        >
+          Next Week <span>➡</span>
+        </button>
+      </div>
 </section>
       {/* ================= STEP 05 ================= */}
       <section className={styles.summarySection}>
