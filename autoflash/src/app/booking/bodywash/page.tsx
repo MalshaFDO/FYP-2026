@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, TouchEvent } from "react";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -75,6 +75,8 @@ const carImages: Record<VehicleType, string> = {
   Pickup: "/03.png",
   MiniVan: "/04.png",
 };
+
+const vehicleTypes: VehicleType[] = ["Sedan", "SUV", "Pickup", "MiniVan"];
 
 const pricing: Record<VehicleType, Plan[]> = {
   Sedan: [
@@ -186,6 +188,7 @@ export default function BookingPage() {
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [closedSlots, setClosedSlots] = useState<
     { date: string; startTime: string; endTime: string; reason?: string }[]
   >([]);
@@ -236,6 +239,37 @@ export default function BookingPage() {
   };
 
   const weekDays = getWeekDays(weekOffset);
+  const isThisWeek = weekOffset === 0;
+  const isNextWeek = weekOffset === 1;
+
+  const cycleVehicle = (direction: "next" | "prev") => {
+    const currentIndex = vehicleTypes.indexOf(vehicle);
+    const nextIndex =
+      direction === "next"
+        ? (currentIndex + 1) % vehicleTypes.length
+        : (currentIndex - 1 + vehicleTypes.length) % vehicleTypes.length;
+
+    setVehicle(vehicleTypes[nextIndex]);
+    setSelectedPlanId(3);
+  };
+
+  const handleVehicleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    setTouchStartX(event.touches[0]?.clientX ?? null);
+  };
+
+  const handleVehicleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX === null) return;
+
+    const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
+    const deltaX = touchEndX - touchStartX;
+    const swipeThreshold = 40;
+
+    if (Math.abs(deltaX) >= swipeThreshold) {
+      cycleVehicle(deltaX < 0 ? "next" : "prev");
+    }
+
+    setTouchStartX(null);
+  };
   const currentPlan = pricing[vehicle].find(p => p.id === selectedPlanId);
   const extrasTotal = selectedExtras.reduce((total, id) => {
     const extra = additionalServices.find(e => e.id === id);
@@ -416,7 +450,7 @@ useEffect(() => {
           <p className={`${styles.stepTag} ${oswald.className}`}>STEP 01</p>
           <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Car Type</h1>
           <nav className={styles.carTypeNav}>
-            {(['Sedan','SUV','Pickup','MiniVan'] as VehicleType[]).map(type => (
+            {vehicleTypes.map(type => (
               <button
                 key={type}
                 className={`${styles.typeBtn} ${vehicle === type ? styles.activeBtn : ""}`}
@@ -431,7 +465,11 @@ useEffect(() => {
           </nav>
         </div>
 
-        <div className={styles.carContainer}>
+        <div
+          className={styles.carContainer}
+          onTouchStart={handleVehicleTouchStart}
+          onTouchEnd={handleVehicleTouchEnd}
+        >
           <AnimatePresence mode="wait">
             <motion.img
               key={vehicle}
@@ -526,18 +564,22 @@ useEffect(() => {
         </div>
       </section>
 
-<p className={styles.weekLabel}>
-  {weekOffset === 0 ? "This Week" : "Next Week"}
-</p>
      {/* STEP 04 - DATE AND TIME */}
 <section className={styles.dateTimeSection}>
   <div className={styles.containerLarge}>
     <p className={styles.stepTagCenter}>STEP 04</p>
     <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
-    <div className={styles.calendarNav}>
-</div>
     <div className={styles.calendarWrapper}>
       <div className={styles.mobileDaySelector}>
+        <button
+          type="button"
+          className={styles.mobileWeekArrow}
+          onClick={() => updateWeekOffset(0)}
+          disabled={isThisWeek}
+          aria-label="Show previous week"
+        >
+          {"<"}
+        </button>
         {weekDays.map((item) => {
           const closedDayObj = closedDays.find((d) => d.date === item.isoDate);
           const isClosedDay = item.isSunday || !!closedDayObj;
@@ -560,6 +602,15 @@ useEffect(() => {
             </button>
           );
         })}
+        <button
+          type="button"
+          className={styles.mobileWeekArrow}
+          onClick={() => updateWeekOffset(1)}
+          disabled={isNextWeek}
+          aria-label="Show next week"
+        >
+          {">"}
+        </button>
       </div>
       {/* Header Row */}
       <div className={styles.calendarHeader}>
@@ -672,18 +723,18 @@ useEffect(() => {
      <div className={styles.buttonContainer}>
   <button 
     onClick={() => updateWeekOffset(0)} 
-    disabled={weekOffset === 0} 
+    disabled={isThisWeek} 
     className={styles.calendarBtn}
   >
-    <span>⬅</span> This Week
+    This Week
   </button>
 
   <button 
     onClick={() => updateWeekOffset(1)} 
-    disabled={weekOffset === 1} 
+    disabled={isNextWeek} 
     className={styles.calendarBtn}
   >
-    Next Week <span>➡</span>
+    Next Week
   </button>
 </div>
 </section>

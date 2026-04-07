@@ -634,10 +634,8 @@
   opacity: 0.7;
 }
 
-/* Optional: Make the arrows look a bit sharper */
-.calendarBtn span {
-  font-size: 1.1rem;
-  line-height: 0;
+.mobileWeekArrow {
+  display: none;
 }
 /* =========================================================
    SECTION 5 — SUMMARY
@@ -831,19 +829,17 @@
   }
   .heroTitle { font-size: clamp(2.2rem, 8vw, 2.8rem); }
   .carTypeNav {
-    gap: 0.5rem;
-    padding: 8px;
-    border-radius: 24px;
+    display: none;
   }
   .typeBtn {
-    flex: 1 1 calc(50% - 0.5rem);
-    min-width: 130px;
     padding: 11px 16px;
     font-size: 0.9rem;
   }
   .carContainer {
     bottom: -36px;
     padding: 0 16px;
+    pointer-events: auto;
+    touch-action: pan-y;
   }
   .displayCar {
     width: 100%;
@@ -898,6 +894,7 @@
   }
   .mobileDaySelector {
     display: flex;
+    align-items: stretch;
     gap: 10px;
     margin-bottom: 16px;
     padding-bottom: 6px;
@@ -907,6 +904,26 @@
     overflow-y: hidden;
     scrollbar-width: thin;
     box-sizing: border-box;
+  }
+  .mobileWeekArrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 52px;
+    min-width: 52px;
+    min-height: 74px;
+    border: 1px solid #dbe3ee;
+    border-radius: 16px;
+    background: #111827;
+    color: #ffffff;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mobileWeekArrow:disabled {
+    background: #e2e8f0;
+    color: #94a3b8;
+    cursor: not-allowed;
   }
   .mobileDayChip {
     display: flex;
@@ -1015,11 +1032,7 @@
     text-align: center;
   }
   .buttonContainer {
-    width: 100%;
-    max-width: 100%;
-    margin: 24px auto 0;
-    padding: 0 20px;
-    box-sizing: border-box;
+    display: none;
   }
   .calendarBtn {
     width: 100%;
@@ -1043,10 +1056,6 @@
     letter-spacing: 0.24em;
   }
   .heroTitle { font-size: 2rem; }
-  .typeBtn {
-    flex-basis: 100%;
-    min-width: 0;
-  }
   .planCard {
     padding: 24px 16px;
   }
@@ -1067,16 +1076,16 @@
     min-width: 76px;
     padding: 11px 9px;
   }
+  .mobileWeekArrow {
+    flex-basis: 48px;
+    min-width: 48px;
+    min-height: 68px;
+  }
   .timeText {
     font-size: 0.78rem;
   }
   .slotHint {
     font-size: 0.65rem;
-  }
-  .buttonContainer {
-    flex-direction: column;
-    gap: 12px;
-    padding: 0 16px;
   }
   .calendarBtn {
     min-height: 52px;

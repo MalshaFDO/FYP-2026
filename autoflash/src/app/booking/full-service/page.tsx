@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
+import type { TouchEvent } from "react";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
@@ -20,8 +21,10 @@ interface SlotBooking {
 }
 interface BookingData {
   vehicle: string;
+  serviceType?: string;
   vehicleType?: PricingVehicleType;
   services?: string[];
+  additionalServices?: Array<{ id: number; name: string; price: number }>;
   oilGrade: string;
   oilBrand?: string;
   mileage: number | null;
@@ -44,6 +47,13 @@ type ServiceOption = {
   free?: boolean;
 };
 
+type ExtraServiceOption = {
+  id: number;
+  name: string;
+  price?: number;
+  priceByVehicle?: Record<VehicleType, number>;
+};
+
 const carImages: Record<VehicleType, string> = {
   Sedan: "/01.png",
   SUV: "/02.png",
@@ -58,7 +68,9 @@ const pricingVehicleTypeMap: Record<VehicleType, PricingVehicleType> = {
   MiniVan: "minivan",
 };
 
-const serviceList: ServiceOption[] = [
+const vehicleTypes: VehicleType[] = ["Sedan", "SUV", "Pickup", "MiniVan"];
+
+const fullServiceList: ServiceOption[] = [
   { key: "fullService", label: "Full Service", locked: true },
   { key: "engineWash", label: "Engine Wash" },
   { key: "oilChange", label: "Oil Change", locked: true },
@@ -80,26 +92,14 @@ const serviceList: ServiceOption[] = [
   { key: "scanReport", label: "Scan Report (FREE)", locked: true, free: true },
 ] as const;
 
-const fullServicePackageKeys = serviceList.map((service) => service.key);
+const oilChangeList: ServiceOption[] = [
+  { key: "oilChange", label: "Oil Change", locked: true },
+  { key: "oilFilter", label: "Oil Filter", locked: true },
+  { key: "oilChangeLabor", label: "Oil Change Labor Charge", locked: true },
+];
 
-const extraServiceMap: Record<number, string | undefined> = {
-  6: "engineWash",
-};
-
-function getSelectedServiceKeys(selectedPlan: string, extras: number[]) {
-  const keys = new Set<string>();
-
-  if (selectedPlan === "full") {
-    fullServicePackageKeys.forEach((key) => keys.add(key));
-  }
-
-  extras.forEach((id) => {
-    const key = extraServiceMap[id];
-    if (key) keys.add(key);
-  });
-
-  return Array.from(keys);
-}
+const fullServicePackageKeys = fullServiceList.map((service) => service.key);
+const oilChangePackageKeys = oilChangeList.map((service) => service.key);
 
 const getWeekDays = (offset: number) => {
   const days = [];
@@ -161,6 +161,52 @@ function toTitleCase(value?: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
+const standardAddons: ExtraServiceOption[] = [
+  { id: 1, name: "Wheel Alignment", price: 3500 },
+  { id: 2, name: "Brake Fluid", price: 1800 },
+  { id: 3, name: "Coolant Flush", price: 2500 },
+  { id: 4, name: "Battery Health", price: 750 },
+  { id: 5, name: "Tire Rotation", price: 1500 },
+  {
+    id: 6,
+    name: "Engine Wash",
+    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
+  },
+];
+
+const oilSpecificAddons: ExtraServiceOption[] = [
+  {
+    id: 101,
+    name: "Quick Wash",
+    priceByVehicle: { Sedan: 900, SUV: 1100, Pickup: 1250, MiniVan: 1550 },
+  },
+  {
+    id: 102,
+    name: "Bodywash & Vacuum",
+    priceByVehicle: { Sedan: 1450, SUV: 1750, Pickup: 2000, MiniVan: 2400 },
+  },
+  {
+    id: 103,
+    name: "Wash, Vacuum & WAX",
+    priceByVehicle: { Sedan: 1950, SUV: 2250, Pickup: 2450, MiniVan: 2800 },
+  },
+  {
+    id: 104,
+    name: "Full Bodywash",
+    priceByVehicle: { Sedan: 3600, SUV: 4100, Pickup: 4600, MiniVan: 4850 },
+  },
+];
+
+const extraServiceOptions = [...standardAddons, ...oilSpecificAddons];
+
+function getExtraServicePrice(extra: ExtraServiceOption, vehicle: VehicleType) {
+  if (extra.priceByVehicle) {
+    return extra.priceByVehicle[vehicle];
+  }
+
+  return extra.price ?? 0;
+}
+
 export default function FullServicePage() {
   const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
@@ -171,6 +217,7 @@ export default function FullServicePage() {
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
+  const [touchStartX, setTouchStartX] = useState<number | null>(null);
   const [closedSlots, setClosedSlots] = useState<
     { date: string; startTime: string; endTime: string; reason?: string }[]
   >([]);
@@ -186,22 +233,6 @@ export default function FullServicePage() {
   const toggleExtra = (id: number) => {
     setExtras(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
-
-  const standardAddons = [
-    { id: 1, name: "Wheel Alignment" },
-    { id: 2, name: "Brake Fluid" },
-    { id: 3, name: "Coolant Flush" },
-    { id: 4, name: "Battery Health" },
-    { id: 5, name: "Tire Rotation" },
-    { id: 6, name: "Engine Wash" },
-  ];
-
-  const oilSpecificAddons = [
-    { id: 101, name: "Quick Wash" },
-    { id: 102, name: "Bodywash & Vacuum" },
-    { id: 103, name: "Wash, Vacuum & WAX" },
-    { id: 104, name: "Full Bodywash" },
-  ];
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
@@ -209,7 +240,7 @@ export default function FullServicePage() {
   const [cloudinaryPdfUrl, setCloudinaryPdfUrl] = useState<string | null>(null);
   const [quotationNumber, setQuotationNumber] = useState<string | null>(null);
   const [selectedServices, setSelectedServices] = useState(
-    serviceList.map((s) => s.key)
+    fullServicePackageKeys
   );
   const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
   const [hasPromptedQuotationConfirmation, setHasPromptedQuotationConfirmation] =
@@ -239,6 +270,19 @@ export default function FullServicePage() {
     bookingTime: selectedTime,
   });
 
+  const selectedAdditionalServices = extras
+    .map((id) => extraServiceOptions.find((service) => service.id === id))
+    .filter((service): service is ExtraServiceOption => Boolean(service))
+    .map((service) => ({
+      id: service.id,
+      name: service.name,
+      price: getExtraServicePrice(service, vehicle),
+    }));
+
+  const hasSelectedAdditionalServices = selectedAdditionalServices.length > 0;
+  const activeServiceList =
+    selectedPlan === "oil" ? oilChangeList : fullServiceList;
+
   const oilQuotePreview =
     bookingData.oilGrade && bookingData.vehicle
       ? calculateServiceQuote({
@@ -257,8 +301,18 @@ export default function FullServicePage() {
       return "Genuine Oil Filter Replacement";
     }
 
+    if (service.key === "oilChangeLabor") {
+      return "Oil Change Labor Charge";
+    }
+
     return service.label;
   };
+
+  useEffect(() => {
+    setSelectedServices(
+      selectedPlan === "oil" ? oilChangePackageKeys : fullServicePackageKeys
+    );
+  }, [selectedPlan]);
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -333,6 +387,36 @@ export default function FullServicePage() {
   }, []);
 
   const weekDays = getWeekDays(weekOffset);
+  const isThisWeek = weekOffset === 0;
+  const isNextWeek = weekOffset === 1;
+
+  const cycleVehicle = (direction: "next" | "prev") => {
+    const currentIndex = vehicleTypes.indexOf(vehicle);
+    const nextIndex =
+      direction === "next"
+        ? (currentIndex + 1) % vehicleTypes.length
+        : (currentIndex - 1 + vehicleTypes.length) % vehicleTypes.length;
+
+    setVehicle(vehicleTypes[nextIndex]);
+  };
+
+  const handleVehicleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
+    setTouchStartX(event.touches[0]?.clientX ?? null);
+  };
+
+  const handleVehicleTouchEnd = (event: TouchEvent<HTMLDivElement>) => {
+    if (touchStartX === null) return;
+
+    const touchEndX = event.changedTouches[0]?.clientX ?? touchStartX;
+    const deltaX = touchEndX - touchStartX;
+    const swipeThreshold = 40;
+
+    if (Math.abs(deltaX) >= swipeThreshold) {
+      cycleVehicle(deltaX < 0 ? "next" : "prev");
+    }
+
+    setTouchStartX(null);
+  };
 
   const parseTimeSlot = (date: string, time: string) => {
     const [clock, meridiemRaw] = time.split(" ");
@@ -396,8 +480,10 @@ export default function FullServicePage() {
           stage: "generate_quote",
           bookingData: {
             ...bookingData,
+            serviceType: selectedPlan,
             vehicleType: pricingVehicleTypeMap[vehicle],
             services: servicesToSubmit,
+            additionalServices: selectedAdditionalServices,
           },
         }),
       });
@@ -458,8 +544,10 @@ export default function FullServicePage() {
 
     const initialBookingData = {
       ...bookingData,
+      serviceType: selectedPlan,
       vehicleType: pricingVehicleTypeMap[vehicle],
       services: selectedServices,
+      additionalServices: selectedAdditionalServices,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
     };
@@ -515,8 +603,10 @@ export default function FullServicePage() {
 
     const updatedBookingData = {
       ...bookingData,
+      serviceType: selectedPlan,
       vehicleType: pricingVehicleTypeMap[vehicle],
       services: selectedServices,
+      additionalServices: selectedAdditionalServices,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
     };
@@ -608,7 +698,7 @@ export default function FullServicePage() {
           <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Vehicle Type</h1>
           
           <nav className={styles.carTypeNav}>
-            {(['Sedan', 'SUV', 'Pickup', 'MiniVan'] as VehicleType[]).map((type) => (
+            {vehicleTypes.map((type) => (
               <button
                 key={type}
                 className={`${styles.typeBtn} ${vehicle === type ? styles.activeBtn : ""}`}
@@ -620,7 +710,11 @@ export default function FullServicePage() {
           </nav>
         </div>
 
-        <div className={styles.carContainer}>
+        <div
+          className={styles.carContainer}
+          onTouchStart={handleVehicleTouchStart}
+          onTouchEnd={handleVehicleTouchEnd}
+        >
           <AnimatePresence mode="wait">
             <motion.img
               key={vehicle}
@@ -693,7 +787,7 @@ export default function FullServicePage() {
               >
                 <div className={styles.addonInfo}>
                   <h4>{item.name}</h4>
-                  <span>Add to Quote</span>
+                  <span>LKR {getExtraServicePrice(item, vehicle)} · Add to Quote</span>
                 </div>
                 <div className={styles.addonCircle}>
                   {extras.includes(item.id) ? <FaCheck /> : <FaPlus />}
@@ -720,7 +814,7 @@ export default function FullServicePage() {
                     >
                       <div className={styles.addonInfo}>
                         <h4>{item.name}</h4>
-                        <span>Add to Quote</span>
+                        <span>LKR {getExtraServicePrice(item, vehicle)} · Add to Quote</span>
                       </div>
                       <div className={styles.addonCircle}>
                          {extras.includes(item.id) ? <FaCheck /> : <FaPlus />}
@@ -741,6 +835,15 @@ export default function FullServicePage() {
 
           <div className={styles.calendarWrapper}>
             <div className={styles.mobileDaySelector}>
+              <button
+                type="button"
+                className={styles.mobileWeekArrow}
+                onClick={() => updateWeekOffset(0)}
+                disabled={isThisWeek}
+                aria-label="Show previous week"
+              >
+                {"<"}
+              </button>
               {weekDays.map((item) => {
                 const closedDayObj = closedDays.find((d) => d.date === item.isoDate);
                 const isClosedDay = item.isSunday || !!closedDayObj;
@@ -763,6 +866,15 @@ export default function FullServicePage() {
                   </button>
                 );
               })}
+              <button
+                type="button"
+                className={styles.mobileWeekArrow}
+                onClick={() => updateWeekOffset(1)}
+                disabled={isNextWeek}
+                aria-label="Show next week"
+              >
+                {">"}
+              </button>
             </div>
             <div className={styles.calendarHeader}>
               {weekDays.map((item) => {
@@ -866,8 +978,7 @@ export default function FullServicePage() {
               ))}
             </div>
           </div>
-        </div>
-       <div className={styles.buttonContainer}>
+           <div className={styles.buttonContainer}>
   <button 
     onClick={() => updateWeekOffset(0)} 
     disabled={weekOffset === 0} 
@@ -884,6 +995,7 @@ export default function FullServicePage() {
     Next Week <span>➡</span>
   </button>
 </div>
+        </div>
       </section>
 
       <section className={styles.aiBookingSection}>
@@ -938,7 +1050,8 @@ export default function FullServicePage() {
 
           {stage === "select_services" && (
             <div className={styles.serviceBox}>
-              {serviceList.map((service) => (
+              <div className={styles.serviceSectionTitle}>Core Service Items</div>
+              {activeServiceList.map((service) => (
                 <label key={service.key} className={styles.serviceOption}>
                   <input
                     type="checkbox"
@@ -956,6 +1069,25 @@ export default function FullServicePage() {
                   )}
                 </label>
               ))}
+
+              <div className={styles.serviceSectionTitle}>Selected Extra Services</div>
+              {hasSelectedAdditionalServices ? (
+                selectedAdditionalServices.map((service) => (
+                  <label key={`extra-${service.id}`} className={styles.serviceOption}>
+                    <input
+                      type="checkbox"
+                      checked={extras.includes(service.id)}
+                      onChange={() => toggleExtra(service.id)}
+                    />
+                    <span>{service.name}</span>
+                    <span className={styles.servicePrice}>LKR {service.price}</span>
+                  </label>
+                ))
+              ) : (
+                <div className={styles.serviceEmptyState}>
+                  No extra services selected yet.
+                </div>
+              )}
 
               <button
                 className={styles.serviceContinueButton}
