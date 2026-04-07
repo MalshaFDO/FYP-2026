@@ -869,7 +869,7 @@
     position: relative;
     bottom: auto;
     margin-top: 18px;
-    margin-bottom: -96px;
+    margin-bottom: -28px;
     padding: 0 16px;
     pointer-events: auto;
     touch-action: pan-y;
@@ -918,7 +918,7 @@
     text-transform: none;
     color: rgba(107, 114, 128, 0.88);
   }
-  .plansSection { padding: 168px 0 72px; }
+  .plansSection { padding: 88px 0 72px; }
   .additionalSection { padding: 72px 0; }
   .dateTimeSection { padding: 60px 0; }
   .summarySection { padding: 60px 0; }
@@ -1131,7 +1131,7 @@
   .heroTitle { font-size: 2rem; }
   .carContainer {
     margin-top: 8px;
-    margin-bottom: -88px;
+    margin-bottom: -18px;
   }
   .displayCar {
     width: 94%;
@@ -1156,7 +1156,7 @@
     padding: 24px 16px;
   }
   .plansSection {
-    padding-top: 152px;
+    padding-top: 72px;
   }
   .priceMain { font-size: 3.2rem; }
   .currency,
