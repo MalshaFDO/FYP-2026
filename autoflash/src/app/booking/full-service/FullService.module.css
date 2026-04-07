@@ -797,7 +797,7 @@
     position: relative;
     bottom: auto;
     margin-top: 18px;
-    margin-bottom: -28px;
+    margin-bottom: -96px;
     padding: 0 16px;
     pointer-events: auto;
     touch-action: pan-y;
@@ -846,7 +846,7 @@
     text-transform: none;
     color: rgba(107, 114, 128, 0.88);
   }
-  .planSection { padding: 88px 0 72px; }
+  .planSection { padding: 168px 0 72px; }
   .addonsSection { padding: 72px 0; }
   .dateTimeSection { padding: 60px 0; }
   .aiBookingSection { padding: 56px 0 72px; }
@@ -1069,7 +1069,7 @@
   .heroTitle { font-size: 2rem; }
   .carContainer {
     margin-top: 8px;
-    margin-bottom: -18px;
+    margin-bottom: -88px;
   }
   .displayCar {
     width: 94%;
@@ -1094,7 +1094,7 @@
     padding: 24px 16px;
   }
   .planSection {
-    padding-top: 72px;
+    padding-top: 152px;
   }
   .quoteBadge {
     width: 100%;
