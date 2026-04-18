@@ -40,6 +40,11 @@ const BookingSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+
+  vehicleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Vehicle",
+},
 });
 
 export default mongoose.models.Booking ||

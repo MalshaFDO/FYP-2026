@@ -23,6 +23,7 @@ const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
+type SavedVehicleType = VehicleType | Lowercase<VehicleType>;
 
 interface Plan {
   id: number;
@@ -40,6 +41,15 @@ interface SlotBooking {
   bookingTime: string;
   status?: string;
   serviceCategory?: "bodywash" | "fullservice";
+}
+
+interface SavedVehicle {
+  _id: string;
+  vehicleNumber: string;
+  vehicleType: SavedVehicleType;
+  brand: string;
+  model: string;
+  currentOil?: string;
 }
 
 type ExtraService =
@@ -77,6 +87,13 @@ const carImages: Record<VehicleType, string> = {
 };
 
 const vehicleTypes: VehicleType[] = ["Sedan", "SUV", "Pickup", "MiniVan"];
+
+const savedVehicleTypeMap: Record<string, VehicleType> = {
+  sedan: "Sedan",
+  suv: "SUV",
+  pickup: "Pickup",
+  minivan: "MiniVan",
+};
 
 const pricing: Record<VehicleType, Plan[]> = {
   Sedan: [
@@ -181,6 +198,9 @@ export default function BookingPage() {
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
+  const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
   const [selectedPlanId, setSelectedPlanId] = useState<number>(3);
   const [selectedExtras, setSelectedExtras] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
@@ -192,6 +212,12 @@ export default function BookingPage() {
   const [closedSlots, setClosedSlots] = useState<
     { date: string; startTime: string; endTime: string; reason?: string }[]
   >([]);
+  const token =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("token") ||
+        window.localStorage.getItem("authToken") ||
+        window.localStorage.getItem("accessToken")
+      : null;
   const updateWeekOffset = (offset: number) => {
     setWeekOffset(offset);
     setSelectedDate(getFirstAvailableDayIso(offset, closedDays));
@@ -339,6 +365,10 @@ export default function BookingPage() {
       alert("Please fill required fields");
       return;
     }
+    if (!selectedVehicleId) {
+      alert("Please select a saved vehicle.");
+      return;
+    }
     if (isSelectedTimeFull) {
       alert(`Selected time (${bookingTime}) is already full. Please choose another hour.`);
       return;
@@ -365,6 +395,7 @@ export default function BookingPage() {
           email,
           vehicleNumber: formattedVehicleNumber,
           vehicleModel,
+          vehicleId: selectedVehicleId,
           bookingDate,
           bookingTime,
           totalPrice: finalTotal,
@@ -388,35 +419,62 @@ export default function BookingPage() {
       alert("Server error");
     }
   };
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      try {
+        if (!token) return;
+
+        const res = await fetch("/api/vehicles/my", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+        if (res.ok && Array.isArray(data.vehicles)) {
+          setVehicles(data.vehicles);
+        }
+      } catch (error) {
+        console.error("Fetch vehicles error:", error);
+      }
+    };
+
+    fetchVehicles();
+  }, [token]);
+  
 const [closedDays, setClosedDays] = useState<
   { date: string; reason?: string }[]
 >([]);
 
 useEffect(() => {
   const fetchClosedDays = async () => {
-    const res = await fetch("/api/admin/closed-days");
-    const data = await res.json();
-    if (data.success && Array.isArray(data.days)) {
-      const nextClosedDays = data.days.map((d: { date: string; reason?: string }) => ({
-        date: d.date,
-        reason: d.reason,
-      }));
+    try {
+      const res = await fetch("/api/admin/closed-days");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.days)) {
+        const nextClosedDays = data.days.map((d: { date: string; reason?: string }) => ({
+          date: d.date,
+          reason: d.reason,
+        }));
 
-      setClosedDays(nextClosedDays);
+        setClosedDays(nextClosedDays);
 
-      const visibleWeek = getWeekDays(weekOffset);
-      const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
-      const selectedDayClosed =
-        !!selectedDayInWeek &&
-        (selectedDayInWeek.isSunday ||
-          nextClosedDays.some(
-            (closedDay: { date: string; reason?: string }) =>
-              closedDay.date === selectedDayInWeek.isoDate
-          ));
+        const visibleWeek = getWeekDays(weekOffset);
+        const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
+        const selectedDayClosed =
+          !!selectedDayInWeek &&
+          (selectedDayInWeek.isSunday ||
+            nextClosedDays.some(
+              (closedDay: { date: string; reason?: string }) =>
+                closedDay.date === selectedDayInWeek.isoDate
+            ));
 
-      if (!selectedDayInWeek || selectedDayClosed) {
-        setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
+        if (!selectedDayInWeek || selectedDayClosed) {
+          setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
+        }
       }
+    } catch (error) {
+      console.error("Fetch closed days error:", error);
     }
   };
 
@@ -438,7 +496,16 @@ useEffect(() => {
 
   fetchClosedSlots();
 }, []);
+  useEffect(() => {
+    if (selectedVehicle) {
+      const normalizedVehicleType =
+        savedVehicleTypeMap[selectedVehicle.vehicleType.toLowerCase()] ?? "Sedan";
 
+      setVehicle(normalizedVehicleType);
+      setVehicleNumber(selectedVehicle.vehicleNumber);
+      setVehicleModel(`${selectedVehicle.brand} ${selectedVehicle.model}`.trim());
+    }
+  }, [selectedVehicle]);
 
 
   return (
@@ -807,6 +874,26 @@ useEffect(() => {
               </p>
 
               <form className={styles.finalForm} onSubmit={handleSubmit}>
+                {vehicles.length > 0 && (
+                  <select
+                    value={selectedVehicleId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedVehicleId(id);
+
+                      const vehicle = vehicles.find((v) => v._id === id) ?? null;
+                      setSelectedVehicle(vehicle);
+                    }}
+                  >
+                    <option value="">Select Saved Vehicle</option>
+                    {vehicles.map((savedVehicle) => (
+                      <option key={savedVehicle._id} value={savedVehicle._id}>
+                        {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
                 <div className={styles.formRow}>
                   <input
   placeholder="First Name *"
@@ -826,12 +913,14 @@ useEffect(() => {
   type="text"
   placeholder="Vehicle Number (e.g. CAA - 1234)"
   value={vehicleNumber}
+  disabled={!!selectedVehicle}
   onChange={(e) => setVehicleNumber(e.target.value)}
 />
                   <input
   placeholder="Vehicle Make & Model"
   required
   value={vehicleModel}
+  disabled={!!selectedVehicle}
   onChange={(e) => setVehicleModel(e.target.value)}
 />
                 </div>
@@ -860,7 +949,7 @@ useEffect(() => {
 <button
   type="submit"
   className={styles.submitBtn}
-  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
+  disabled={!currentPlan || !bookingDate || !bookingTime || !selectedVehicleId || isSelectedTimeFull || isSelectedTimePast}
 >
   Send request
 </button>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongoose";
 import Booking from "@/models/booking";
 import ClosedDay from "@/models/closedDay";
@@ -48,6 +49,16 @@ export async function POST(req: Request) {
     const { searchParams } = new URL(req.url);
     const payload = await req.json();
     await connectDB();
+
+    const vehicleId =
+      typeof payload?.vehicleId === "string" ? payload.vehicleId.trim() : "";
+
+    if (!vehicleId || !mongoose.Types.ObjectId.isValid(vehicleId)) {
+      return NextResponse.json(
+        { success: false, error: "A valid saved vehicle is required" },
+        { status: 400 }
+      );
+    }
 
     if (!payload?.bookingDate || !payload?.bookingTime) {
       return NextResponse.json(
@@ -108,6 +119,7 @@ export async function POST(req: Request) {
 
     const booking = await Booking.create({
       ...payload,
+      vehicleId,
       serviceCategory,
       totalPrice: Number(payload?.totalPrice ?? 0),
       hourSlot: existingCount + 1,
