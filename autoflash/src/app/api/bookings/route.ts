@@ -53,9 +53,9 @@ export async function POST(req: Request) {
     const vehicleId =
       typeof payload?.vehicleId === "string" ? payload.vehicleId.trim() : "";
 
-    if (!vehicleId || !mongoose.Types.ObjectId.isValid(vehicleId)) {
+    if (vehicleId && !mongoose.Types.ObjectId.isValid(vehicleId)) {
       return NextResponse.json(
-        { success: false, error: "A valid saved vehicle is required" },
+        { success: false, error: "Saved vehicle id is invalid" },
         { status: 400 }
       );
     }
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
 
     const booking = await Booking.create({
       ...payload,
-      vehicleId,
+      vehicleId: vehicleId || undefined,
       serviceCategory,
       totalPrice: Number(payload?.totalPrice ?? 0),
       hourSlot: existingCount + 1,

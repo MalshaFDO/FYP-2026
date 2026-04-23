@@ -10,6 +10,7 @@ export default function Header() {
     if (pathname === "/") return "Dashboard";
     if (pathname === "/bookings") return "Bookings";
     if (pathname === "/customers") return "Customers";
+    if (pathname === "/record-books") return "Record Books";
     if (pathname === "/vehicles") return "Vehicles";
     if (pathname === "/services") return "Services";
     if (pathname === "/payments") return "Payments";

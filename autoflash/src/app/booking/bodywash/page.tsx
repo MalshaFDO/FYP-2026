@@ -52,6 +52,12 @@ interface SavedVehicle {
   currentOil?: string;
 }
 
+interface ProfileUser {
+  name?: string;
+  phone?: string;
+  email?: string;
+}
+
 type ExtraService =
   | {
       id: number;
@@ -186,6 +192,21 @@ const getFirstAvailableDayIso = (
   );
 
   return firstAvailableDay?.isoDate || getWeekDays(offset)[0]?.isoDate || new Date().toISOString().split("T")[0];
+};
+
+const splitFullName = (value: string) => {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return { firstName: "", lastName: "" };
+  }
+
+  const [firstName, ...rest] = trimmed.split(/\s+/);
+
+  return {
+    firstName,
+    lastName: rest.join(" "),
+  };
 };
 
 export default function BookingPage() {
@@ -365,10 +386,6 @@ export default function BookingPage() {
       alert("Please fill required fields");
       return;
     }
-    if (!selectedVehicleId) {
-      alert("Please select a saved vehicle.");
-      return;
-    }
     if (isSelectedTimeFull) {
       alert(`Selected time (${bookingTime}) is already full. Please choose another hour.`);
       return;
@@ -387,6 +404,7 @@ export default function BookingPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          vehicleId: selectedVehicleId || undefined,
           vehicle,
           serviceType: currentPlan?.name || "Bodywash",
           additionalServices: selectedExtraDetails,
@@ -395,7 +413,6 @@ export default function BookingPage() {
           email,
           vehicleNumber: formattedVehicleNumber,
           vehicleModel,
-          vehicleId: selectedVehicleId,
           bookingDate,
           bookingTime,
           totalPrice: finalTotal,
@@ -420,26 +437,42 @@ export default function BookingPage() {
     }
   };
   useEffect(() => {
-    const fetchVehicles = async () => {
+    const fetchProfile = async () => {
       try {
         if (!token) return;
 
-        const res = await fetch("/api/vehicles/my", {
+        const res = await fetch("/api/profile/me", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
         const data = await res.json();
-        if (res.ok && Array.isArray(data.vehicles)) {
-          setVehicles(data.vehicles);
+
+        if (!res.ok) {
+          return;
         }
+
+        const nextUser: ProfileUser | null = data.user ?? null;
+        const nextVehicles = Array.isArray(data.vehicles) ? data.vehicles : [];
+        const defaultVehicle = nextVehicles[0] ?? null;
+        const { firstName: profileFirstName, lastName: profileLastName } = splitFullName(
+          nextUser?.name || ""
+        );
+
+        setFirstName(profileFirstName);
+        setLastName(profileLastName);
+        setPhone(nextUser?.phone || "");
+        setEmail(nextUser?.email || "");
+        setVehicles(nextVehicles);
+        setSelectedVehicleId(defaultVehicle?._id || "");
+        setSelectedVehicle(defaultVehicle);
       } catch (error) {
-        console.error("Fetch vehicles error:", error);
+        console.error("Fetch profile error:", error);
       }
     };
 
-    fetchVehicles();
+    fetchProfile();
   }, [token]);
   
 const [closedDays, setClosedDays] = useState<
@@ -875,23 +908,26 @@ useEffect(() => {
 
               <form className={styles.finalForm} onSubmit={handleSubmit}>
                 {vehicles.length > 0 && (
-                  <select
-                    value={selectedVehicleId}
-                    onChange={(e) => {
-                      const id = e.target.value;
-                      setSelectedVehicleId(id);
+                  <div className={styles.selectWrap}>
+                    <select
+                      className={styles.vehicleSelect}
+                      value={selectedVehicleId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        setSelectedVehicleId(id);
 
-                      const vehicle = vehicles.find((v) => v._id === id) ?? null;
-                      setSelectedVehicle(vehicle);
-                    }}
-                  >
-                    <option value="">Select Saved Vehicle</option>
-                    {vehicles.map((savedVehicle) => (
-                      <option key={savedVehicle._id} value={savedVehicle._id}>
-                        {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
-                      </option>
-                    ))}
-                  </select>
+                        const vehicle = vehicles.find((v) => v._id === id) ?? null;
+                        setSelectedVehicle(vehicle);
+                      }}
+                    >
+                      <option value="">Select Saved Vehicle</option>
+                      {vehicles.map((savedVehicle) => (
+                        <option key={savedVehicle._id} value={savedVehicle._id}>
+                          {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 )}
 
                 <div className={styles.formRow}>
@@ -949,7 +985,7 @@ useEffect(() => {
 <button
   type="submit"
   className={styles.submitBtn}
-  disabled={!currentPlan || !bookingDate || !bookingTime || !selectedVehicleId || isSelectedTimeFull || isSelectedTimePast}
+  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
 >
   Send request
 </button>

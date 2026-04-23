@@ -14,6 +14,7 @@ export default function Sidebar() {
     { name: "Bookings", path: "/bookings" },
     { name: "Calendar", path: "/calendar" },
     { name: "Customers", path: "/customers" },
+    { name: "Record Books", path: "/record-books" },
     { name: "Vehicles", path: "/vehicles" },
     { name: "Services", path: "/services" },
     { name: "Payments", path: "/payments" },

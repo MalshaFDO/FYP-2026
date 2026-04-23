@@ -33,6 +33,67 @@ function parseTimeSlot(date: string, time: string) {
   return slotDateTime;
 }
 
+function getNextDetailsStage(data: any) {
+  if (!String(data?.customerName ?? "").trim()) return "details_name";
+  if (!String(data?.mobile ?? "").trim()) return "details_mobile";
+  if (!String(data?.vehicleNumber ?? "").trim()) return "details_vehicle";
+  return null;
+}
+
+async function uploadQuotationPdf(base64File: string) {
+  try {
+    const upload = await cloudinary.uploader.upload(base64File, {
+      resource_type: "raw",
+      folder: "autoflash/quotations",
+      public_id: `Quote_${Date.now()}`,
+      format: "pdf",
+    });
+
+    return upload.secure_url ?? null;
+  } catch (error) {
+    console.error("Quotation PDF Upload Error:", error);
+    return null;
+  }
+}
+
+async function createFullServiceBooking(data: any, serviceType: string) {
+  await connectDB();
+
+  const slotDateTime = parseTimeSlot(data.bookingDate, data.bookingTime);
+  if (slotDateTime < new Date()) {
+    return sendResponse("You cannot book a past slot.", "quotation", data);
+  }
+
+  const vehicleNum = String(data.vehicleNumber ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .replace(/^([A-Z]+)(\d+)$/, "$1-$2");
+  const count = await Booking.countDocuments({
+    bookingDate: data.bookingDate,
+    bookingTime: data.bookingTime,
+  });
+
+  await Booking.create({
+    ...data,
+    vehicleNumber: vehicleNum,
+    serviceType: normalizeServiceType(serviceType),
+    serviceCategory: "fullservice",
+    additionalServices: data.additionalServices ?? [],
+    hourSlot: count + 1,
+    totalPrice: data.quote.total,
+    status: "Pending",
+  });
+
+  return sendResponse(
+    `Your booking has been confirmed successfully. We look forward to seeing you on ${data.bookingDate} at ${data.bookingTime}.`,
+    "done",
+    {
+      ...data,
+      vehicleNumber: vehicleNum,
+    }
+  );
+}
+
 function buildQuote(bookingData: any) {
   const isSelectedService = bookingData.vehicleType && Array.isArray(bookingData.services) && bookingData.services.length > 0;
   const isOilChangePackage = String(bookingData.serviceType ?? "").toLowerCase() === "oil";
@@ -115,8 +176,52 @@ function buildQuote(bookingData: any) {
 // --- Stage Handlers ---
 
 const STAGE_HANDLERS: Record<string, Function> = {
-  start: (msg: string, data: any) => 
-    sendResponse("Hi! Welcome to AutoFlash. How can I assist you today?", "make_model", data),
+  start: (msg: string, data: any) => {
+    if (data?.hasSavedVehicles && data?.selectedVehicleLabel) {
+      return sendResponse(
+        `Hi! Would you like the quotation for your saved vehicle ${data.selectedVehicleLabel}, or for another vehicle?`,
+        "saved_vehicle_choice",
+        data
+      );
+    }
+
+    return sendResponse("Hi! Welcome to AutoFlash. How can I assist you today?", "make_model", data);
+  },
+
+  saved_vehicle_choice: (msg: string, data: any) => {
+    const normalized = msg.trim().toLowerCase();
+    const useSavedVehicle = /^(yes|y|saved|current|this|same|use saved)/i.test(normalized);
+    const useOtherVehicle = /^(no|n|other|another|different)/i.test(normalized);
+
+    if (useSavedVehicle) {
+      data.useSavedVehicle = true;
+      return sendResponse(
+        `Great. We'll use your saved vehicle ${data.selectedVehicleLabel}. What oil grade was used in your last service? (Or tell me your mileage)`,
+        "oil_info",
+        data
+      );
+    }
+
+    if (useOtherVehicle) {
+      data.useSavedVehicle = false;
+      data.vehicle = "";
+      data.vehicleNumber = "";
+      data.vehicleId = "";
+      data.selectedVehicleLabel = "";
+
+      return sendResponse(
+        "Sure. Please provide your vehicle make and model. Example: Toyota Axio",
+        "make_model",
+        data
+      );
+    }
+
+    return sendResponse(
+      "Please reply with yes to use your saved vehicle, or say other if the quotation is for a different vehicle.",
+      "saved_vehicle_choice",
+      data
+    );
+  },
 
   make_model: (msg: string, data: any) => {
     if (msg.trim().split(" ").length < 2) {
@@ -172,24 +277,20 @@ const STAGE_HANDLERS: Record<string, Function> = {
     });
 
     const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
-
-    const uploadRes = await cloudinary.uploader.upload(base64File, {
-      resource_type: "raw",
-      folder: "autoflash/quotations",
-      public_id: `Quote_${Date.now()}`,
-      format: "pdf",
-    });
+    const securePdfUrl = await uploadQuotationPdf(base64File);
 
     await Quotation.create({
       ...data,
       quotationNumber: qNum,
       totalPrice: quote.total,
-      pdfUrl: uploadRes.secure_url,
+      pdfUrl: securePdfUrl,
       status: "generated",
     });
 
     return NextResponse.json({
-      pdfUrl: uploadRes.secure_url,
+      pdfUrl: securePdfUrl || base64File,
+      pdfDownloadUrl: securePdfUrl || base64File,
+      cloudinaryPdfUrl: securePdfUrl,
       nextStage: "done",
       quotationNumber: qNum,
       bookingData: {
@@ -208,19 +309,7 @@ const STAGE_HANDLERS: Record<string, Function> = {
 
     const pdfBytes = await generateQuotationPDF({ ...data, quotationNumber: qNum, quote, customerName: "Preview" });
     const base64File = `data:application/pdf;base64,${Buffer.from(pdfBytes).toString("base64")}`;
-
-    let securePdfUrl = null;
-    try {
-      const upload = await cloudinary.uploader.upload(base64File, {
-        resource_type: "raw",
-        folder: "autoflash/quotations",
-        public_id: `Quote_${Date.now()}`,
-        format: "pdf",
-      });
-      securePdfUrl = upload.secure_url;
-    } catch (e) {
-      console.error("PDF Upload Error", e);
-    }
+    const securePdfUrl = await uploadQuotationPdf(base64File);
 
     await Quotation.create({ ...data, quotationNumber: qNum, totalPrice: quote.total, pdfUrl: securePdfUrl, status: "generated" });
     
@@ -228,6 +317,8 @@ const STAGE_HANDLERS: Record<string, Function> = {
     data.quote = quote;
     return sendResponse("Your quotation is ready. Review it below.", "quotation", data, { 
       pdfUrl: securePdfUrl || base64File, 
+      pdfDownloadUrl: securePdfUrl || base64File,
+      cloudinaryPdfUrl: securePdfUrl,
       quotationNumber: qNum 
     });
   },
@@ -237,46 +328,64 @@ const STAGE_HANDLERS: Record<string, Function> = {
     return sendResponse(reply, "confirm_slot", data);
   },
 
-  confirm_slot: (msg: string, data: any) => {
+  confirm_slot: async (msg: string, data: any, serviceType: string) => {
     const isAffirmative = /yes|yeah|yep|sure|ok/i.test(msg);
-    return isAffirmative 
-      ? sendResponse("Thank you. May I have your name, please?", "details_name", data)
-      : sendResponse("Certainly. Please review the quotation and select a more convenient date and time.", "quotation", data);
+
+    if (!isAffirmative) {
+      return sendResponse("Certainly. Please review the quotation and select a more convenient date and time.", "quotation", data);
+    }
+
+    const nextStage = getNextDetailsStage(data);
+
+    if (nextStage === "details_name") {
+      return sendResponse("Thank you. May I have your name, please?", "details_name", data);
+    }
+
+    if (nextStage === "details_mobile") {
+      return sendResponse("Thank you. Could you please share your mobile number?", "details_mobile", data);
+    }
+
+    if (nextStage === "details_vehicle") {
+      return sendResponse("Lastly, could you please provide your vehicle registration number? For example: CAK-6494.", "details_vehicle", data);
+    }
+
+    return createFullServiceBooking(data, serviceType);
   },
 
-  details_name: (msg: string, data: any) => {
+  details_name: async (msg: string, data: any, serviceType: string) => {
     data.customerName = msg.trim();
-    return sendResponse(`Thank you, ${data.customerName}. Could you please share your mobile number?`, "details_mobile", data);
+
+    const nextStage = getNextDetailsStage(data);
+
+    if (nextStage === "details_mobile") {
+      return sendResponse(`Thank you, ${data.customerName}. Could you please share your mobile number?`, "details_mobile", data);
+    }
+
+    if (nextStage === "details_vehicle") {
+      return sendResponse("Lastly, could you please provide your vehicle registration number? For example: CAK-6494.", "details_vehicle", data);
+    }
+
+    return createFullServiceBooking(data, serviceType);
   },
 
-  details_mobile: (msg: string, data: any) => {
+  details_mobile: async (msg: string, data: any, serviceType: string) => {
     const match = msg.match(/0\d{9}/);
     if (!match) return sendResponse("Please enter a valid 10-digit mobile number, for example 0771234567.", "details_mobile", data);
     data.mobile = match[0];
-    return sendResponse("Lastly, could you please provide your vehicle registration number? For example: CAK-6494.", "details_vehicle", data);
+
+    const nextStage = getNextDetailsStage(data);
+
+    if (nextStage === "details_vehicle") {
+      return sendResponse("Lastly, could you please provide your vehicle registration number? For example: CAK-6494.", "details_vehicle", data);
+    }
+
+    return createFullServiceBooking(data, serviceType);
   },
 
   details_vehicle: async (msg: string, data: any, serviceType: string) => {
     try {
-      await connectDB();
-      const slotDateTime = parseTimeSlot(data.bookingDate, data.bookingTime);
-      if (slotDateTime < new Date()) return sendResponse("You cannot book a past slot.", "quotation", data);
-
-      const vehicleNum = msg.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/^([A-Z]+)(\d+)$/, "$1-$2");
-      const count = await Booking.countDocuments({ bookingDate: data.bookingDate, bookingTime: data.bookingTime });
-
-      await Booking.create({
-        ...data,
-        vehicleNumber: vehicleNum,
-        serviceType: normalizeServiceType(serviceType),
-        serviceCategory: "fullservice",
-        additionalServices: data.additionalServices ?? [],
-        hourSlot: count + 1,
-        totalPrice: data.quote.total,
-        status: "Pending",
-      });
-
-      return sendResponse(`Your booking has been confirmed successfully. We look forward to seeing you on ${data.bookingDate} at ${data.bookingTime}.`, "done", data);
+      data.vehicleNumber = msg;
+      return createFullServiceBooking(data, serviceType);
     } catch (err) {
       return NextResponse.json({ reply: "We encountered a system issue while saving your booking. Please try again.", nextStage: "details_vehicle", bookingData: data }, { status: 500 });
     }

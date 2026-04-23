@@ -13,12 +13,14 @@ const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type PricingVehicleType = "sedan" | "suv" | "pickup" | "minivan";
+
 interface SlotBooking {
   bookingDate: string;
   bookingTime: string;
   status?: string;
   serviceCategory?: "bodywash" | "fullservice";
 }
+
 interface BookingData {
   vehicle: string;
   serviceType?: string;
@@ -32,12 +34,31 @@ interface BookingData {
   bookingTime: string;
   customerName?: string;
   mobile?: string;
+  email?: string;
   vehicleNumber?: string;
+  vehicleId?: string;
+  hasSavedVehicles?: boolean;
+  useSavedVehicle?: boolean;
+  selectedVehicleLabel?: string;
   quotationNumber?: string;
   quote?: {
     items: Array<{ name: string; price: number }>;
     total: number;
   };
+}
+
+interface SavedVehicle {
+  _id: string;
+  vehicleNumber: string;
+  vehicleType: VehicleType | Lowercase<VehicleType>;
+  brand: string;
+  model: string;
+}
+
+interface ProfileUser {
+  name?: string;
+  phone?: string;
+  email?: string;
 }
 
 type ServiceOption = {
@@ -69,6 +90,13 @@ const pricingVehicleTypeMap: Record<VehicleType, PricingVehicleType> = {
 };
 
 const vehicleTypes: VehicleType[] = ["Sedan", "SUV", "Pickup", "MiniVan"];
+
+const savedVehicleTypeMap: Record<string, VehicleType> = {
+  sedan: "Sedan",
+  suv: "SUV",
+  pickup: "Pickup",
+  minivan: "MiniVan",
+};
 
 const fullServiceList: ServiceOption[] = [
   { key: "fullService", label: "Full Service", locked: true },
@@ -210,6 +238,9 @@ function getExtraServicePrice(extra: ExtraServiceOption, vehicle: VehicleType) {
 export default function FullServicePage() {
   const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
+  const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
+  const [selectedVehicleId, setSelectedVehicleId] = useState("");
+  const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<string>("full"); 
   const [extras, setExtras] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState(getFirstOpenDayIso(0));
@@ -224,6 +255,12 @@ export default function FullServicePage() {
   const [closedDays, setClosedDays] = useState<
     { date: string; reason?: string }[]
   >([]);
+  const token =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("token") ||
+        window.localStorage.getItem("authToken") ||
+        window.localStorage.getItem("accessToken")
+      : null;
 
   const updateWeekOffset = (offset: number) => {
     setWeekOffset(offset);
@@ -248,6 +285,7 @@ export default function FullServicePage() {
   const [input, setInput] = useState("");
   const [stage, setStage] = useState<
     | "start"
+    | "saved_vehicle_choice"
     | "make_model"
     | "oil_info"
     | "oil_brand"
@@ -336,6 +374,59 @@ export default function FullServicePage() {
   }, []);
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        if (!token) return;
+
+        const res = await fetch("/api/profile/me", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          return;
+        }
+
+        const nextUser: ProfileUser | null = data.user ?? null;
+        const nextVehicles = Array.isArray(data.vehicles) ? data.vehicles : [];
+        const defaultVehicle = nextVehicles[0] ?? null;
+
+        setVehicles(nextVehicles);
+        setSelectedVehicleId(defaultVehicle?._id || "");
+        setSelectedVehicle(defaultVehicle);
+        setBookingData((current) => ({
+          ...current,
+          customerName: nextUser?.name || current.customerName,
+          mobile: nextUser?.phone || current.mobile,
+          email: nextUser?.email || current.email,
+          hasSavedVehicles: nextVehicles.length > 0,
+          vehicle: defaultVehicle
+            ? `${defaultVehicle.brand} ${defaultVehicle.model}`.trim()
+            : current.vehicle,
+          vehicleNumber: defaultVehicle?.vehicleNumber || current.vehicleNumber,
+          vehicleId: defaultVehicle?._id || current.vehicleId,
+          selectedVehicleLabel: defaultVehicle
+            ? `${defaultVehicle.brand} ${defaultVehicle.model} (${defaultVehicle.vehicleNumber})`
+            : current.selectedVehicleLabel,
+        }));
+
+        if (defaultVehicle) {
+          const normalizedVehicleType =
+            savedVehicleTypeMap[String(defaultVehicle.vehicleType).toLowerCase()] ?? "Sedan";
+          setVehicle(normalizedVehicleType);
+        }
+      } catch (error) {
+        console.error("Fetch profile error:", error);
+      }
+    };
+
+    fetchProfile();
+  }, [token]);
+
+  useEffect(() => {
     const fetchClosedSlots = async () => {
       try {
         const res = await fetch("/api/admin/closed-slots");
@@ -350,6 +441,22 @@ export default function FullServicePage() {
 
     fetchClosedSlots();
   }, []);
+
+  useEffect(() => {
+    if (!selectedVehicle) return;
+
+    const normalizedVehicleType =
+      savedVehicleTypeMap[String(selectedVehicle.vehicleType).toLowerCase()] ?? "Sedan";
+
+    setVehicle(normalizedVehicleType);
+    setBookingData((current) => ({
+      ...current,
+      vehicle: `${selectedVehicle.brand} ${selectedVehicle.model}`.trim(),
+      vehicleNumber: selectedVehicle.vehicleNumber,
+      vehicleId: selectedVehicle._id,
+      selectedVehicleLabel: `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.vehicleNumber})`,
+    }));
+  }, [selectedVehicle]);
 
   useEffect(() => {
     const fetchClosedDays = async () => {
@@ -550,6 +657,11 @@ export default function FullServicePage() {
       additionalServices: selectedAdditionalServices,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
+      hasSavedVehicles: vehicles.length > 0,
+      selectedVehicleLabel:
+        selectedVehicle
+          ? `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.vehicleNumber})`
+          : bookingData.selectedVehicleLabel,
     };
 
     setBookingData(initialBookingData);
@@ -1040,6 +1152,27 @@ export default function FullServicePage() {
         </div>
 
         <div className={styles.chatBody}>
+          {vehicles.length > 0 && (
+            <div className={styles.serviceBox}>
+              <div className={styles.serviceSectionTitle}>Saved Vehicle</div>
+              <select
+                value={selectedVehicleId}
+                onChange={(e) => {
+                  const id = e.target.value;
+                  setSelectedVehicleId(id);
+                  setSelectedVehicle(vehicles.find((item) => item._id === id) ?? null);
+                }}
+              >
+                <option value="">Select Saved Vehicle</option>
+                {vehicles.map((savedVehicle) => (
+                  <option key={savedVehicle._id} value={savedVehicle._id}>
+                    {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {messages.map((msg, index) => (
             <div
               key={index}

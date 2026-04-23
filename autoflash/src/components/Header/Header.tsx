@@ -27,10 +27,10 @@ const Header = () => {
         {/* LOGO */}
         <div className={styles.logoWrapper}>
           <Image
-            src="/AF2.png"
+            src="/AFLOGO.jpg"
             alt="AutoFlash Logo"
-            width={140}
-            height={38}
+            width={132}
+            height={56}
             priority
           />
         </div>
@@ -41,6 +41,7 @@ const Header = () => {
           <Link href="/services">Services</Link>
           <Link href="/about">About</Link>
           <Link href="/contact">Contact</Link>
+          <Link href="/record">Profile</Link>
 
          <button
   className={styles.bookingBtn}
@@ -67,6 +68,7 @@ const Header = () => {
           <Link href="/services" onClick={() => setMenuOpen(false)}>Services</Link>
           <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
           <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
+          <Link href="/record" onClick={() => setMenuOpen(false)}>Profile</Link>
 
           <button
   className={styles.bookingBtn}

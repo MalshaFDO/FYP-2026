@@ -2,17 +2,48 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import Booking from "@/models/booking";
 
+const normalizeVehicleNumber = (value: string) =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+const normalizePhone = (value: string) => value.replace(/\D/g, "");
+
 const generateBookingRef = () =>
   `AF-${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 10)}`;
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Unknown error";
 
-// GET all bookings
-export async function GET() {
+// GET all bookings or filter by vehicle/mobile
+export async function GET(req: Request) {
   try {
     await connectDB();
-    const bookings = await Booking.find().sort({ createdAt: -1 }).lean();
+    const { searchParams } = new URL(req.url);
+    const vehicleNumber = searchParams.get("vehicleNumber")?.trim();
+    const mobile = searchParams.get("mobile")?.trim() || searchParams.get("phone")?.trim();
+
+    let query = {};
+
+    if (vehicleNumber || mobile) {
+      const filters = [];
+
+      if (vehicleNumber) {
+        const normalizedVehicle = normalizeVehicleNumber(vehicleNumber);
+        filters.push({ vehicleNumber: vehicleNumber.toUpperCase() });
+        filters.push({ vehicleNumber: normalizedVehicle });
+      }
+
+      if (mobile) {
+        const normalizedMobile = normalizePhone(mobile);
+        if (normalizedMobile) {
+          filters.push({ mobile: mobile });
+          filters.push({ mobile: normalizedMobile });
+        }
+      }
+
+      query = filters.length > 0 ? { $or: filters } : {};
+    }
+
+    const bookings = await Booking.find(query).sort({ createdAt: -1, bookingDate: -1 }).lean();
     return NextResponse.json(bookings);
   } catch (error) {
     console.error("Fetch admin bookings error:", error);
