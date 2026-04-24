@@ -27,10 +27,10 @@ const Header = () => {
         {/* LOGO */}
         <div className={styles.logoWrapper}>
           <Image
-            src="/AFLOGO.jpg"
+            src="/AFLOGO.png"
             alt="AutoFlash Logo"
-            width={132}
-            height={56}
+            width={250}
+            height={100}
             priority
           />
         </div>
