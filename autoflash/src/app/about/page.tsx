@@ -56,8 +56,8 @@ export default function AboutPage() {
     <main className={`${styles.page} ${styles.aboutPage} ${inter.className}`}>
       <section className={styles.aboutHero}>
         <div className={styles.heroInner}>
-          <div className={styles.aboutManifesto}>
-            <div className={styles.aboutManifestoLead}>
+          <div className={styles.aboutHeroLayout}>
+            <div className={styles.aboutStoryCard}>
               <span className={styles.eyebrow}>About AutoFlash</span>
               <h1 className={`${styles.heroTitle} ${oswald.className}`}>A Brand Story Built Around Better Vehicle Service</h1>
               <p className={styles.heroText}>
@@ -74,7 +74,15 @@ export default function AboutPage() {
               </div>
             </div>
 
-            <aside className={styles.aboutManifestoStats}>
+            <aside className={styles.aboutHeroRail}>
+              <div className={styles.aboutHeroNote}>
+                <span className={styles.cardTag}>Snapshot</span>
+                <h2 className={`${styles.cardTitle} ${oswald.className}`}>The platform already connects discovery, quoting, and booking</h2>
+                <p className={styles.cardText}>
+                  AutoFlash is structured to guide people from interest to confirmation without making the experience feel heavy.
+                </p>
+              </div>
+
               <div className={styles.aboutMetrics}>
                 <article className={styles.metricTile}>
                   <span className={styles.metricNumber}>01</span>
@@ -96,10 +104,10 @@ export default function AboutPage() {
 
       <section className={styles.storySection}>
         <div className={styles.sectionInner}>
-          <div className={styles.aboutNarrativeStack}>
-            <article className={styles.aboutWideStatement}>
+          <div className={styles.aboutNarrativeLayout}>
+            <article className={styles.storyBox}>
               <span className={styles.cardTag}>Why it matters</span>
-              <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Vehicle service should not feel messy before the car even arrives</h2>
+              <h2 className={`${styles.cardTitle} ${oswald.className}`}>Vehicle service should not feel messy before the car even arrives</h2>
               <p className={styles.storyParagraph}>
                 Traditional service booking often breaks down before the workshop even starts working. Customers wait on replies,
                 repeat details, and stay unsure about what happens next. AutoFlash was built to remove that uncertainty.
@@ -110,14 +118,26 @@ export default function AboutPage() {
               </p>
             </article>
 
-            <div className={styles.aboutBeliefBand}>
-              {values.map((value) => (
-                <article key={value.title} className={styles.aboutBeliefCard}>
-                  <span className={styles.cardTag}>{value.tag}</span>
-                  <h3 className={`${styles.cardTitle} ${oswald.className}`}>{value.title}</h3>
-                  <p className={styles.cardText}>{value.text}</p>
-                </article>
-              ))}
+            <div className={styles.aboutNarrativeRail}>
+              <article className={`${styles.storyBox} ${styles.storyBoxMuted}`}>
+                <span className={styles.cardTag}>What we believe</span>
+                <div className={styles.valuesGrid}>
+                  {values.map((value) => (
+                    <div key={value.title} className={styles.valueCard}>
+                      <span className={styles.cardTag}>{value.tag}</span>
+                      <h3 className={`${styles.cardTitle} ${oswald.className}`}>{value.title}</h3>
+                      <p className={styles.cardText}>{value.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              <article className={styles.aboutCompactCard}>
+                <span className={styles.cardTag}>What makes it different</span>
+                <p className={styles.cardText}>
+                  Pages are designed to move people toward a real decision instead of leaving them to assemble the process on their own.
+                </p>
+              </article>
             </div>
           </div>
         </div>
@@ -125,51 +145,79 @@ export default function AboutPage() {
 
       <section className={styles.sectionDark}>
         <div className={styles.sectionInner}>
-          <div className={styles.aboutStatementPanel}>
-            <span className={styles.floatingKicker}>Brand direction</span>
-            <h2 className={`${styles.ctaTitle} ${oswald.className}`}>Modern workshop energy with digital structure</h2>
-            <p className={styles.floatingText}>
-              AutoFlash blends the feel of a real vehicle-care business with the convenience customers now expect from modern
-              online services.
-            </p>
-            <p className={styles.floatingText}>
-              Pages are meant to do more than describe the business. They move people toward a real outcome: selecting a
-              service, generating a quote, choosing a slot, and confirming a visit with less confusion.
-            </p>
+          <div className={styles.aboutFeatureBand}>
+            <div className={styles.highlightCard}>
+              <span className={styles.cardTag}>What makes it different</span>
+              <h2 className={`${styles.cardTitle} ${oswald.className}`}>The platform is shaped around action, not just information</h2>
+              <p className={styles.cardText}>
+                Pages are meant to do more than describe the business. They move people toward a real outcome: selecting a
+                service, generating a quote, choosing a slot, and confirming a visit with less confusion.
+              </p>
+            </div>
+
+            <aside className={styles.floatingCard}>
+              <div className={styles.floatingKicker}>Brand direction</div>
+              <h3 className={`${styles.floatingTitle} ${oswald.className}`}>Modern workshop energy with digital structure</h3>
+              <p className={styles.floatingText}>
+                AutoFlash blends the feel of a real vehicle-care business with the convenience customers now expect from modern
+                online services.
+              </p>
+            </aside>
           </div>
         </div>
       </section>
 
       <section className={styles.sectionLight}>
         <div className={styles.sectionInner}>
-          <div className={styles.sectionIntro}>
-            <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Platform Journey</h2>
-            <p className={styles.sectionCopy}>This section reads like a timeline, so it feels different from the other pages.</p>
-          </div>
+          <div className={styles.aboutJourneyLayout}>
+            <div>
+              <div className={styles.sectionIntro}>
+                <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Platform Journey</h2>
+                <p className={styles.sectionCopy}>This section reads like a timeline, so it feels different from the other pages.</p>
+              </div>
 
-          <div className={styles.aboutJourneyRail}>
-            {milestones.map((item) => (
-              <article key={item.tag} className={styles.aboutJourneyCard}>
-                <div className={styles.timelineMarker}>{item.tag}</div>
-                <div>
-                  <h3 className={`${styles.cardTitle} ${oswald.className}`}>{item.title}</h3>
-                  <p className={styles.timelineText}>{item.text}</p>
-                </div>
+              <div className={styles.timelineFull}>
+                {milestones.map((item) => (
+                  <article key={item.tag} className={styles.timelineRow}>
+                    <div className={styles.timelineMarker}>{item.tag}</div>
+                    <div>
+                      <h3 className={`${styles.cardTitle} ${oswald.className}`}>{item.title}</h3>
+                      <p className={styles.timelineText}>{item.text}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <aside className={styles.aboutJourneyAside}>
+              <article className={styles.aboutCompactCard}>
+                <span className={styles.cardTag}>Current focus</span>
+                <p className={styles.cardText}>Make bookings easier to complete, easier to trust, and easier to manage at scale.</p>
               </article>
-            ))}
-          </div>
 
-          <div className={styles.aboutClosingBand}>
-            <article className={styles.aboutCompactCard}>
-              <span className={styles.cardTag}>Current focus</span>
-              <p className={styles.cardText}>Make bookings easier to complete, easier to trust, and easier to manage at scale.</p>
-            </article>
-            <Link href="/booking/full-service" className={styles.primaryBtn}>
-              Try The Service Flow
-            </Link>
-            <Link href="/services" className={styles.secondaryBtn}>
-              View Service Pages
-            </Link>
+              <div className={styles.infoStrip}>
+                <article className={styles.metricTile}>
+                  <div>
+                    <strong>Service flow</strong>
+                    <p className={styles.cardText}>Move from the overview into a real booking path without breaking the page rhythm.</p>
+                  </div>
+                  <Link href="/booking/full-service" className={styles.primaryBtn}>
+                    Try The Service Flow
+                  </Link>
+                </article>
+
+                <article className={styles.aboutCompactCard}>
+                  <span className={styles.cardTag}>Next step</span>
+                  <div>
+                    <strong>Explore the wider platform</strong>
+                    <p className={styles.cardText}>Browse service pages and see how the structure supports future expansion.</p>
+                  </div>
+                  <Link href="/services" className={styles.secondaryBtn}>
+                    View Service Pages
+                  </Link>
+                </article>
+              </div>
+            </aside>
           </div>
         </div>
       </section>

@@ -48,7 +48,7 @@ export default function ContactPage() {
     <main className={`${styles.page} ${styles.contactPage} ${inter.className}`}>
       <section className={styles.contactHero}>
         <div className={styles.heroInner}>
-          <div className={styles.contactCommandCenter}>
+          <div className={styles.contactHeroWrap}>
             <div className={styles.contactInfoBlock}>
               <span className={styles.eyebrow}>Contact AutoFlash</span>
               <h1 className={`${styles.heroTitle} ${oswald.className}`}>Talk To Us Fast, Or Book Without Waiting</h1>
@@ -66,7 +66,7 @@ export default function ContactPage() {
               </div>
             </div>
 
-            <div className={styles.contactSignalColumn}>
+            <div className={styles.contactHighlight}>
               <div className={styles.contactQuickCard}>
                 <span className={styles.contactQuickLabel}>Phone</span>
                 <span className={styles.contactQuickValue}>+94 76 824 8676</span>
@@ -84,60 +84,56 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <section className={styles.contactDeskSection}>
+      <section className={styles.signalSection}>
         <div className={styles.sectionInner}>
-          <div className={styles.contactDeskGrid}>
-            <div className={styles.contactDeskList}>
+          <div className={styles.signalGrid}>
+            <aside className={styles.signalCard}>
+              <span className={styles.cardTag}>When to call</span>
+              <h2 className={`${styles.cardTitle} ${oswald.className}`}>Best for urgent questions and service-day coordination</h2>
+              <ul className={styles.signalList}>
+                <li>Need help choosing between services</li>
+                <li>Need quick clarification before arriving</li>
+                <li>Need support with a same-day booking issue</li>
+              </ul>
+            </aside>
+
+            <div className={styles.contactGrid}>
               {contactBlocks.map((block) => (
-                <article key={block.title} className={styles.contactDeskCard}>
+                <article key={block.title} className={styles.contactCard}>
                   <span className={styles.cardTag}>{block.tag}</span>
                   <h3 className={`${styles.cardTitle} ${oswald.className}`}>{block.title}</h3>
                   <p className={styles.cardText}>{block.text}</p>
                 </article>
               ))}
             </div>
-
-            <aside className={styles.contactDeskSidebar}>
-              <article className={styles.signalCard}>
-                <span className={styles.cardTag}>When to call</span>
-                <h2 className={`${styles.cardTitle} ${oswald.className}`}>Best for urgent questions and service-day coordination</h2>
-                <ul className={styles.signalList}>
-                  <li>Need help choosing between services</li>
-                  <li>Need quick clarification before arriving</li>
-                  <li>Need support with a same-day booking issue</li>
-                </ul>
-              </article>
-
-              <article className={styles.contactMiniAction}>
-                <span className={styles.cardTag}>Fastest route</span>
-                <p className={styles.cardText}>If the customer already knows the service needed, booking online is usually the quickest option.</p>
-                <Link href="/booking/full-service" className={styles.primaryBtn}>
-                  Start Booking
-                </Link>
-              </article>
-            </aside>
           </div>
         </div>
       </section>
 
-      <section className={styles.contactFaqSection}>
+      <section className={styles.sectionLight}>
         <div className={styles.sectionInner}>
-          <div className={styles.contactFaqHeader}>
-            <span className={styles.cardTag}>Support Desk</span>
+          <div className={styles.sectionIntro}>
             <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Quick Answers Before You Reach Out</h2>
             <p className={styles.sectionCopy}>This section works more like a support desk than a marketing block.</p>
           </div>
 
-          <div className={styles.contactFaqTimeline}>
-            {faqs.map((item, index) => (
-              <article key={item.question} className={styles.contactFaqItem}>
-                <div className={styles.contactFaqMarker}>0{index + 1}</div>
-                <div className={styles.contactFaqContent}>
-                  <h3 className={`${styles.cardTitle} ${oswald.className}`}>{item.question}</h3>
-                  <p>{item.answer}</p>
-                </div>
+          <div className={styles.faqStack}>
+            {faqs.map((item) => (
+              <article key={item.question} className={styles.faqWide}>
+                <h3 className={`${styles.cardTitle} ${oswald.className}`}>{item.question}</h3>
+                <p>{item.answer}</p>
               </article>
             ))}
+          </div>
+
+          <div className={styles.infoStrip}>
+            <div>
+              <strong>Need the fastest path?</strong>
+              <p className={styles.cardText}>If the customer already knows the service needed, booking online is usually the quickest option.</p>
+            </div>
+            <Link href="/booking/full-service" className={styles.primaryBtn}>
+              Start Booking
+            </Link>
           </div>
         </div>
       </section>
