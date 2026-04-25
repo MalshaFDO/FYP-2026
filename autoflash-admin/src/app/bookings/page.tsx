@@ -17,6 +17,22 @@ const parseJsonSafely = async (res: Response) => {
   }
 };
 
+const getErrorDetails = (error: unknown) => {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  if (typeof error === "string") {
+    return { message: error };
+  }
+
+  return { error };
+};
+
 const formatServiceType = (serviceType?: any) => {
   const raw =
     typeof serviceType === "string"
@@ -132,7 +148,7 @@ export default function BookingsPage() {
 
         setBookings(Array.isArray(data) ? data : []);
       } catch (error) {
-        console.error("Failed to load bookings:", error);
+        console.error("Failed to load bookings:", getErrorDetails(error));
         setBookings([]);
       }
     };
@@ -288,116 +304,118 @@ Thank you for choosing AutoFlash.`;
 
   return (
     <div className={styles.container}>
-      <h2>All Bookings</h2>
-
-      <div style={{ marginBottom: "15px" }}>
-        <input
-          type="text"
-          placeholder="Search by name, mobile, email or vehicle number..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{
-            padding: "8px 12px",
-            width: "320px",
-            borderRadius: "8px",
-            border: "1px solid #334155",
-            background: "#0f172a",
-            color: "white",
-            outline: "none",
-          }}
-        />
+      <div className={styles.hero}>
+        <p className={styles.eyebrow}>Admin Bookings</p>
+        <h2>All Bookings</h2>
+        <p className={styles.description}>
+          Search, filter, and update bookings from the refreshed control room view.
+        </p>
       </div>
 
-      <div style={{ marginBottom: "20px", display: "flex", gap: "10px" }}>
-        {["All", "BodyWash", "Full Service", "Interior"].map((cat) => (
-          <button
-            key={cat}
-            onClick={() => setFilter(cat)}
-            style={{
-              padding: "8px 15px",
-              borderRadius: "20px",
-              border: "none",
-              cursor: "pointer",
-              background: filter === cat ? "#6366f1" : "#1e293b",
-              color: "white",
-            }}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      <table className={styles.table}>
-        <thead>
-          <tr>
-            <th>Customer</th>
-            <th>Vehicle</th>
-            <th>Service</th>
-            <th>Additional Services</th> 
-            <th>Date</th>                 
-            <th>Time</th>                 
-            <th>Status</th>
-          </tr>
-        </thead>
-
-       <tbody>
-          {filteredBookings.map((booking) => (
-            <tr key={booking._id}>
-              <td>
-                <div style={{ fontWeight: '500' }}>{formatCustomerName(booking.customerName)}</div>
-                <div style={{ fontSize: '0.8rem', color: '#94a3b8' }}>{booking.mobile}</div>
-              </td>
-              <td>
-        <div style={{ fontWeight: "500", color: "#f8fafc" }}>
-          {booking.vehicle} {booking.vehicleModel ? `- ${booking.vehicleModel}` : ""}
+      <div className={styles.controls}>
+        <div className={styles.searchRow}>
+          <input
+            type="text"
+            placeholder="Search by name, mobile, email or vehicle number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`admin-input ${styles.searchInput}`}
+          />
         </div>
-        <div style={{ fontSize: "0.85rem", color: "#6366f1", marginTop: "2px" }}>
-          {formatVehicleNumber(booking.vehicleNumber)}
-        </div>
-      </td>
-              <td>{formatServiceType(booking.serviceType)}</td>
-              
-              {/* Additional Services Display */}
-              <td>
-                <div className={styles.additionalBadgeContainer}>
-                  {booking.additionalServices && booking.additionalServices.length > 0 ? (
-                    booking.additionalServices.map((service: any, index: number) => (
-                      <span key={index} className={styles.serviceBadge}>
-                        {getServiceLabel(service) || "Unnamed Service"}
-                      </span>
-                    ))
-                  ) : (
-                    <span style={{ color: "#475569", fontSize: "0.85rem" }}>None</span>
-                  )}
-                </div>
-              </td>
 
-              {/* Split Date and Time */}
-              <td>{booking.bookingDate || booking.date || "-"}</td>
-              <td>{booking.bookingTime || booking.time || "-"}</td>
-
-              <td>
-                <select
-                  className={`${styles.statusSelect} ${
-                    booking.status === "Pending" ? styles.pending :
-                    booking.status === "Confirmed" ? styles.confirmed :
-                    booking.status === "In Progress" ? styles.inprogress :
-                    booking.status === "Completed" ? styles.completed : styles.cancelled
-                  }`}
-                  value={booking.status}
-                  onChange={(e) => updateStatus(booking._id, e.target.value)}
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Confirmed">Confirmed</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </td>
-            </tr>
+        <div className={styles.filterRow}>
+          {["All", "BodyWash", "Full Service", "Interior"].map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setFilter(cat)}
+              className={`${styles.filterButton} ${
+                filter === cat ? styles.filterButtonActive : ""
+              }`}
+            >
+              {cat}
+            </button>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
+
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Vehicle</th>
+              <th>Service</th>
+              <th>Additional Services</th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredBookings.map((booking) => (
+              <tr key={booking._id}>
+                <td>
+                  <div className={styles.cellHeading}>
+                    {formatCustomerName(booking.customerName)}
+                  </div>
+                  <div className={styles.cellSubtle}>{booking.mobile}</div>
+                </td>
+                <td>
+                  <div className={styles.cellHeading}>
+                    {booking.vehicle} {booking.vehicleModel ? `- ${booking.vehicleModel}` : ""}
+                  </div>
+                  <div className={styles.vehicleAccent}>
+                    {formatVehicleNumber(booking.vehicleNumber)}
+                  </div>
+                </td>
+                <td>{formatServiceType(booking.serviceType)}</td>
+
+                <td>
+                  <div className={styles.additionalBadgeContainer}>
+                    {booking.additionalServices && booking.additionalServices.length > 0 ? (
+                      booking.additionalServices.map((service: any, index: number) => (
+                        <span key={index} className={styles.serviceBadge}>
+                          {getServiceLabel(service) || "Unnamed Service"}
+                        </span>
+                      ))
+                    ) : (
+                      <span className={styles.emptyText}>None</span>
+                    )}
+                  </div>
+                </td>
+
+                <td>{booking.bookingDate || booking.date || "-"}</td>
+                <td>{booking.bookingTime || booking.time || "-"}</td>
+
+                <td>
+                  <select
+                    className={`admin-select ${styles.statusSelect} ${
+                      booking.status === "Pending"
+                        ? styles.pending
+                        : booking.status === "Confirmed"
+                        ? styles.confirmed
+                        : booking.status === "In Progress"
+                        ? styles.inprogress
+                        : booking.status === "Completed"
+                        ? styles.completed
+                        : styles.cancelled
+                    }`}
+                    value={booking.status}
+                    onChange={(e) => updateStatus(booking._id, e.target.value)}
+                  >
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Cancelled">Cancelled</option>
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

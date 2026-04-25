@@ -1,44 +1,117 @@
 .container {
-  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
   color: #f8fafc;
 }
 
 .container h2 {
-  font-size: 1.75rem;
-  margin-bottom: 2rem;
-  font-weight: 600;
+  font-size: clamp(1.8rem, 2.8vw, 2.5rem);
+  margin: 0;
+  font-weight: 700;
   color: #ffffff;
 }
 
-/* --- Table Styles --- */
+.hero {
+  display: grid;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #67e8f9;
+}
+
+.description {
+  margin: 0;
+  max-width: 68ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+}
+
+.controls {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+  border-radius: 24px;
+  background: rgba(12, 24, 39, 0.74);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.searchRow {
+  display: flex;
+}
+
+.searchInput {
+  max-width: 420px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterButton {
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  cursor: pointer;
+  background: rgba(9, 20, 34, 0.72);
+  color: #9fb0c7;
+  transition: all 0.18s ease;
+}
+
+.filterButton:hover {
+  border-color: rgba(103, 232, 249, 0.22);
+  color: #f8fafc;
+}
+
+.filterButtonActive {
+  background: linear-gradient(135deg, rgba(16, 48, 66, 0.98), rgba(18, 77, 82, 0.84));
+  color: #f8fdff;
+  border-color: rgba(103, 232, 249, 0.28);
+}
+
+.tableWrap {
+  background: rgba(12, 24, 39, 0.74);
+  border-radius: 24px;
+  overflow: hidden;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
 .table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  table-layout: auto;
 }
 
 .table th {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.03);
   padding: 1.25rem 1rem;
   text-align: left;
   font-size: 0.85rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #94a3b8;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.08em;
+  color: #93a8bd;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
 }
 
 .table td {
   padding: 1.25rem 1rem;
   font-size: 0.95rem;
   color: #cbd5e1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.06);
   vertical-align: middle;
 }
 
@@ -50,61 +123,88 @@
   background: rgba(255, 255, 255, 0.02);
 }
 
-/* ... (keep your existing styles) */
-
 .additionalBadgeContainer {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  max-width: 200px; /* Prevents the column from getting too wide */
+  max-width: 220px;
 }
 
 .serviceBadge {
-  background: rgba(99, 102, 241, 0.15);
-  color: #a5b4fc;
-  padding: 2px 8px;
-  border-radius: 4px;
+  background: rgba(6, 182, 212, 0.12);
+  color: #9ae6f0;
+  padding: 4px 9px;
+  border-radius: 999px;
   font-size: 0.75rem;
-  border: 1px solid rgba(99, 102, 241, 0.3);
+  border: 1px solid rgba(103, 232, 249, 0.16);
   white-space: nowrap;
 }
 
-/* Adjusting table layout for more columns */
-.table {
-  table-layout: auto;
-}
-
 .table td {
-  padding: 1rem 0.75rem; /* Slightly tighter padding for more columns */
+  padding: 1rem 0.75rem;
 }
 
-/* --- Status Dropdown Styling --- */
 .statusSelect {
-  padding: 6px 12px;
+  padding: 8px 12px;
   border-radius: 20px;
-  border: none;
+  border: 0;
   color: white;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
+  outline: none;
 }
 
 .pending {
-  background-color: #facc15; /* yellow */
-  color: black;
+  background-color: #fbbf24;
+  color: #1f2937;
 }
 
 .confirmed {
-  background-color: #3b82f6; /* blue */
+  background-color: #0ea5e9;
 }
 
 .inprogress {
-  background-color: #8b5cf6; /* purple */
+  background-color: #14b8a6;
 }
 
 .completed {
-  background-color: #22c55e; /* green */
+  background-color: #22c55e;
 }
 
 .cancelled {
-  background-color: #ef4444; /* red */
+  background-color: #ef4444;
+}
+
+.cellHeading {
+  font-weight: 600;
+}
+
+.cellSubtle {
+  font-size: 0.82rem;
+  color: #91a7bd;
+}
+
+.vehicleAccent {
+  font-size: 0.85rem;
+  color: #67e8f9;
+  margin-top: 2px;
+}
+
+.emptyText {
+  color: #6f849a;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .controls {
+    padding: 16px;
+  }
+
+  .searchInput {
+    max-width: none;
+  }
+
+  .tableWrap {
+    overflow-x: auto;
+  }
 }
