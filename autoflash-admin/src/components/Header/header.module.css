@@ -1,17 +1,21 @@
 .header {
-  height: 70px;
-  background: #1f2937;
-  color: white;
+  min-height: 78px;
+  background:
+    linear-gradient(90deg, rgba(12, 30, 46, 0.96) 0%, rgba(16, 42, 58, 0.92) 100%);
+  color: #f4f8fc;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 30px;
-  border-bottom: 1px solid #374151;
+  padding: 18px 30px;
+  border-bottom: 1px solid rgba(103, 232, 249, 0.16);
+  box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(14px);
 }
 
 .left h1 {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 
 .right {
@@ -24,12 +28,27 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(9, 36, 52, 0.72);
+  border: 1px solid rgba(103, 232, 249, 0.18);
+  cursor: default;
 }
 
 .avatar {
   width: 35px;
   height: 35px;
-  background: #6366f1;
+  background: linear-gradient(135deg, #10bfd7, #21c7b8);
   border-radius: 50%;
+  box-shadow: 0 10px 24px rgba(33, 199, 216, 0.28);
+}
+
+@media (max-width: 960px) {
+  .header {
+    padding: 14px 16px;
+  }
+
+  .left h1 {
+    font-size: 1.1rem;
+  }
 }
