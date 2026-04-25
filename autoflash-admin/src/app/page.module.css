@@ -1,12 +1,108 @@
 .dashboard {
-  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  font-family: 'Inter', system-ui, sans-serif;
   color: #f8fafc;
 }
 
-/* --- Cards Section --- */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
+  gap: 28px;
+  margin-bottom: 28px;
+  padding: 34px 36px;
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 26%),
+    rgba(12, 24, 39, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+  align-items: center;
+}
+
+.heroContent {
+  display: grid;
+  gap: 18px;
+  max-width: 680px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.heroTitle {
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  font-size: clamp(2.4rem, 4vw, 4.8rem);
+  line-height: 0.95;
+  max-width: 10ch;
+  letter-spacing: -0.03em;
+}
+
+.heroTitle span {
+  display: block;
+}
+
+.heroDescription {
+  margin: 0;
+  max-width: 56ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+  font-size: 1.02rem;
+}
+
+.heroMetaPanel {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  border-radius: 24px;
+  background: rgba(7, 18, 30, 0.68);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.heroMeta {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+.heroMetaItem {
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(8, 20, 33, 0.7);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.heroMetaLabel {
+  display: block;
+  margin-bottom: 6px;
+  color: #91a7bd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.heroMetaValue {
+  display: block;
+  color: #f8fafc;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.heroMetaNote {
+  color: #7f95aa;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -15,25 +111,27 @@
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
+  background: rgba(12, 24, 39, 0.7);
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 22px;
   padding: 1.5rem;
   transition: transform 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 18px 44px rgba(2, 8, 20, 0.2);
+  backdrop-filter: blur(10px);
 }
 
 .card:hover {
-  transform: translateY(-5px);
-  border-color: #3b82f6;
+  transform: translateY(-4px);
+  border-color: rgba(103, 232, 249, 0.34);
 }
 
 .card h3 {
   font-size: 0.9rem;
-  font-weight: 500;
-  color: #94a3b8;
+  font-weight: 600;
+  color: #93a8bd;
   margin: 0 0 0.5rem 0;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
 }
 
 .card p {
@@ -43,18 +141,36 @@
   color: #ffffff;
 }
 
-/* --- Table Section --- */
-.tableSection {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 12px;
+.chartSection {
+  margin-bottom: 28px;
+  background: rgba(12, 24, 39, 0.74);
+  border-radius: 24px;
   padding: 1.5rem;
   overflow-x: auto;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
 }
 
+.tableSection {
+  background: rgba(12, 24, 39, 0.74);
+  border-radius: 24px;
+  padding: 1.5rem;
+  overflow-x: auto;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.chartSection h2,
 .tableSection h2 {
   font-size: 1.25rem;
-  margin-bottom: 1.5rem;
+  margin: 0 0 1.25rem;
   color: #f1f5f9;
+}
+
+.chartFrame {
+  min-height: 320px;
 }
 
 .table {
@@ -65,41 +181,41 @@
 
 .table th {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  color: #94a3b8;
-  font-weight: 500;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+  color: #93a8bd;
+  font-weight: 600;
   font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(125, 211, 252, 0.06);
   font-size: 0.9rem;
   color: #cbd5e1;
 }
 
-/* --- Status Pills --- */
 .status {
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   display: inline-block;
   color: white;
 }
 
-/* Status Colors */
 .pending {
-  background-color: #facc15;
-  color: black;
+  background-color: #fbbf24;
+  color: #1f2937;
 }
 
 .confirmed {
-  background-color: #3b82f6;
+  background-color: #0ea5e9;
 }
 
 .inprogress {
-  background-color: #8b5cf6;
+  background-color: #14b8a6;
 }
 
 .completed {
@@ -116,4 +232,22 @@
   font-weight: 500;
   letter-spacing: 1px;
   color: #ffffff;
+}
+
+@media (max-width: 640px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 22px 20px;
+  }
+
+  .card,
+  .chartSection,
+  .tableSection {
+    padding: 1.1rem;
+  }
+
+  .heroTitle {
+    max-width: none;
+    font-size: 2.6rem;
+  }
 }

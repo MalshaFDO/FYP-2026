@@ -4,6 +4,7 @@ import { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar/sidebar";
 import Header from "@/components/Header/header";
+import styles from "./AppShell.module.css";
 
 export default function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -14,13 +15,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div style={{ display: "flex" }}>
+    <div className={styles.shell}>
       <Sidebar />
 
-      <div style={{ marginLeft: "250px", width: "100%" }}>
+      <div className={styles.content}>
         <Header />
 
-        <main style={{ padding: "30px" }}>{children}</main>
+        <main className={styles.main}>{children}</main>
       </div>
     </div>
   );

@@ -49,69 +49,105 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.dashboard}>
-      {/* Cards */}
+      <section className={styles.hero}>
+        <div className={styles.heroContent}>
+          <p className={styles.eyebrow}>Admin Overview</p>
+          <h2 className={styles.heroTitle}>
+            <span>Keep bookings,</span>
+            <span>customers, and</span>
+            <span>revenue in sync.</span>
+          </h2>
+          <p className={styles.heroDescription}>
+            Monitor bookings, revenue, and recent activity from one clean admin
+            workspace built for faster daily operations.
+          </p>
+        </div>
+
+        <div className={styles.heroMetaPanel}>
+          <div className={styles.heroMeta}>
+            <div className={styles.heroMetaItem}>
+              <span className={styles.heroMetaLabel}>Open Jobs</span>
+              <span className={styles.heroMetaValue}>{stats.pendingCount}</span>
+            </div>
+            <div className={styles.heroMetaItem}>
+              <span className={styles.heroMetaLabel}>Today</span>
+              <span className={styles.heroMetaValue}>{stats.todaysBookings}</span>
+            </div>
+            <div className={styles.heroMetaItem}>
+              <span className={styles.heroMetaLabel}>Revenue</span>
+              <span className={styles.heroMetaValue}>LKR {stats.monthlyRevenue}</span>
+            </div>
+          </div>
+          <div className={styles.heroMetaNote}>
+            Live snapshot of the admin workspace for today.
+          </div>
+        </div>
+      </section>
+
       <div className={styles.cards}>
-  <div className={styles.card}>
-    <h3>Total Bookings</h3>
-    <p>{stats.totalBookings}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Total Bookings</h3>
+          <p>{stats.totalBookings}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Total Customers</h3>
-    <p>{stats.totalCustomers}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Total Customers</h3>
+          <p>{stats.totalCustomers}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Today's Bookings</h3>
-    <p>{stats.todaysBookings}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Today's Bookings</h3>
+          <p>{stats.todaysBookings}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Pending</h3>
-    <p>{stats.pendingCount}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Pending</h3>
+          <p>{stats.pendingCount}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Confirmed</h3>
-    <p>{stats.confirmedCount}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Confirmed</h3>
+          <p>{stats.confirmedCount}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>In Progress</h3>
-    <p>{stats.inProgressCount}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>In Progress</h3>
+          <p>{stats.inProgressCount}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Completed</h3>
-    <p>{stats.completedCount}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Completed</h3>
+          <p>{stats.completedCount}</p>
+        </div>
 
-  <div className={styles.card}>
-    <h3>Cancelled</h3>
-    <p>{stats.cancelledCount}</p>
-  </div>
+        <div className={styles.card}>
+          <h3>Cancelled</h3>
+          <p>{stats.cancelledCount}</p>
+        </div>
 
-  <div className={styles.card}>
-  <h3>Total Revenue</h3>
-  <p>LKR {stats.totalRevenue}</p>
-</div>
+        <div className={styles.card}>
+          <h3>Total Revenue</h3>
+          <p>LKR {stats.totalRevenue}</p>
+        </div>
 
-<div className={styles.card}>
-  <h3>Completed Revenue</h3>
-  <p>LKR {stats.completedRevenue}</p>
-</div>
+        <div className={styles.card}>
+          <h3>Completed Revenue</h3>
+          <p>LKR {stats.completedRevenue}</p>
+        </div>
 
-<div className={styles.card}>
-  <h3>This Month Revenue</h3>
-  <p>LKR {stats.monthlyRevenue}</p>
-</div>
-</div>
-<div style={{ marginTop: "40px" }}>
-  <h2>Revenue Overview</h2>
-  <RevenueChart data={stats.monthlyChartData} />
-</div>
+        <div className={styles.card}>
+          <h3>This Month Revenue</h3>
+          <p>LKR {stats.monthlyRevenue}</p>
+        </div>
+      </div>
 
-      {/* Recent Bookings Table */}
+      <section className={styles.chartSection}>
+        <h2>Revenue Overview</h2>
+        <div className={styles.chartFrame}>
+          <RevenueChart data={stats.monthlyChartData} />
+        </div>
+      </section>
+
       <div className={styles.tableSection}>
         <h2>Recent Bookings</h2>
 
