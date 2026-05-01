@@ -54,7 +54,7 @@ export default function ServiceSelectorModal({ onClose }: Props) {
             <h3>Body Wash</h3>
           </div>
 
-          <div className={styles.card} onClick={() => handleSelect('/booking/oil-change')}>
+          <div className={styles.card} onClick={() => handleSelect('/booking/full-service')}>
             <FaOilCan className={styles.icon} />
             <h3>Oil Change</h3>
           </div>

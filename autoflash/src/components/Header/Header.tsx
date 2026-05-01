@@ -3,10 +3,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import styles from "./Header.module.css";
 import ServiceSelectorModal from '@/components/ServiceSelectorModal/ServiceSelectorModal';
 
+const navLinks = [
+  { href: "/", label: "Home" },
+  { href: "/services", label: "Services" },
+  { href: "/about", label: "About" },
+  { href: "/contact", label: "Contact" },
+  { href: "/record", label: "Profile" },
+];
+
 const Header = () => {
+  const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -20,12 +30,17 @@ const Header = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    setMenuOpen(false);
+    setShowModal(false);
+  }, [pathname]);
+
   return (
     <>
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
         
         {/* LOGO */}
-        <div className={styles.logoWrapper}>
+        <Link href="/" className={styles.logoWrapper} aria-label="Go to AutoFlash home">
           <Image
             src="/AFLOGO.png"
             alt="AutoFlash Logo"
@@ -33,52 +48,56 @@ const Header = () => {
             height={100}
             priority
           />
-        </div>
+        </Link>
 
         {/* DESKTOP NAV */}
         <nav className={styles.nav}>
-          <Link href="/">Home</Link>
-          <Link href="/services">Services</Link>
-          <Link href="/about">About</Link>
-          <Link href="/contact">Contact</Link>
-          <Link href="/record">Profile</Link>
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
 
-         <button
-  className={styles.bookingBtn}
-  onClick={() => setShowModal(true)}
->
-  Book Now 
-</button>
+          <button
+            type="button"
+            className={styles.bookingBtn}
+            onClick={() => setShowModal(true)}
+          >
+            Book Now
+          </button>
 
         </nav>
 
         {/* HAMBURGER */}
-        <div
+        <button
+          type="button"
           className={`${styles.hamburger} ${menuOpen ? styles.open : ""}`}
+          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen(!menuOpen)}
         >
           <span></span>
           <span></span>
           <span></span>
-        </div>
+        </button>
 
         {/* MOBILE MENU */}
         <div className={`${styles.mobileMenu} ${menuOpen ? styles.show : ""}`}>
-          <Link href="/" onClick={() => setMenuOpen(false)}>Home</Link>
-          <Link href="/services" onClick={() => setMenuOpen(false)}>Services</Link>
-          <Link href="/about" onClick={() => setMenuOpen(false)}>About</Link>
-          <Link href="/contact" onClick={() => setMenuOpen(false)}>Contact</Link>
-          <Link href="/record" onClick={() => setMenuOpen(false)}>Profile</Link>
-
+          {navLinks.map((link) => (
+            <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
+              {link.label}
+            </Link>
+          ))}
           <button
-  className={styles.bookingBtn}
-  onClick={() => {
-    setMenuOpen(false);
-    setShowModal(true);
-  }}
->
-  Book Now
-</button>
+            type="button"
+            className={styles.bookingBtn}
+            onClick={() => {
+              setMenuOpen(false);
+              setShowModal(true);
+            }}
+          >
+            Book Now
+          </button>
 
         </div>
 

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import OTP from "@/models/otp";
-import { normalizePhoneNumber } from "@/lib/phone";
+import User from "@/models/user";
+import { getPhoneCandidates, normalizePhoneNumber } from "@/lib/phone";
 import { sendOtpSms } from "@/lib/sms";
 
 export async function POST(req: Request) {
@@ -16,6 +17,20 @@ export async function POST(req: Request) {
       return NextResponse.json(
         { message: "Phone is required" },
         { status: 400 }
+      );
+    }
+
+    const user = await User.findOne({
+      phone: { $in: getPhoneCandidates(normalizedPhone) },
+    }).select("_id");
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          message: "This mobile number is not registered. Please sign up first.",
+          isNewUser: true,
+        },
+        { status: 404 }
       );
     }
 

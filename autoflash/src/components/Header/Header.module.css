@@ -16,6 +16,11 @@
   z-index: 1000;
 }
 
+.logoWrapper {
+  display: inline-flex;
+  align-items: center;
+}
+
 /* DARK ON SCROLL */
 .scrolled {
   height: 60px; /* Shrinks slightly when scrolling */
@@ -70,6 +75,9 @@
   gap: 6px;
   cursor: pointer;
   z-index: 1001;
+  padding: 0;
+  border: none;
+  background: transparent;
 }
 
 .hamburger span {
@@ -92,12 +100,14 @@
   gap: 20px;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: all 0.4s ease;
 }
 
 .show {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 /* RESPONSIVE */
