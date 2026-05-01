@@ -1,16 +1,9 @@
 export default function PaymentsPage() {
   return (
-    <div
-      style={{
-        background: "#ffffff",
-        borderRadius: "24px",
-        padding: "24px",
-        border: "1px solid #e5e7eb",
-        boxShadow: "0 18px 48px rgba(15, 23, 42, 0.08)",
-      }}
-    >
-      <h2 style={{ marginTop: 0 }}>Payments</h2>
-      <p style={{ marginBottom: 0, color: "#6b7280" }}>
+    <div className="admin-page-card">
+      <p className="admin-kicker">Admin Payments</p>
+      <h2 className="admin-page-title">Payments</h2>
+      <p className="admin-page-copy">
         Payments management content can be added here.
       </p>
     </div>
