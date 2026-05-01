@@ -15,19 +15,24 @@ declare global {
   var mongoose: MongooseCache | undefined;
 }
 
-let cached: MongooseCache;
+const cached: MongooseCache = global.mongoose;
 
 if (!global.mongoose) {
   global.mongoose = { conn: null, promise: null };
 }
 
-cached = global.mongoose;
-
 export async function connectDB() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI);
+    cached.promise = mongoose
+      .connect(MONGODB_URI, {
+        serverSelectionTimeoutMS: 10000,
+      })
+      .catch((error) => {
+        cached.promise = null;
+        throw error;
+      });
   }
 
   cached.conn = await cached.promise;

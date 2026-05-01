@@ -13,6 +13,28 @@ const generateBookingRef = () =>
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Unknown error";
 
+type BookingJson = Record<string, unknown> & {
+  _id?: { toString?: () => string } | string;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+};
+
+const serializeBooking = (booking: BookingJson) => ({
+  ...booking,
+  _id:
+    typeof booking?._id === "string"
+      ? booking._id
+      : booking?._id?.toString?.() ?? booking?._id,
+  createdAt:
+    booking?.createdAt instanceof Date
+      ? booking.createdAt.toISOString()
+      : booking?.createdAt,
+  updatedAt:
+    booking?.updatedAt instanceof Date
+      ? booking.updatedAt.toISOString()
+      : booking?.updatedAt,
+});
+
 // GET all bookings or filter by vehicle/mobile
 export async function GET(req: Request) {
   try {
@@ -43,8 +65,11 @@ export async function GET(req: Request) {
       query = filters.length > 0 ? { $or: filters } : {};
     }
 
-    const bookings = await Booking.find(query).sort({ createdAt: -1, bookingDate: -1 }).lean();
-    return NextResponse.json(bookings);
+    const bookings = await Booking.find(query)
+      .sort({ createdAt: -1, bookingDate: -1 })
+      .lean();
+
+    return NextResponse.json(bookings.map(serializeBooking));
   } catch (error) {
     console.error("Fetch admin bookings error:", error);
     return NextResponse.json(
