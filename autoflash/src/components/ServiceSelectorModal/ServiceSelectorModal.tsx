@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FaTimes, FaCar, FaTint, FaOilCan } from 'react-icons/fa';
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import styles from './ServiceSelectorModal.module.css';
 
 interface Props {
@@ -11,6 +12,21 @@ interface Props {
 
 export default function ServiceSelectorModal({ onClose }: Props) {
   const router = useRouter();
+  const { language } = useLanguage();
+  const t =
+    language === "si"
+      ? {
+          title: "ඔබගේ සේවාව තෝරන්න",
+          fullService: "සම්පූර්ණ සේවාව",
+          bodyWash: "බොඩි වොෂ්",
+          oilChange: "ඔයිල් චේන්ජ්",
+        }
+      : {
+          title: "Select Your Service",
+          fullService: "Full Service",
+          bodyWash: "Body Wash",
+          oilChange: "Oil Change",
+        };
 
   const handleSelect = (route: string) => {
     const token = localStorage.getItem('token');
@@ -41,22 +57,22 @@ export default function ServiceSelectorModal({ onClose }: Props) {
           <FaTimes />
         </button>
 
-        <h2 className={styles.title}>Select Your Service</h2>
+        <h2 className={styles.title}>{t.title}</h2>
 
         <div className={styles.grid}>
           <div className={styles.card} onClick={() => handleSelect('/booking/full-service')}>
             <FaCar className={styles.icon} />
-            <h3>Full Service</h3>
+            <h3>{t.fullService}</h3>
           </div>
 
           <div className={styles.card} onClick={() => handleSelect('/booking/bodywash')}>
             <FaTint className={styles.icon} />
-            <h3>Body Wash</h3>
+            <h3>{t.bodyWash}</h3>
           </div>
 
           <div className={styles.card} onClick={() => handleSelect('/booking/full-service')}>
             <FaOilCan className={styles.icon} />
-            <h3>Oil Change</h3>
+            <h3>{t.oilChange}</h3>
           </div>
         </div>
       </div>

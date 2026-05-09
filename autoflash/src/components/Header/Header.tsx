@@ -4,22 +4,50 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import styles from "./Header.module.css";
-import ServiceSelectorModal from '@/components/ServiceSelectorModal/ServiceSelectorModal';
+import ServiceSelectorModal from "@/components/ServiceSelectorModal/ServiceSelectorModal";
 
-const navLinks = [
-  { href: "/", label: "Home" },
-  { href: "/services", label: "Services" },
-  { href: "/about", label: "About" },
-  { href: "/contact", label: "Contact" },
-  { href: "/record", label: "Profile" },
-];
+const copy = {
+  en: {
+    navLinks: [
+      { href: "/", label: "Home" },
+      { href: "/services", label: "Services" },
+      { href: "/about", label: "About" },
+      { href: "/contact", label: "Contact" },
+      { href: "/record", label: "Profile" },
+    ],
+    bookNow: "Book Now",
+    goHome: "Go to AutoFlash home",
+    openMenu: "Open navigation menu",
+    closeMenu: "Close navigation menu",
+    english: "English",
+    sinhala: "සිංහල",
+  },
+  si: {
+    navLinks: [
+      { href: "/", label: "මුල් පිටුව" },
+      { href: "/services", label: "සේවා" },
+      { href: "/about", label: "අප ගැන" },
+      { href: "/contact", label: "සම්බන්ධ වන්න" },
+      { href: "/record", label: "පැතිකඩ" },
+    ],
+    bookNow: "දැන් වෙන්කරන්න",
+    goHome: "AutoFlash මුල් පිටුවට යන්න",
+    openMenu: "නැවිගේෂන් මෙනුව විවෘත කරන්න",
+    closeMenu: "නැවිගේෂන් මෙනුව වසන්න",
+    english: "English",
+    sinhala: "සිංහල",
+  },
+} as const;
 
 const Header = () => {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const { language, setLanguage } = useLanguage();
+  const t = copy[language];
 
   useEffect(() => {
     const onScroll = () => {
@@ -38,9 +66,7 @@ const Header = () => {
   return (
     <>
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
-        
-        {/* LOGO */}
-        <Link href="/" className={styles.logoWrapper} aria-label="Go to AutoFlash home">
+        <Link href="/" className={styles.logoWrapper} aria-label={t.goHome}>
           <Image
             src="/AFLOGO.png"
             alt="AutoFlash Logo"
@@ -50,29 +76,43 @@ const Header = () => {
           />
         </Link>
 
-        {/* DESKTOP NAV */}
         <nav className={styles.nav}>
-          {navLinks.map((link) => (
+          {t.navLinks.map((link) => (
             <Link key={link.href} href={link.href}>
               {link.label}
             </Link>
           ))}
+
+          <div className={styles.languageSwitch}>
+            <button
+              type="button"
+              className={language === "en" ? styles.languageActive : ""}
+              onClick={() => setLanguage("en")}
+            >
+              {t.english}
+            </button>
+            <button
+              type="button"
+              className={language === "si" ? styles.languageActive : ""}
+              onClick={() => setLanguage("si")}
+            >
+              {t.sinhala}
+            </button>
+          </div>
 
           <button
             type="button"
             className={styles.bookingBtn}
             onClick={() => setShowModal(true)}
           >
-            Book Now
+            {t.bookNow}
           </button>
-
         </nav>
 
-        {/* HAMBURGER */}
         <button
           type="button"
           className={`${styles.hamburger} ${menuOpen ? styles.open : ""}`}
-          aria-label={menuOpen ? "Close navigation menu" : "Open navigation menu"}
+          aria-label={menuOpen ? t.closeMenu : t.openMenu}
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen(!menuOpen)}
         >
@@ -81,13 +121,30 @@ const Header = () => {
           <span></span>
         </button>
 
-        {/* MOBILE MENU */}
         <div className={`${styles.mobileMenu} ${menuOpen ? styles.show : ""}`}>
-          {navLinks.map((link) => (
+          <div className={styles.mobileLanguageSwitch}>
+            <button
+              type="button"
+              className={language === "en" ? styles.languageActive : ""}
+              onClick={() => setLanguage("en")}
+            >
+              {t.english}
+            </button>
+            <button
+              type="button"
+              className={language === "si" ? styles.languageActive : ""}
+              onClick={() => setLanguage("si")}
+            >
+              {t.sinhala}
+            </button>
+          </div>
+
+          {t.navLinks.map((link) => (
             <Link key={link.href} href={link.href} onClick={() => setMenuOpen(false)}>
               {link.label}
             </Link>
           ))}
+
           <button
             type="button"
             className={styles.bookingBtn}
@@ -96,17 +153,12 @@ const Header = () => {
               setShowModal(true);
             }}
           >
-            Book Now
+            {t.bookNow}
           </button>
-
         </div>
-
       </header>
 
-      {/* ✅ MODAL OUTSIDE HEADER STRUCTURE */}
-      {showModal && (
-        <ServiceSelectorModal onClose={() => setShowModal(false)} />
-      )}
+      {showModal && <ServiceSelectorModal onClose={() => setShowModal(false)} />}
     </>
   );
 };
