@@ -90,8 +90,8 @@ export function buildPayHereCheckout(payload: PayHereCheckoutPayload) {
     actionUrl: sandboxEnabled ? SANDBOX_URL : LIVE_URL,
     fields: {
       merchant_id: merchantId,
-      return_url: `${payload.origin}/payment/success?order_id=${encodeURIComponent(payload.orderId)}`,
-      cancel_url: `${payload.origin}/payment/cancel?order_id=${encodeURIComponent(payload.orderId)}`,
+      return_url: `${payload.origin}/cart?payment=success&order_id=${encodeURIComponent(payload.orderId)}`,
+      cancel_url: `${payload.origin}/cart?payment=cancel&order_id=${encodeURIComponent(payload.orderId)}`,
       notify_url: `${payload.origin}/api/payhere/notify`,
       first_name: firstName,
       last_name: lastName,
@@ -116,4 +116,3 @@ export function buildPayHereCheckout(payload: PayHereCheckoutPayload) {
     },
   };
 }
-
