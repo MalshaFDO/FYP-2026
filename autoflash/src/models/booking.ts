@@ -29,6 +29,10 @@ const BookingSchema = new mongoose.Schema({
   hourSlot: { type: Number, min: 1, max: 3 },
 
   totalPrice: { type: Number },
+  paymentStatus: { type: String },
+  paymentOption: { type: String, enum: ["full", "half"] },
+  paidAmount: { type: Number },
+  paymentOrderId: { type: String },
   notes: { type: String },
 
   status: {
