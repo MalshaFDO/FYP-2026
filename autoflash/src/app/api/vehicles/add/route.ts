@@ -1,15 +1,18 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongoose";
-import Vehicle from "@/models/vehicle";
 import { getUserFromToken } from "@/lib/auth";
+import { connectDB } from "@/lib/mongoose";
+import {
+  getVehicleNumberRegex,
+  normalizeVehicleNumber,
+  normalizeVehicleNumberForStorage,
+} from "@/lib/vehicleNumber";
+import Vehicle from "@/models/vehicle";
 
 export async function POST(req: Request) {
   try {
     await connectDB();
 
-    // 🔐 Get user from token
     const user = getUserFromToken(req);
-
     const {
       vehicleNumber,
       vehicleType,
@@ -19,38 +22,50 @@ export async function POST(req: Request) {
       currentOil,
     } = await req.json();
 
-    // 🔍 Check duplicate
-    const existingVehicle = await Vehicle.findOne({ vehicleNumber });
+    const normalizedVehicleNumber =
+      typeof vehicleNumber === "string" ? normalizeVehicleNumber(vehicleNumber) : "";
+    const trimmedBrand = typeof brand === "string" ? brand.trim() : "";
+    const trimmedModel = typeof model === "string" ? model.trim() : "";
 
-    if (existingVehicle) {
+    if (!normalizedVehicleNumber || !vehicleType || !trimmedBrand || !trimmedModel) {
       return NextResponse.json(
-        { message: "Vehicle already exists" },
+        { message: "Vehicle number, type, make, and model are required." },
         { status: 400 }
       );
     }
 
-    // 💾 Save vehicle
+    const existingVehicle = await Vehicle.findOne({
+      vehicleNumber: getVehicleNumberRegex(normalizedVehicleNumber),
+    });
+
+    if (existingVehicle) {
+      return NextResponse.json(
+        { message: "This vehicle number is already registered." },
+        { status: 409 }
+      );
+    }
+
     const newVehicle = await Vehicle.create({
       userId: user.userId,
-      vehicleNumber,
+      vehicleNumber: normalizeVehicleNumberForStorage(normalizedVehicleNumber),
       vehicleType,
-      brand,
-      model,
-      fuelType,
-      currentOil,
+      brand: trimmedBrand,
+      model: trimmedModel,
+      fuelType: fuelType || "",
+      currentOil: currentOil || "",
     });
 
     return NextResponse.json({
       message: "Vehicle added successfully",
       vehicle: newVehicle,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("ADD VEHICLE ERROR:", error);
 
     return NextResponse.json(
       {
         message: "Error adding vehicle",
-        error: error.message,
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );

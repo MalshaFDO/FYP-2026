@@ -20,7 +20,21 @@ function normalizeGatewayPhone(phone: string) {
   return digits;
 }
 
-export async function sendOtpSms(phone: string, otp: string) {
+type OtpSmsPurpose = "default" | "delete_vehicle";
+
+const getOtpMessage = (otp: string, purpose: OtpSmsPurpose) => {
+  if (purpose === "delete_vehicle") {
+    return `Your AutoFlash vehicle deletion OTP is ${otp}. Enter this code to delete your registered vehicle. It expires in 5 minutes.`;
+  }
+
+  return `Your AutoFlash verification code is ${otp}. It expires in 5 minutes.`;
+};
+
+export async function sendOtpSms(
+  phone: string,
+  otp: string,
+  purpose: OtpSmsPurpose = "default"
+) {
   if (!SMS_API_URL || !SMS_USERNAME || !SMS_PASSWORD || !SMS_SENDER_ID) {
     throw new Error(
       "SMS gateway settings are missing. Set SMS_API_URL, SMS_USERNAME, SMS_PASSWORD, and SMS_SENDER_ID."
@@ -28,7 +42,7 @@ export async function sendOtpSms(phone: string, otp: string) {
   }
 
   const formattedPhone = normalizeGatewayPhone(phone);
-  const message = `Your AutoFlash verification code is ${otp}. It expires in 5 minutes.`;
+  const message = getOtpMessage(otp, purpose);
 
   const response = await axios.post(SMS_API_URL, null, {
     params: {

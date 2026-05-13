@@ -3,6 +3,11 @@ import { connectDB } from "@/lib/mongoose";
 import User from "@/models/user";
 import Vehicle from "@/models/vehicle";
 import { getPhoneCandidates, normalizePhoneNumber } from "@/lib/phone";
+import {
+  getVehicleNumberRegex,
+  normalizeVehicleNumber,
+  normalizeVehicleNumberForStorage,
+} from "@/lib/vehicleNumber";
 
 export async function POST(req: Request) {
   try {
@@ -25,7 +30,16 @@ export async function POST(req: Request) {
     const normalizedPhone =
       typeof phone === "string" ? normalizePhoneNumber(phone) : "";
     const normalizedVehicleNumber =
-      typeof vehicleNumber === "string" ? vehicleNumber.trim().toUpperCase() : "";
+      typeof vehicleNumber === "string" ? normalizeVehicleNumber(vehicleNumber) : "";
+    const trimmedBrand = typeof brand === "string" ? brand.trim() : "";
+    const trimmedModel = typeof model === "string" ? model.trim() : "";
+
+    if (!normalizedVehicleNumber || !vehicleType || !trimmedBrand || !trimmedModel) {
+      return NextResponse.json(
+        { message: "Vehicle number, type, make, and model are required." },
+        { status: 400 }
+      );
+    }
 
     const existingUser = await User.findOne({
       $or: [
@@ -41,7 +55,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const existingVehicle = await Vehicle.findOne({ vehicleNumber: normalizedVehicleNumber });
+    const existingVehicle = await Vehicle.findOne({
+      vehicleNumber: getVehicleNumberRegex(normalizedVehicleNumber),
+    });
 
     if (existingVehicle) {
       return NextResponse.json(
@@ -59,10 +75,10 @@ export async function POST(req: Request) {
 
     const newVehicle = await Vehicle.create({
       userId: newUser._id,
-      vehicleNumber: normalizedVehicleNumber,
+      vehicleNumber: normalizeVehicleNumberForStorage(normalizedVehicleNumber),
       vehicleType,
-      brand,
-      model,
+      brand: trimmedBrand,
+      model: trimmedModel,
       fuelType: fuelType || "",
       currentOil: currentOil || "",
     });

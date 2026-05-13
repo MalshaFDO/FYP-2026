@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { ChangeEvent, DragEvent } from "react";
+import type { ChangeEvent, DragEvent, PointerEvent, WheelEvent } from "react";
 import Image from "next/image";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { FaBookOpen, FaHistory } from "react-icons/fa";
+import { getVehicleModelsByMake, vehicleMakes } from "@/lib/vehicleCatalog";
 import styles from "./record.module.css";
 
 interface UserProfile {
@@ -213,12 +215,109 @@ const getRecordTimestamp = (entry: RecordEntry, index: number) => {
   return Number.isNaN(parsed) ? index : parsed;
 };
 
+type CropSettings = {
+  zoom: number;
+  x: number;
+  y: number;
+  frameSize: number;
+};
+
+type CropPoint = {
+  x: number;
+  y: number;
+};
+
+const clamp = (value: number, min: number, max: number) =>
+  Math.min(max, Math.max(min, value));
+
+const getPointDistance = (first: CropPoint, second: CropPoint) =>
+  Math.hypot(first.x - second.x, first.y - second.y);
+
+const getPointCenter = (first: CropPoint, second: CropPoint) => ({
+  x: (first.x + second.x) / 2,
+  y: (first.y + second.y) / 2,
+});
+
 const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ""));
-    reader.onerror = () => reject(new Error("Failed to read image file"));
+    reader.onerror = () => reject(new Error("Failed to read selected image"));
     reader.readAsDataURL(file);
+  });
+
+const getImageAspect = (imageSrc: string) =>
+  new Promise<number>((resolve, reject) => {
+    const image = new window.Image();
+    image.onload = () => resolve(image.naturalWidth / image.naturalHeight || 1);
+    image.onerror = () => reject(new Error("Failed to load selected image"));
+    image.src = imageSrc;
+  });
+
+const cropImageToSquareDataUrl = (
+  imageSrc: string,
+  crop: CropSettings,
+  size = 512
+) =>
+  new Promise<string>((resolve, reject) => {
+    const image = new window.Image();
+
+    image.onload = () => {
+      const frameSize = crop.frameSize || size;
+      const aspect = image.naturalWidth / image.naturalHeight;
+      const baseScale =
+        aspect >= 1
+          ? (frameSize / image.naturalHeight) * crop.zoom
+          : (frameSize / image.naturalWidth) * crop.zoom;
+      const displayWidth = image.naturalWidth * baseScale;
+      const displayHeight = image.naturalHeight * baseScale;
+      const maxX = Math.max(0, (displayWidth - frameSize) / 2);
+      const maxY = Math.max(0, (displayHeight - frameSize) / 2);
+      const clampedX = clamp(crop.x, -maxX, maxX);
+      const clampedY = clamp(crop.y, -maxY, maxY);
+      const sourceSize = frameSize / baseScale;
+      const sourceX = clamp(
+        (displayWidth - frameSize) / 2 / baseScale - clampedX / baseScale,
+        0,
+        image.naturalWidth - sourceSize
+      );
+      const sourceY = clamp(
+        (displayHeight - frameSize) / 2 / baseScale - clampedY / baseScale,
+        0,
+        image.naturalHeight - sourceSize
+      );
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+
+      if (!context) {
+        reject(new Error("Unable to crop image"));
+        return;
+      }
+
+      canvas.width = size;
+      canvas.height = size;
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, size, size);
+      context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        size,
+        size
+      );
+
+      resolve(canvas.toDataURL("image/jpeg", 0.9));
+    };
+
+    image.onerror = () => {
+      reject(new Error("Failed to load selected image"));
+    };
+
+    image.src = imageSrc;
   });
 
 const parseJsonResponse = async (res: Response) => {
@@ -240,8 +339,50 @@ const parseJsonResponse = async (res: Response) => {
   }
 };
 
+const getErrorMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
+const profileSkeletonRows = Array.from({ length: 5 }, (_, index) => index);
+const actionSkeletonRows = Array.from({ length: 2 }, (_, index) => index);
+
+function ProfileSkeleton() {
+  return (
+    <section className={`${styles.profileGrid} ${styles.profileSkeletonGrid}`}>
+      <article className={`${styles.profileCard} ${styles.profileSkeletonCard}`}>
+        <div className={styles.profileSkeletonHeader}>
+          <span />
+          <strong />
+        </div>
+        <div className={styles.profileSkeletonDetails}>
+          {profileSkeletonRows.map((row) => (
+            <div className={styles.profileSkeletonField} key={row}>
+              <span />
+              <strong />
+            </div>
+          ))}
+        </div>
+        <div className={styles.profileSkeletonActions}>
+          <span />
+          <span />
+        </div>
+      </article>
+
+      <article className={`${styles.profileCard} ${styles.quickActionsCard} ${styles.profileSkeletonCard}`}>
+        <div className={styles.profileSkeletonTitle} />
+        <div className={styles.profileSkeletonButtons}>
+          {actionSkeletonRows.map((row) => (
+            <span key={row} />
+          ))}
+        </div>
+        <div className={styles.profileSkeletonText} />
+      </article>
+    </section>
+  );
+}
+
 export default function RecordPage() {
-  const [token, setToken] = useState<string | null>(null);
+  const router = useRouter();
+  const [token, setToken] = useState<string | null | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [recordBookEnabled, setRecordBookEnabled] = useState(false);
@@ -259,9 +400,26 @@ export default function RecordPage() {
   const [newPhone, setNewPhone] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [savingVehicle, setSavingVehicle] = useState(false);
+  const [deletingVehicle, setDeletingVehicle] = useState(false);
+  const [sendingDeleteOtp, setSendingDeleteOtp] = useState(false);
+  const [newVehicleType, setNewVehicleType] = useState("sedan");
+  const [newVehicleNumber, setNewVehicleNumber] = useState("");
+  const [newVehicleBrand, setNewVehicleBrand] = useState("");
+  const [newVehicleModel, setNewVehicleModel] = useState("");
+  const [addVehicleOpen, setAddVehicleOpen] = useState(false);
+  const [deleteVehicleOpen, setDeleteVehicleOpen] = useState(false);
+  const [deleteVehicleOtp, setDeleteVehicleOtp] = useState("");
+  const [deleteOtpSent, setDeleteOtpSent] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [pendingProfileImage, setPendingProfileImage] = useState("");
+  const [pendingImageAspect, setPendingImageAspect] = useState(1);
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropX, setCropX] = useState(0);
+  const [cropY, setCropY] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [sendingCurrentPhoneOtp, setSendingCurrentPhoneOtp] = useState(false);
   const [currentPhoneOtpSent, setCurrentPhoneOtpSent] = useState(false);
@@ -269,6 +427,29 @@ export default function RecordPage() {
   const [currentPhoneVerified, setCurrentPhoneVerified] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cropFrameRef = useRef<HTMLDivElement | null>(null);
+  const historySectionRef = useRef<HTMLElement | null>(null);
+  const recordBookSectionRef = useRef<HTMLElement | null>(null);
+  const cropPointersRef = useRef<Map<number, CropPoint>>(new Map());
+  const lastCropDragPointRef = useRef<CropPoint | null>(null);
+  const lastCropPinchDistanceRef = useRef<number | null>(null);
+  const lastCropPinchCenterRef = useRef<CropPoint | null>(null);
+  const newVehicleModelOptions = useMemo(
+    () => getVehicleModelsByMake(newVehicleBrand),
+    [newVehicleBrand]
+  );
+  const getCropBounds = (zoom = cropZoom) => {
+    const frameSize = cropFrameRef.current?.clientWidth || 320;
+    const displayWidth =
+      pendingImageAspect >= 1 ? frameSize * pendingImageAspect * zoom : frameSize * zoom;
+    const displayHeight =
+      pendingImageAspect >= 1 ? frameSize * zoom : (frameSize / pendingImageAspect) * zoom;
+
+    return {
+      x: Math.max(0, (displayWidth - frameSize) / 2),
+      y: Math.max(0, (displayHeight - frameSize) / 2),
+    };
+  };
 
   useEffect(() => {
     const storedToken =
@@ -276,8 +457,15 @@ export default function RecordPage() {
       window.localStorage.getItem("authToken") ||
       window.localStorage.getItem("accessToken");
 
+    if (!storedToken) {
+      window.localStorage.setItem("redirectAfterLogin", "/record");
+      router.replace("/login");
+      setToken(null);
+      return;
+    }
+
     setToken(storedToken);
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const fetchFeatureStatus = async () => {
@@ -292,7 +480,7 @@ export default function RecordPage() {
         }
 
         setRecordBookEnabled(Boolean(data.enabled));
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("RECORD PAGE FEATURE STATUS ERROR:", err);
         setRecordBookEnabled(false);
       }
@@ -302,6 +490,10 @@ export default function RecordPage() {
   }, []);
 
   useEffect(() => {
+    if (token === undefined) {
+      return;
+    }
+
     if (token === null) {
       setLoading(false);
       return;
@@ -334,8 +526,8 @@ export default function RecordPage() {
         setNewPhone("");
         setVehicles(nextVehicles);
         setSelectedVehicleId((current) => current || nextVehicles[0]?._id || "");
-      } catch (err: any) {
-        setError(err.message || "Failed to load profile");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Failed to load profile"));
       } finally {
         setLoading(false);
       }
@@ -388,8 +580,8 @@ export default function RecordPage() {
         }
 
         setRecordBook(bookData.book ?? null);
-      } catch (err: any) {
-        setError(err.message || "Failed to load vehicle details");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Failed to load vehicle details"));
       } finally {
         setLoading(false);
       }
@@ -441,11 +633,6 @@ export default function RecordPage() {
   }, [recordBook]);
   const latestRecordEntry = orderedRecordEntries[orderedRecordEntries.length - 1];
 
-  const handleLoginRedirect = () => {
-    window.localStorage.setItem("redirectAfterLogin", "/record");
-    window.location.href = "/login";
-  };
-
   const handleLogout = () => {
     window.localStorage.removeItem("token");
     window.localStorage.removeItem("authToken");
@@ -493,11 +680,169 @@ export default function RecordPage() {
       setCurrentPhoneVerified(false);
       setIsEditing(false);
       setSaveMessage("Profile updated successfully.");
-    } catch (err: any) {
-      setError(err.message || "Failed to update profile");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to update profile"));
     } finally {
       setSavingProfile(false);
     }
+  };
+
+  const handleAddVehicle = async () => {
+    if (!token) return;
+
+    try {
+      setSavingVehicle(true);
+      setError("");
+      setSaveMessage("");
+
+      const res = await fetch("/api/vehicles/add", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          vehicleNumber: newVehicleNumber,
+          vehicleType: newVehicleType,
+          brand: newVehicleBrand,
+          model: newVehicleModel,
+          fuelType: "",
+          currentOil: "",
+        }),
+      });
+
+      const data = await parseJsonResponse(res);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to add vehicle");
+      }
+
+      const addedVehicle = data.vehicle as Vehicle;
+
+      setVehicles((current) => [addedVehicle, ...current]);
+      setSelectedVehicleId(addedVehicle._id);
+      setNewVehicleNumber("");
+      setNewVehicleBrand("");
+      setNewVehicleModel("");
+      setNewVehicleType("sedan");
+      setAddVehicleOpen(false);
+      setViewMode("history");
+      setSaveMessage(
+        `${formatVehicleNumber(addedVehicle.vehicleNumber)} - ${addedVehicle.brand} ${addedVehicle.model} added to this profile.`
+      );
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to add vehicle"));
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
+
+  const closeAddVehicleModal = () => {
+    if (savingVehicle) return;
+
+    setAddVehicleOpen(false);
+  };
+
+  const closeDeleteVehicleModal = () => {
+    if (deletingVehicle || sendingDeleteOtp) return;
+
+    setDeleteVehicleOpen(false);
+    setDeleteVehicleOtp("");
+    setDeleteOtpSent(false);
+  };
+
+  const sendDeleteVehicleOtp = async () => {
+    if (!user?.phone) {
+      setError("Registered mobile number is not available.");
+      return;
+    }
+
+    try {
+      setSendingDeleteOtp(true);
+      setError("");
+      setSaveMessage("");
+
+      const res = await fetch("/api/auth/send-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ phone: user.phone, purpose: "delete_vehicle" }),
+      });
+
+      const data = await parseJsonResponse(res);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to send OTP");
+      }
+
+      setDeleteOtpSent(true);
+      setSaveMessage(`OTP sent to registered mobile number ${user.phone}.`);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to send OTP"));
+    } finally {
+      setSendingDeleteOtp(false);
+    }
+  };
+
+  const handleDeleteVehicle = async () => {
+    if (!token || !selectedVehicle) return;
+
+    try {
+      setDeletingVehicle(true);
+      setError("");
+      setSaveMessage("");
+
+      const res = await fetch("/api/vehicles/delete", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          vehicleId: selectedVehicle._id,
+          otp: deleteVehicleOtp,
+        }),
+      });
+
+      const data = await parseJsonResponse(res);
+
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to delete vehicle");
+      }
+
+      const nextVehicles = vehicles.filter((vehicle) => vehicle._id !== selectedVehicle._id);
+      const nextSelectedVehicle = nextVehicles[0] ?? null;
+
+      setVehicles(nextVehicles);
+      setSelectedVehicleId(nextSelectedVehicle?._id || "");
+      setHistory([]);
+      setRecordBook(null);
+      setViewMode("history");
+      setDeleteVehicleOpen(false);
+      setDeleteVehicleOtp("");
+      setDeleteOtpSent(false);
+      setSaveMessage(
+        `${formatVehicleNumber(selectedVehicle.vehicleNumber)} - ${selectedVehicle.brand} ${selectedVehicle.model} deleted.`
+      );
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to delete vehicle"));
+    } finally {
+      setDeletingVehicle(false);
+    }
+  };
+
+  const closeCropper = () => {
+    setCropperOpen(false);
+    setPendingProfileImage("");
+    setPendingImageAspect(1);
+    setCropZoom(1);
+    setCropX(0);
+    setCropY(0);
+    cropPointersRef.current.clear();
+    lastCropDragPointRef.current = null;
+    lastCropPinchDistanceRef.current = null;
+    lastCropPinchCenterRef.current = null;
   };
 
   const handleImageFile = async (file?: File) => {
@@ -517,11 +862,145 @@ export default function RecordPage() {
     try {
       setError("");
       const dataUrl = await readFileAsDataUrl(file);
-      setFormProfileImage(dataUrl);
-      setSaveMessage("Picture selected. Click Save Profile to update it.");
-    } catch (err: any) {
-      setError(err.message || "Failed to load selected image");
+      const aspect = await getImageAspect(dataUrl);
+      setPendingProfileImage(dataUrl);
+      setPendingImageAspect(aspect);
+      setCropZoom(1);
+      setCropX(0);
+      setCropY(0);
+      setCropperOpen(true);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to load selected image"));
     }
+  };
+
+  const applyCroppedImage = async () => {
+    if (!pendingProfileImage) return;
+
+    try {
+      setError("");
+      const dataUrl = await cropImageToSquareDataUrl(pendingProfileImage, {
+        zoom: cropZoom,
+        x: cropX,
+        y: cropY,
+        frameSize: cropFrameRef.current?.clientWidth || 320,
+      });
+
+      setFormProfileImage(dataUrl);
+      setSaveMessage("Picture adjusted. Click Save Profile to update it.");
+      closeCropper();
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to crop selected image"));
+    }
+  };
+
+  const resetCropGesture = () => {
+    lastCropDragPointRef.current = null;
+    lastCropPinchDistanceRef.current = null;
+    lastCropPinchCenterRef.current = null;
+  };
+
+  const handleCropPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    cropPointersRef.current.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    if (cropPointersRef.current.size === 1) {
+      lastCropDragPointRef.current = {
+        x: event.clientX,
+        y: event.clientY,
+      };
+      lastCropPinchDistanceRef.current = null;
+      lastCropPinchCenterRef.current = null;
+    }
+  };
+
+  const handleCropPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const pointers = cropPointersRef.current;
+
+    if (!pointers.has(event.pointerId)) return;
+
+    pointers.set(event.pointerId, {
+      x: event.clientX,
+      y: event.clientY,
+    });
+
+    const points = Array.from(pointers.values());
+
+    if (points.length === 1) {
+      const lastPoint = lastCropDragPointRef.current;
+      const nextPoint = points[0];
+
+      if (lastPoint) {
+        const bounds = getCropBounds();
+        setCropX((current) => clamp(current + (nextPoint.x - lastPoint.x), -bounds.x, bounds.x));
+        setCropY((current) => clamp(current + (nextPoint.y - lastPoint.y), -bounds.y, bounds.y));
+      }
+
+      lastCropDragPointRef.current = nextPoint;
+      lastCropPinchDistanceRef.current = null;
+      lastCropPinchCenterRef.current = null;
+      return;
+    }
+
+    const [firstPoint, secondPoint] = points;
+    const nextDistance = getPointDistance(firstPoint, secondPoint);
+    const nextCenter = getPointCenter(firstPoint, secondPoint);
+
+    if (lastCropPinchDistanceRef.current) {
+      const zoomRatio = nextDistance / lastCropPinchDistanceRef.current;
+      setCropZoom((current) => {
+        const nextZoom = clamp(current * zoomRatio, 1, 4);
+        const bounds = getCropBounds(nextZoom);
+        setCropX((currentX) => clamp(currentX, -bounds.x, bounds.x));
+        setCropY((currentY) => clamp(currentY, -bounds.y, bounds.y));
+        return nextZoom;
+      });
+    }
+
+    if (lastCropPinchCenterRef.current) {
+      const bounds = getCropBounds();
+      setCropX((current) =>
+        clamp(current + (nextCenter.x - lastCropPinchCenterRef.current!.x), -bounds.x, bounds.x)
+      );
+      setCropY((current) =>
+        clamp(current + (nextCenter.y - lastCropPinchCenterRef.current!.y), -bounds.y, bounds.y)
+      );
+    }
+
+    lastCropPinchDistanceRef.current = nextDistance;
+    lastCropPinchCenterRef.current = nextCenter;
+    lastCropDragPointRef.current = null;
+  };
+
+  const handleCropPointerEnd = (event: PointerEvent<HTMLDivElement>) => {
+    cropPointersRef.current.delete(event.pointerId);
+
+    if (cropPointersRef.current.size === 1) {
+      const [remainingPoint] = Array.from(cropPointersRef.current.values());
+      lastCropDragPointRef.current = remainingPoint;
+      lastCropPinchDistanceRef.current = null;
+      lastCropPinchCenterRef.current = null;
+      return;
+    }
+
+    if (cropPointersRef.current.size === 0) {
+      resetCropGesture();
+    }
+  };
+
+  const handleCropWheel = (event: WheelEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    const nextZoomDelta = event.deltaY < 0 ? 0.08 : -0.08;
+    setCropZoom((current) => {
+      const nextZoom = clamp(current + nextZoomDelta, 1, 4);
+      const bounds = getCropBounds(nextZoom);
+      setCropX((currentX) => clamp(currentX, -bounds.x, bounds.x));
+      setCropY((currentY) => clamp(currentY, -bounds.y, bounds.y));
+      return nextZoom;
+    });
   };
 
   const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -584,8 +1063,8 @@ export default function RecordPage() {
 
       setCurrentPhoneOtpSent(true);
       setSaveMessage("OTP sent to your current mobile number.");
-    } catch (err: any) {
-      setError(err.message || "Failed to send OTP");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Failed to send OTP"));
     } finally {
       setSendingCurrentPhoneOtp(false);
     }
@@ -600,24 +1079,34 @@ export default function RecordPage() {
 
     setViewMode("recordbook");
     setBookOpen(false);
+    window.setTimeout(() => {
+      recordBookSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
   };
 
-  if (!token) {
+  const handleOpenHistory = () => {
+    setViewMode("history");
+    window.setTimeout(() => {
+      historySectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
+  };
+
+  if (token === undefined) {
     return (
       <main className={styles.page}>
-        <section className={styles.loginCard}>
-          <p className={styles.kicker}>User Profile</p>
-          <h1>Login to view your profile and vehicle records</h1>
-          <p>
-            After login, you will be able to see your name, mobile number, vehicle
-            details, service history, and your read-only e-service record book.
-          </p>
-          <button className={styles.primaryButton} onClick={handleLoginRedirect}>
-            Login with OTP
-          </button>
-        </section>
+        <ProfileSkeleton />
       </main>
     );
+  }
+
+  if (token === null) {
+    return null;
   }
 
   return (
@@ -654,7 +1143,7 @@ export default function RecordPage() {
         </div>
       </section>
 
-      {loading && <p className={styles.stateText}>Loading profile...</p>}
+      {loading && <ProfileSkeleton />}
       {error && <p className={styles.errorText}>{error}</p>}
       {saveMessage && <p className={styles.successText}>{saveMessage}</p>}
 
@@ -872,6 +1361,32 @@ export default function RecordPage() {
                     Edit Profile
                   </button>
                 )}
+                <button
+                  type="button"
+                  className={styles.secondaryButton}
+                  onClick={() => {
+                    setAddVehicleOpen(true);
+                    setError("");
+                    setSaveMessage("");
+                  }}
+                >
+                  Add New Vehicle
+                </button>
+                {selectedVehicle && (
+                  <button
+                    type="button"
+                    className={styles.dangerButton}
+                    onClick={() => {
+                      setDeleteVehicleOpen(true);
+                      setDeleteVehicleOtp("");
+                      setDeleteOtpSent(false);
+                      setError("");
+                      setSaveMessage("");
+                    }}
+                  >
+                    Delete Vehicle
+                  </button>
+                )}
               </div>
 
               <p className={styles.profileHelper}>
@@ -881,16 +1396,20 @@ export default function RecordPage() {
               </p>
             </article>
 
-            <article className={styles.profileCard}>
-              <h2>Quick Actions</h2>
+            <article className={`${styles.profileCard} ${styles.quickActionsCard}`}>
+              <div className={styles.quickActionsHeader}>
+                <span className={styles.quickActionsBadge}>Tools</span>
+                <h2>Quick Actions</h2>
+              </div>
               <div className={styles.buttonColumn}>
                 <button
                   className={`${styles.actionButton} ${
                     viewMode === "history" ? styles.activeButton : ""
                   }`}
-                  onClick={() => setViewMode("history")}
+                  onClick={handleOpenHistory}
                 >
-                  Look Vehicle Services History
+                  <FaHistory />
+                  <span>Service History</span>
                 </button>
                 {recordBookEnabled && (
                   <button
@@ -899,7 +1418,8 @@ export default function RecordPage() {
                     }`}
                     onClick={handleOpenRecordBook}
                   >
-                    E-Service Record Book
+                    <FaBookOpen />
+                    <span>E-Service Record Book</span>
                   </button>
                 )}
               </div>
@@ -915,19 +1435,22 @@ export default function RecordPage() {
             <section className={styles.emptyCard}>
               <h3>No saved vehicles yet</h3>
               <p>
-                Add a vehicle through your booking flow first, then your profile will
-                show the vehicle history
+                Add a vehicle here first, then your profile will show the vehicle history
                 {recordBookEnabled ? " and e-service record book" : ""}
                 here.
               </p>
-              <Link href="/booking/bodywash" className={styles.linkButton}>
-                Go to Booking
-              </Link>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={() => setAddVehicleOpen(true)}
+              >
+                Add New Vehicle
+              </button>
             </section>
           )}
 
           {vehicles.length > 0 && viewMode === "history" && (
-            <section className={styles.sectionCard}>
+            <section ref={historySectionRef} className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2>Vehicle Service History</h2>
                 <span>{filteredHistory.length} of {history.length} records</span>
@@ -999,8 +1522,189 @@ export default function RecordPage() {
             </section>
           )}
 
+          {addVehicleOpen && (
+            <div
+              className={styles.modalOverlay}
+              role="presentation"
+              onClick={closeAddVehicleModal}
+            >
+              <section
+                className={styles.vehicleModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-vehicle-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className={styles.modalHeader}>
+                  <h2 id="add-vehicle-title">Add Vehicle</h2>
+                  <button
+                    type="button"
+                    className={styles.modalCloseButton}
+                    onClick={closeAddVehicleModal}
+                    disabled={savingVehicle}
+                    aria-label="Close add vehicle"
+                  >
+                    X
+                  </button>
+                </div>
+
+                <p className={styles.vehicleNotice}>
+                  <strong>Important:</strong> This vehicle will be saved under{" "}
+                  <strong>{user?.name || "your profile"}</strong> and mobile number{" "}
+                  <strong>{user?.phone || "-"}</strong>.
+                </p>
+
+                <div className={styles.vehicleFormGrid}>
+                  <label className={styles.vehicleField}>
+                    <span>Vehicle type</span>
+                    <select
+                      value={newVehicleType}
+                      onChange={(e) => setNewVehicleType(e.target.value)}
+                      disabled={savingVehicle}
+                    >
+                      <option value="sedan">Sedan</option>
+                      <option value="SUV">SUV</option>
+                      <option value="Pickup">Pick-Up</option>
+                      <option value="Minivan">Minivan</option>
+                    </select>
+                  </label>
+
+                  <label className={styles.vehicleField}>
+                    <span>Vehicle number</span>
+                    <input
+                      value={newVehicleNumber}
+                      onChange={(e) => setNewVehicleNumber(e.target.value)}
+                      placeholder="CAA - 1234"
+                      disabled={savingVehicle}
+                    />
+                  </label>
+
+                  <label className={styles.vehicleField}>
+                    <span>Vehicle make</span>
+                    <input
+                      list="profile-vehicle-makes"
+                      value={newVehicleBrand}
+                      onChange={(e) => setNewVehicleBrand(e.target.value)}
+                      placeholder="Type or select make"
+                      disabled={savingVehicle}
+                    />
+                    <datalist id="profile-vehicle-makes">
+                      {vehicleMakes.map((make) => (
+                        <option key={make} value={make} />
+                      ))}
+                    </datalist>
+                  </label>
+
+                  <label className={styles.vehicleField}>
+                    <span>Vehicle model</span>
+                    <input
+                      list="profile-vehicle-models"
+                      value={newVehicleModel}
+                      onChange={(e) => setNewVehicleModel(e.target.value)}
+                      placeholder="Type or select model"
+                      disabled={savingVehicle}
+                    />
+                    <datalist id="profile-vehicle-models">
+                      {newVehicleModelOptions.map((model) => (
+                        <option key={model} value={model} />
+                      ))}
+                    </datalist>
+                  </label>
+                </div>
+
+                <div className={styles.profileFooter}>
+                  <button
+                    type="button"
+                    className={styles.primaryButton}
+                    onClick={handleAddVehicle}
+                    disabled={savingVehicle}
+                  >
+                    {savingVehicle ? "Adding..." : "Add Vehicle"}
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {deleteVehicleOpen && selectedVehicle && (
+            <div
+              className={styles.modalOverlay}
+              role="presentation"
+              onClick={closeDeleteVehicleModal}
+            >
+              <section
+                className={styles.vehicleModal}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="delete-vehicle-title"
+                onClick={(event) => event.stopPropagation()}
+              >
+                <div className={styles.modalHeader}>
+                  <h2 id="delete-vehicle-title">Delete Vehicle</h2>
+                  <button
+                    type="button"
+                    className={styles.modalCloseButton}
+                    onClick={closeDeleteVehicleModal}
+                    disabled={deletingVehicle || sendingDeleteOtp}
+                    aria-label="Close delete vehicle"
+                  >
+                    X
+                  </button>
+                </div>
+
+                <p className={styles.deleteNotice}>
+                  <strong>{formatVehicleNumber(selectedVehicle.vehicleNumber)} - {selectedVehicle.brand} {selectedVehicle.model}</strong>
+                  <span>
+                    To delete this vehicle, send an OTP to registered mobile number{" "}
+                    <strong>{user?.phone || "-"}</strong> and enter it below.
+                  </span>
+                </p>
+
+                <div className={styles.deleteOtpBlock}>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={sendDeleteVehicleOtp}
+                    disabled={sendingDeleteOtp || deletingVehicle}
+                  >
+                    {sendingDeleteOtp ? "Sending OTP..." : deleteOtpSent ? "Resend OTP" : "Send OTP"}
+                  </button>
+
+                  <label className={styles.vehicleField}>
+                    <span>OTP Code</span>
+                    <input
+                      value={deleteVehicleOtp}
+                      onChange={(event) => setDeleteVehicleOtp(event.target.value)}
+                      placeholder={deleteOtpSent ? "Enter OTP" : "Send OTP first"}
+                      disabled={!deleteOtpSent || deletingVehicle}
+                    />
+                  </label>
+                </div>
+
+                <div className={styles.profileFooter}>
+                  <button
+                    type="button"
+                    className={styles.dangerButton}
+                    onClick={handleDeleteVehicle}
+                    disabled={!deleteOtpSent || !deleteVehicleOtp.trim() || deletingVehicle}
+                  >
+                    {deletingVehicle ? "Deleting..." : "Delete Vehicle"}
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.secondaryButton}
+                    onClick={closeDeleteVehicleModal}
+                    disabled={deletingVehicle || sendingDeleteOtp}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </section>
+            </div>
+          )}
+
           {vehicles.length > 0 && viewMode === "recordbook" && (
-            <section className={styles.sectionCard}>
+            <section ref={recordBookSectionRef} className={styles.sectionCard}>
               <div className={styles.sectionHeader}>
                 <h2>E-Service Record Book</h2>
                 <span>{formatVehicleNumber(recordBook?.vehicleNumber || selectedVehicle?.vehicleNumber)}</span>
@@ -1260,6 +1964,80 @@ export default function RecordPage() {
               alt={formName || "Profile picture"}
               className={styles.viewerImage}
             />
+          </div>
+        </div>
+      )}
+
+      {cropperOpen && pendingProfileImage && (
+        <div className={styles.viewerOverlay} onClick={closeCropper}>
+          <div
+            className={styles.cropperCard}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className={styles.viewerHeader}>
+              <h3>Adjust Profile Picture</h3>
+              <button
+                type="button"
+                className={styles.viewerClose}
+                onClick={closeCropper}
+              >
+                Cancel
+              </button>
+            </div>
+
+            <div
+              ref={cropFrameRef}
+              className={styles.cropFrame}
+              onPointerDown={handleCropPointerDown}
+              onPointerMove={handleCropPointerMove}
+              onPointerUp={handleCropPointerEnd}
+              onPointerCancel={handleCropPointerEnd}
+              onPointerLeave={handleCropPointerEnd}
+              onWheel={handleCropWheel}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={pendingProfileImage}
+                alt="Crop preview"
+                className={styles.cropImage}
+                style={{
+                  width:
+                    pendingImageAspect >= 1
+                      ? `${pendingImageAspect * cropZoom * 100}%`
+                      : `${cropZoom * 100}%`,
+                  height:
+                    pendingImageAspect >= 1
+                      ? `${cropZoom * 100}%`
+                      : `${(cropZoom / pendingImageAspect) * 100}%`,
+                  transform: `translate(calc(-50% + ${cropX}px), calc(-50% + ${cropY}px))`,
+                }}
+              />
+            </div>
+
+            <p className={styles.cropHint}>
+              Drag to move. Pinch with two fingers to zoom in or out.
+            </p>
+
+            <div className={styles.cropActions}>
+              <button
+                type="button"
+                className={styles.secondaryButton}
+                onClick={() => {
+                  setCropZoom(1);
+                  setCropX(0);
+                  setCropY(0);
+                }}
+              >
+                Reset
+              </button>
+              <button
+                type="button"
+                className={styles.primaryButton}
+                onClick={applyCroppedImage}
+              >
+                Apply Crop
+              </button>
+            </div>
           </div>
         </div>
       )}

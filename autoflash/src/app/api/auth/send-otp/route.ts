@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { phone } = await req.json();
+    const { phone, purpose } = await req.json();
     const normalizedPhone =
       typeof phone === "string" ? normalizePhoneNumber(phone) : "";
 
@@ -45,7 +45,11 @@ export async function POST(req: Request) {
     });
 
     try {
-      await sendOtpSms(normalizedPhone, otp);
+      await sendOtpSms(
+        normalizedPhone,
+        otp,
+        purpose === "delete_vehicle" ? "delete_vehicle" : "default"
+      );
     } catch (error) {
       await OTP.deleteMany({ phone: normalizedPhone });
       throw error;

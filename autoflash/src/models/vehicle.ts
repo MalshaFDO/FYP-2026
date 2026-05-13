@@ -1,4 +1,5 @@
 import mongoose, { Schema, models } from "mongoose";
+import { normalizeVehicleNumberForStorage } from "@/lib/vehicleNumber";
 
 const VehicleSchema = new Schema(
   {
@@ -11,6 +12,8 @@ const VehicleSchema = new Schema(
       type: String,
       required: true,
       unique: true,
+      set: (value: string) =>
+        typeof value === "string" ? normalizeVehicleNumberForStorage(value) : value,
     },
     vehicleType: {
       type: String, // sedan, suv, bike

@@ -1,8 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getVehicleModelsByMake, vehicleMakes } from "@/lib/vehicleCatalog";
+import { normalizeVehicleNumberForStorage } from "@/lib/vehicleNumber";
 import styles from "./signup.module.css";
 
 const getRouteLabel = (route: string) =>
@@ -28,6 +30,10 @@ export default function SignupPage() {
   const [vehicleBrand, setVehicleBrand] = useState("");
   const [vehicleModel, setVehicleModel] = useState("");
   const [vehicleNumber, setVehicleNumber] = useState("");
+  const vehicleModelOptions = useMemo(
+    () => getVehicleModelsByMake(vehicleBrand),
+    [vehicleBrand]
+  );
 
   useEffect(() => {
     setSelectedRoute(localStorage.getItem("redirectAfterLogin") || "/booking/bodywash");
@@ -51,7 +57,7 @@ export default function SignupPage() {
           email: customerEmail.trim().toLowerCase(),
           phone: normalizedPhone,
           password: "otp-user",
-          vehicleNumber: vehicleNumber.trim().toUpperCase(),
+          vehicleNumber: normalizeVehicleNumberForStorage(vehicleNumber),
           vehicleType,
           brand: vehicleBrand.trim(),
           model: vehicleModel.trim(),
@@ -191,22 +197,36 @@ export default function SignupPage() {
                   <span>Vehicle make</span>
                   <input
                     type="text"
+                    list="signup-vehicle-makes"
                     value={vehicleBrand}
                     onChange={(e) => setVehicleBrand(e.target.value)}
+                    placeholder="Type or select make"
                     disabled={loading}
                     required
                   />
+                  <datalist id="signup-vehicle-makes">
+                    {vehicleMakes.map((make) => (
+                      <option key={make} value={make} />
+                    ))}
+                  </datalist>
                 </label>
 
                 <label className={styles.field}>
                   <span>Vehicle model</span>
                   <input
                     type="text"
+                    list="signup-vehicle-models"
                     value={vehicleModel}
                     onChange={(e) => setVehicleModel(e.target.value)}
+                    placeholder="Type or select model"
                     disabled={loading}
                     required
                   />
+                  <datalist id="signup-vehicle-models">
+                    {vehicleModelOptions.map((model) => (
+                      <option key={model} value={model} />
+                    ))}
+                  </datalist>
                 </label>
               </div>
 
