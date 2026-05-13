@@ -96,7 +96,7 @@ const Footer = () => {
                 <FaPhoneAlt className={styles.icon} />
                 <div>
                   <span className={styles.contactLabel}>{t.callUs}</span>
-                  <span className={styles.contactValue}>+94 XX XXX XXXX</span>
+                  <span className={styles.contactValue}>+94 76 824 8676</span>
                 </div>
               </li>
             </ul>
@@ -105,13 +105,13 @@ const Footer = () => {
           <div className={styles.section}>
             <h3 className={styles.heading}>{t.followUs}</h3>
             <div className={styles.socials}>
-              <a href="#" className={styles.socialLink} aria-label="Facebook">
+              <a href="https://www.facebook.com/autoflashwennappuwa" className={styles.socialLink} aria-label="Facebook">
                 <FaFacebook />
               </a>
-              <a href="#" className={styles.socialLink} aria-label="Instagram">
+              <a href="https://www.instagram.com/auto_flash_?igsh=MTlpMDI4MnpzeHVpNg%3D%3D&utm_source=qr" className={styles.socialLink} aria-label="Instagram">
                 <FaInstagram />
               </a>
-              <a href="#" className={styles.socialLink} aria-label="WhatsApp">
+              <a href="https://api.whatsapp.com/send/?phone=%2B94768248676&text&type=phone_number&app_absent=0" className={styles.socialLink} aria-label="WhatsApp">
                 <FaWhatsapp />
               </a>
             </div>

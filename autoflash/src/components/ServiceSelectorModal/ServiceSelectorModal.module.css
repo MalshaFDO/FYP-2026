@@ -63,7 +63,12 @@
 }
 
 .card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   background: #181818;
+  min-height: 188px;
   padding: 45px 30px;
   border-radius: 15px;
   text-align: center;
@@ -78,10 +83,17 @@
   background: #202020;
 }
 
+.card:nth-child(3) {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc((100% - 25px) / 2);
+}
+
 .icon {
+  display: block;
   font-size: 34px;
   color: #ff3b3b;
-  margin-bottom: 18px;
+  margin: 0 auto 18px;
 }
 
 .card h3 {
@@ -95,6 +107,11 @@
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .card:nth-child(3) {
+    grid-column: auto;
+    width: 100%;
   }
 
   .modal {
