@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { TouchEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
@@ -9,9 +10,12 @@ import styles from "./FullService.module.css";
 import { addCartItem } from "@/lib/cart";
 import { calculateServiceQuote } from "@/lib/pricing";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
+import CartTransition from "@/components/CartTransition/CartTransition";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
+const BOOKING_ANIMATION_URL =
+  "https://lottie.host/7353aba1-c97c-4e10-b12f-2a18b2049ea2/c085qzdABB.lottie";
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type PricingVehicleType = "sedan" | "suv" | "pickup" | "minivan";
@@ -238,6 +242,7 @@ function getExtraServicePrice(extra: ExtraServiceOption, vehicle: VehicleType) {
 }
 
 export default function FullServicePage() {
+  const router = useRouter();
   const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
@@ -248,6 +253,8 @@ export default function FullServicePage() {
   const [selectedDate, setSelectedDate] = useState(getFirstOpenDayIso(0));
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
+  const [isCartTransitionVisible, setIsCartTransitionVisible] = useState(false);
+  const [isBookingTransitionVisible, setIsBookingTransitionVisible] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -870,7 +877,7 @@ export default function FullServicePage() {
       bookingPayload: payload,
     });
 
-    alert(`${getServiceTitle()} added to cart. You can choose full or half payment in the cart.`);
+    setIsCartTransitionVisible(true);
   };
 
   const handleBookQuoteNow = async () => {
@@ -888,11 +895,8 @@ export default function FullServicePage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        const slotText = data.booking?.hourSlot
-          ? ` (slot ${data.booking.hourSlot}/${FULLSERVICE_SLOTS} for ${selectedTime})`
-          : "";
-        alert(`Booking successfully created${slotText}!`);
-        window.location.reload();
+        setIsChatOpen(false);
+        setIsBookingTransitionVisible(true);
       } else {
         alert(data.error || "Booking failed");
       }
@@ -904,6 +908,15 @@ export default function FullServicePage() {
 
   return (
     <main className={`${styles.page} ${inter.className}`}>
+      {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
+      {isBookingTransitionVisible && (
+        <CartTransition
+          animationUrl={BOOKING_ANIMATION_URL}
+          title="Booking confirmed"
+          message="Taking you back home when the animation finishes..."
+          onComplete={() => router.push("/")}
+        />
+      )}
       
       {/* STEP 01 - HERO SECTION */}
       <section className={styles.heroSection}>
