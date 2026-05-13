@@ -6,7 +6,9 @@ import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
 import styles from "./FullService.module.css";
+import { addCartItem } from "@/lib/cart";
 import { calculateServiceQuote } from "@/lib/pricing";
+import { formatVehicleNumber } from "@/lib/vehicleNumber";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
@@ -241,7 +243,7 @@ export default function FullServicePage() {
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<string>("full"); 
+  const [selectedPlan, setSelectedPlan] = useState<string>("full");
   const [extras, setExtras] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState(getFirstOpenDayIso(0));
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
@@ -347,6 +349,12 @@ export default function FullServicePage() {
   };
 
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("plan") === "oil") {
+      setSelectedPlan("oil");
+    }
+  }, []);
+
+  useEffect(() => {
     setSelectedServices(
       selectedPlan === "oil" ? oilChangePackageKeys : fullServicePackageKeys
     );
@@ -406,10 +414,12 @@ export default function FullServicePage() {
           vehicle: defaultVehicle
             ? `${defaultVehicle.brand} ${defaultVehicle.model}`.trim()
             : current.vehicle,
-          vehicleNumber: defaultVehicle?.vehicleNumber || current.vehicleNumber,
+          vehicleNumber: defaultVehicle
+            ? formatVehicleNumber(defaultVehicle.vehicleNumber)
+            : current.vehicleNumber,
           vehicleId: defaultVehicle?._id || current.vehicleId,
           selectedVehicleLabel: defaultVehicle
-            ? `${defaultVehicle.brand} ${defaultVehicle.model} (${defaultVehicle.vehicleNumber})`
+            ? `${defaultVehicle.brand} ${defaultVehicle.model} (${formatVehicleNumber(defaultVehicle.vehicleNumber)})`
             : current.selectedVehicleLabel,
         }));
 
@@ -452,9 +462,9 @@ export default function FullServicePage() {
     setBookingData((current) => ({
       ...current,
       vehicle: `${selectedVehicle.brand} ${selectedVehicle.model}`.trim(),
-      vehicleNumber: selectedVehicle.vehicleNumber,
+      vehicleNumber: formatVehicleNumber(selectedVehicle.vehicleNumber),
       vehicleId: selectedVehicle._id,
-      selectedVehicleLabel: `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.vehicleNumber})`,
+      selectedVehicleLabel: `${selectedVehicle.brand} ${selectedVehicle.model} (${formatVehicleNumber(selectedVehicle.vehicleNumber)})`,
     }));
   }, [selectedVehicle]);
 
@@ -660,7 +670,7 @@ export default function FullServicePage() {
       hasSavedVehicles: vehicles.length > 0,
       selectedVehicleLabel:
         selectedVehicle
-          ? `${selectedVehicle.brand} ${selectedVehicle.model} (${selectedVehicle.vehicleNumber})`
+          ? `${selectedVehicle.brand} ${selectedVehicle.model} (${formatVehicleNumber(selectedVehicle.vehicleNumber)})`
           : bookingData.selectedVehicleLabel,
     };
 
@@ -798,6 +808,98 @@ export default function FullServicePage() {
     }
 
     setInput("");
+  };
+
+  const getServiceTitle = () => (selectedPlan === "oil" ? "Oil Change" : "Full Service");
+
+  const validateCheckoutBooking = () => {
+    if (!bookingData.quote?.total) {
+      alert("Please generate the quotation before adding this booking to cart.");
+      return false;
+    }
+
+    if (!bookingData.customerName || !bookingData.mobile || !bookingData.vehicleNumber) {
+      alert("Please complete customer name, mobile number, and vehicle number in the chat before payment.");
+      return false;
+    }
+
+    const usedSlots = getUsedSlotCount(selectedDate, selectedTime);
+    if (usedSlots >= FULLSERVICE_SLOTS) {
+      alert(`Selected time (${selectedTime}) is already full. Please choose another hour.`);
+      return false;
+    }
+
+    if (isPastSlot(selectedDate, selectedTime)) {
+      alert(`Selected time (${selectedTime}) is unavailable because it has already passed. Please choose another hour.`);
+      return false;
+    }
+
+    return true;
+  };
+
+  const buildFullServicePayload = () => ({
+    ...bookingData,
+    serviceType: getServiceTitle(),
+    serviceCategory: "fullservice",
+    vehicleType: pricingVehicleTypeMap[vehicle],
+    services: selectedServices,
+    additionalServices: selectedAdditionalServices,
+    bookingDate: selectedDate,
+    bookingTime: selectedTime,
+    vehicleModel: bookingData.vehicle,
+    totalPrice: bookingData.quote?.total ?? 0,
+  });
+
+  const handleAddQuoteToCart = () => {
+    if (!validateCheckoutBooking()) return;
+
+    const payload = buildFullServicePayload();
+    const totalPrice = Number(payload.totalPrice) || 0;
+
+    addCartItem({
+      serviceCategory: "fullservice",
+      serviceType: getServiceTitle(),
+      paymentOption: "full",
+      totalPrice,
+      payableAmount: totalPrice,
+      bookingDate: selectedDate,
+      bookingTime: selectedTime,
+      vehicleLabel: String(bookingData.selectedVehicleLabel || bookingData.vehicle || vehicle),
+      customerName: bookingData.customerName,
+      mobile: bookingData.mobile,
+      bookingPayload: payload,
+    });
+
+    alert(`${getServiceTitle()} added to cart. You can choose full or half payment in the cart.`);
+  };
+
+  const handleBookQuoteNow = async () => {
+    if (!validateCheckoutBooking()) return;
+
+    try {
+      const res = await fetch("/api/bookings?type=fullservice", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(buildFullServicePayload()),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        const slotText = data.booking?.hourSlot
+          ? ` (slot ${data.booking.hourSlot}/${FULLSERVICE_SLOTS} for ${selectedTime})`
+          : "";
+        alert(`Booking successfully created${slotText}!`);
+        window.location.reload();
+      } else {
+        alert(data.error || "Booking failed");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Server error");
+    }
   };
 
   return (
@@ -1156,6 +1258,7 @@ export default function FullServicePage() {
             <div className={styles.serviceBox}>
               <div className={styles.serviceSectionTitle}>Saved Vehicle</div>
               <select
+                className={styles.savedVehicleSelect}
                 value={selectedVehicleId}
                 onChange={(e) => {
                   const id = e.target.value;
@@ -1166,7 +1269,7 @@ export default function FullServicePage() {
                 <option value="">Select Saved Vehicle</option>
                 {vehicles.map((savedVehicle) => (
                   <option key={savedVehicle._id} value={savedVehicle._id}>
-                    {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
+                    {formatVehicleNumber(savedVehicle.vehicleNumber)} - {savedVehicle.brand} {savedVehicle.model}
                   </option>
                 ))}
               </select>
@@ -1265,6 +1368,23 @@ export default function FullServicePage() {
               >
                 Download quotation
               </a>
+              <div className={styles.paymentPanel}>
+                <div className={styles.paymentPanelHeader}>
+                  <span>Ready to continue</span>
+                  <strong>LKR {(bookingData.quote?.total ?? 0).toLocaleString()}</strong>
+                </div>
+                <p className={styles.paymentHint}>
+                  Add to cart to choose full or half payment at checkout.
+                </p>
+                <div className={styles.checkoutActions}>
+                  <button type="button" onClick={handleAddQuoteToCart}>
+                    Add to cart
+                  </button>
+                  <button type="button" onClick={handleBookQuoteNow}>
+                    Book now
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

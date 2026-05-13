@@ -17,6 +17,8 @@ import {
   FaClock
 } from 'react-icons/fa';
 import { PiEngineFill } from "react-icons/pi";
+import { addCartItem, getPaymentAmount } from "@/lib/cart";
+import { formatVehicleNumber } from "@/lib/vehicleNumber";
 import styles from "./Bodywash.module.css";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
@@ -266,19 +268,6 @@ export default function BookingPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const formatVehicleNumber = (value: string) => {
-    const cleaned = value
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
-    const letters = cleaned.slice(0, 3);
-    const numbers = cleaned.slice(3, 7);
-
-    if (!letters) return "";
-    if (!numbers) return letters;
-    return `${letters} - ${numbers}`;
-  };
-
   const toggleExtra = (id: number) => {
     setSelectedExtras(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -379,45 +368,80 @@ export default function BookingPage() {
     return "Fully booked";
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const validateBooking = () => {
     if (!firstName || !vehicleNumber || !phone) {
       alert("Please fill required fields");
-      return;
+      return false;
     }
     if (isSelectedTimeFull) {
       alert(`Selected time (${bookingTime}) is already full. Please choose another hour.`);
-      return;
+      return false;
     }
     if (isSelectedTimePast) {
       alert(`Selected time (${bookingTime}) is unavailable because it has already passed. Please choose another hour.`);
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const buildBookingPayload = () => {
+    const formattedVehicleNumber = formatVehicleNumber(vehicleNumber);
+
+    return {
+      vehicleId: selectedVehicleId || undefined,
+      vehicle,
+      serviceType: currentPlan?.name || "Bodywash",
+      additionalServices: selectedExtraDetails,
+      customerName: `${firstName} ${lastName}`.trim(),
+      mobile: phone,
+      email,
+      vehicleNumber: formattedVehicleNumber,
+      vehicleModel,
+      bookingDate,
+      bookingTime,
+      totalPrice: finalTotal,
+      notes,
+    };
+  };
+
+  const handleAddToCart = () => {
+    if (!validateBooking()) return;
+
+    const payload = buildBookingPayload();
+    const vehicleDetails = [vehicle, payload.vehicleModel, `(${payload.vehicleNumber})`]
+      .filter(Boolean)
+      .join(" ");
+
+    addCartItem({
+      serviceCategory: "bodywash",
+      serviceType: payload.serviceType,
+      paymentOption: "full",
+      totalPrice: finalTotal,
+      payableAmount: getPaymentAmount(finalTotal, "full"),
+      bookingDate,
+      bookingTime,
+      vehicleLabel: vehicleDetails,
+      customerName: payload.customerName,
+      mobile: payload.mobile,
+      bookingPayload: payload,
+    });
+
+    alert("Bodywash booking added to cart for full payment.");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateBooking()) return;
+
     try {
-      const formattedVehicleNumber = formatVehicleNumber(vehicleNumber);
-       
       const res = await fetch("/api/bookings?type=bodywash", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          vehicleId: selectedVehicleId || undefined,
-          vehicle,
-          serviceType: currentPlan?.name || "Bodywash",
-          additionalServices: selectedExtraDetails,
-          customerName: `${firstName} ${lastName}`,
-          mobile: phone,
-          email,
-          vehicleNumber: formattedVehicleNumber,
-          vehicleModel,
-          bookingDate,
-          bookingTime,
-          totalPrice: finalTotal,
-          notes,
-        }),
+        body: JSON.stringify(buildBookingPayload()),
       });
 
       const data = await res.json();
@@ -535,7 +559,7 @@ useEffect(() => {
         savedVehicleTypeMap[selectedVehicle.vehicleType.toLowerCase()] ?? "Sedan";
 
       setVehicle(normalizedVehicleType);
-      setVehicleNumber(selectedVehicle.vehicleNumber);
+      setVehicleNumber(formatVehicleNumber(selectedVehicle.vehicleNumber));
       setVehicleModel(`${selectedVehicle.brand} ${selectedVehicle.model}`.trim());
     }
   }, [selectedVehicle]);
@@ -923,7 +947,7 @@ useEffect(() => {
                       <option value="">Select Saved Vehicle</option>
                       {vehicles.map((savedVehicle) => (
                         <option key={savedVehicle._id} value={savedVehicle._id}>
-                          {savedVehicle.vehicleNumber} - {savedVehicle.brand} {savedVehicle.model}
+                          {formatVehicleNumber(savedVehicle.vehicleNumber)} - {savedVehicle.brand} {savedVehicle.model}
                         </option>
                       ))}
                     </select>
@@ -975,20 +999,35 @@ useEffect(() => {
 />
                 </div>
 
-               <textarea
+<textarea
   placeholder="Additional information"
   rows={4}
   value={notes}
   onChange={(e) => setNotes(e.target.value)}
 />
 
-<button
-  type="submit"
-  className={styles.submitBtn}
-  disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
->
-  Send request
-</button>
+<div className={styles.paymentNotice}>
+  Bodywash online payments are full payment only.
+</div>
+
+<div className={styles.finalActions}>
+  <button
+    type="button"
+    className={styles.secondarySubmitBtn}
+    disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
+    onClick={handleAddToCart}
+  >
+    Add to cart
+  </button>
+
+  <button
+    type="submit"
+    className={styles.submitBtn}
+    disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
+  >
+    Book now
+  </button>
+</div>
               </form>
             </div>
           </div>
