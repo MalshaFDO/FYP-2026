@@ -576,7 +576,7 @@ useEffect(() => {
           animationUrl={BOOKING_ANIMATION_URL}
           title="Booking confirmed"
           message="Taking you back home when the animation finishes..."
-          onComplete={() => router.push("/")}
+          onComplete={() => router.push("/", { scroll: true })}
         />
       )}
 
