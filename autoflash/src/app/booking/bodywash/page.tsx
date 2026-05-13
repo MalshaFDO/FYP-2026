@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { ReactNode, TouchEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -19,10 +20,13 @@ import {
 import { PiEngineFill } from "react-icons/pi";
 import { addCartItem, getPaymentAmount } from "@/lib/cart";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
+import CartTransition from "@/components/CartTransition/CartTransition";
 import styles from "./Bodywash.module.css";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
+const BOOKING_ANIMATION_URL =
+  "https://lottie.host/7353aba1-c97c-4e10-b12f-2a18b2049ea2/c085qzdABB.lottie";
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type SavedVehicleType = VehicleType | Lowercase<VehicleType>;
@@ -212,6 +216,7 @@ const splitFullName = (value: string) => {
 };
 
 export default function BookingPage() {
+  const router = useRouter();
   const BODYWASH_SLOTS = 3;
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -229,6 +234,8 @@ export default function BookingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
+  const [isCartTransitionVisible, setIsCartTransitionVisible] = useState(false);
+  const [isBookingTransitionVisible, setIsBookingTransitionVisible] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -427,7 +434,7 @@ export default function BookingPage() {
       bookingPayload: payload,
     });
 
-    alert("Bodywash booking added to cart for full payment.");
+    setIsCartTransitionVisible(true);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -447,11 +454,7 @@ export default function BookingPage() {
       const data = await res.json();
 
       if (res.ok && data.success) {
-        const slotText = data.booking?.hourSlot
-          ? ` (slot ${data.booking.hourSlot}/${BODYWASH_SLOTS} for ${bookingTime})`
-          : "";
-        alert(`Booking successfully created${slotText}!`);
-        window.location.reload();
+        setIsBookingTransitionVisible(true);
       } else {
         alert(data.error || "Booking failed");
       }
@@ -567,6 +570,15 @@ useEffect(() => {
 
   return (
     <main className={`${styles.page} ${inter.className}`}>
+      {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
+      {isBookingTransitionVisible && (
+        <CartTransition
+          animationUrl={BOOKING_ANIMATION_URL}
+          title="Booking confirmed"
+          message="Taking you back home when the animation finishes..."
+          onComplete={() => router.push("/")}
+        />
+      )}
 
       {/* STEP 01 */}
       <section className={styles.heroSection}>
