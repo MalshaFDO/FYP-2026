@@ -27,6 +27,86 @@ export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [checkoutError, setCheckoutError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [paymentMessage, setPaymentMessage] = useState("");
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get("payment");
+    const orderId = params.get("order_id") || "";
+
+    if (!paymentStatus) return;
+
+    if (paymentStatus === "cancel") {
+      setPaymentMessage("Payment was cancelled. Your cart is still here so you can try again.");
+      window.history.replaceState({}, "", "/cart");
+      return;
+    }
+
+    if (paymentStatus !== "success") return;
+
+    const processedKey = orderId ? `autoflashProcessedOrder:${orderId}` : "";
+
+    if (processedKey && window.localStorage.getItem(processedKey)) {
+      setPaymentMessage("This payment has already been handled.");
+      window.history.replaceState({}, "", "/cart");
+      return;
+    }
+
+    const stored = window.localStorage.getItem("autoflashPendingCheckout");
+    const pendingItems = stored ? (JSON.parse(stored) as CartItem[]) : getCartItems();
+
+    if (!Array.isArray(pendingItems) || pendingItems.length === 0) {
+      setPaymentMessage("Payment returned successfully, but no pending cart items were found.");
+      window.history.replaceState({}, "", "/cart");
+      return;
+    }
+
+    const createPaidBookings = async () => {
+      setIsCheckingOut(true);
+      setCheckoutError("");
+
+      try {
+        for (const item of pendingItems) {
+          const type = item.serviceCategory === "bodywash" ? "bodywash" : "fullservice";
+          const res = await fetch(`/api/bookings?type=${type}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ...item.bookingPayload,
+              paymentStatus: "Paid",
+              paymentOption: item.paymentOption,
+              paidAmount: item.payableAmount,
+              paymentOrderId: orderId,
+            }),
+          });
+          const data = await res.json();
+
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || `Failed to create ${item.serviceType} booking`);
+          }
+        }
+
+        clearCart();
+        window.localStorage.removeItem("autoflashPendingCheckout");
+        if (processedKey) window.localStorage.setItem(processedKey, "true");
+        setItems([]);
+        setPaymentMessage("Payment successful. Your booking has been created and the cart is now empty.");
+      } catch (error) {
+        setCheckoutError(
+          error instanceof Error
+            ? error.message
+            : "Payment returned successfully, but booking creation failed."
+        );
+      } finally {
+        setIsCheckingOut(false);
+        window.history.replaceState({}, "", "/cart");
+      }
+    };
+
+    createPaidBookings();
+  }, []);
 
   useEffect(() => {
     const syncCart = () => setItems(getCartItems());
@@ -111,6 +191,7 @@ export default function CartPage() {
         throw new Error(data.error || "Unable to start PayHere checkout");
       }
 
+      window.localStorage.setItem("autoflashPendingCheckout", JSON.stringify(items));
       submitPayHereForm(data.actionUrl, data.fields);
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : "Unable to start PayHere checkout");
@@ -143,6 +224,7 @@ export default function CartPage() {
               <FaCreditCard />
             </div>
             <h2>Your cart is empty</h2>
+            {paymentMessage && <p className={styles.successText}>{paymentMessage}</p>}
             <p>Add a bodywash, full service, or oil change booking to begin checkout.</p>
             <Link href="/services" className={styles.primaryLink}>
               Browse services
@@ -251,6 +333,7 @@ export default function CartPage() {
                 Full service and oil change can use full or half payment. Bodywash
                 stays full payment only. Checkout opens PayHere Sandbox.
               </div>
+              {paymentMessage && <div className={styles.paymentMessage}>{paymentMessage}</div>}
               {checkoutError && <div className={styles.checkoutError}>{checkoutError}</div>}
               <button
                 type="button"
