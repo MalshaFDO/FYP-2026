@@ -24,12 +24,15 @@ import {
 import type { CartItem, PaymentHistoryItem } from "@/lib/cart";
 import styles from "./Cart.module.css";
 
+type CheckoutMode = "online" | "service";
+
 export default function CartPage() {
   const [items, setItems] = useState<CartItem[]>([]);
   const [checkoutError, setCheckoutError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
+  const [checkoutMode, setCheckoutMode] = useState<CheckoutMode>("online");
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -176,7 +179,7 @@ export default function CartPage() {
     form.submit();
   };
 
-  const handleCheckout = async () => {
+  const handlePayNow = async () => {
     if (items.length === 0 || isCheckingOut) return;
 
     setCheckoutError("");
@@ -197,9 +200,55 @@ export default function CartPage() {
       }
 
       window.localStorage.setItem("autoflashPendingCheckout", JSON.stringify(items));
+      if (typeof data?.fields?.order_id === "string" && data.fields.order_id) {
+        window.localStorage.setItem("autoflashPendingOrderId", data.fields.order_id);
+      }
       submitPayHereForm(data.actionUrl, data.fields);
     } catch (error) {
       setCheckoutError(error instanceof Error ? error.message : "Unable to start PayHere checkout");
+      setIsCheckingOut(false);
+    }
+  };
+
+  const handlePayInService = async () => {
+    if (items.length === 0 || isCheckingOut) return;
+
+    setCheckoutError("");
+    setIsCheckingOut(true);
+
+    try {
+      for (const item of items) {
+        const type = item.serviceCategory === "bodywash" ? "bodywash" : "fullservice";
+        const res = await fetch(`/api/bookings?type=${type}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ...item.bookingPayload,
+            paymentStatus: "Pending",
+            paymentOption: "full",
+            paidAmount: 0,
+            remainingAmount: Number(item.totalPrice || 0),
+          }),
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || `Failed to save ${item.serviceType} booking`);
+        }
+      }
+
+      clearCart();
+      window.localStorage.removeItem("autoflashPendingCheckout");
+      window.localStorage.removeItem("autoflashPendingOrderId");
+      setItems([]);
+      setPaymentMessage("Booking saved. Please pay at the service center.");
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error ? error.message : "Unable to save your booking for payment at service"
+      );
+    } finally {
       setIsCheckingOut(false);
     }
   };
@@ -272,67 +321,85 @@ export default function CartPage() {
                     </span>
                   </div>
 
-                  <div className={styles.paymentSelector}>
-                    <div>
-                      <span>Payment choice</span>
-                      <strong>
-                        {item.paymentStage === "remaining"
-                          ? "Remaining balance"
-                          : item.serviceCategory === "bodywash"
-                          ? "Full payment required"
-                          : "Choose before gateway"}
-                      </strong>
-                    </div>
-                    {item.paymentStage === "remaining" ? (
-                      <div className={styles.lockedPayment}>
-                        <FaLock /> Pay balance
+                  {checkoutMode === "online" ? (
+                    <>
+                      <div className={styles.paymentSelector}>
+                        <div>
+                          <span>Payment choice</span>
+                          <strong>
+                            {item.paymentStage === "remaining"
+                              ? "Remaining balance"
+                              : item.serviceCategory === "bodywash"
+                              ? "Full payment required"
+                              : "Choose before payment"}
+                          </strong>
+                        </div>
+                        {item.paymentStage === "remaining" ? (
+                          <div className={styles.lockedPayment}>
+                            <FaLock /> Pay balance
+                          </div>
+                        ) : item.serviceCategory === "fullservice" ? (
+                          <div className={styles.segmentedControl}>
+                            <button
+                              type="button"
+                              className={item.paymentOption === "full" ? styles.segmentActive : ""}
+                              onClick={() => handlePaymentOptionChange(item.id, "full")}
+                            >
+                              Full
+                            </button>
+                            <button
+                              type="button"
+                              className={item.paymentOption === "half" ? styles.segmentActive : ""}
+                              onClick={() => handlePaymentOptionChange(item.id, "half")}
+                            >
+                              Half
+                            </button>
+                          </div>
+                        ) : (
+                          <div className={styles.lockedPayment}>
+                            <FaLock /> Full only
+                          </div>
+                        )}
                       </div>
-                    ) : item.serviceCategory === "fullservice" ? (
-                      <div className={styles.segmentedControl}>
-                        <button
-                          type="button"
-                          className={item.paymentOption === "full" ? styles.segmentActive : ""}
-                          onClick={() => handlePaymentOptionChange(item.id, "full")}
-                        >
-                          Full
-                        </button>
-                        <button
-                          type="button"
-                          className={item.paymentOption === "half" ? styles.segmentActive : ""}
-                          onClick={() => handlePaymentOptionChange(item.id, "half")}
-                        >
-                          Half
-                        </button>
+                      <div className={styles.priceRow}>
+                        <div>
+                          <span>Total</span>
+                          <strong>LKR {item.totalPrice.toLocaleString()}</strong>
+                        </div>
+                        <div>
+                          <span>
+                            {item.paymentStage === "remaining"
+                              ? "Remaining payment"
+                              : item.paymentOption === "half"
+                              ? "Half payment"
+                              : "Full payment"}
+                          </span>
+                          <strong>LKR {item.payableAmount.toLocaleString()}</strong>
+                        </div>
+                        {item.remainingAmount ? (
+                          <div>
+                            <span>Balance after paid</span>
+                            <strong>LKR {item.remainingAmount.toLocaleString()}</strong>
+                          </div>
+                        ) : null}
                       </div>
-                    ) : (
-                      <div className={styles.lockedPayment}>
-                        <FaLock /> Full only
-                      </div>
-                    )}
-                  </div>
-
-                  <div className={styles.priceRow}>
-                    <div>
-                      <span>Total</span>
-                      <strong>LKR {item.totalPrice.toLocaleString()}</strong>
-                    </div>
-                    <div>
-                      <span>
-                        {item.paymentStage === "remaining"
-                          ? "Remaining payment"
-                          : item.paymentOption === "half"
-                          ? "Half payment"
-                          : "Full payment"}
-                      </span>
-                      <strong>LKR {item.payableAmount.toLocaleString()}</strong>
-                    </div>
-                    {item.remainingAmount ? (
+                    </>
+                  ) : (
+                    <div className={styles.priceRow}>
                       <div>
-                        <span>Balance after paid</span>
-                        <strong>LKR {item.remainingAmount.toLocaleString()}</strong>
+                        <span>Total</span>
+                        <strong>LKR {item.totalPrice.toLocaleString()}</strong>
                       </div>
-                    ) : null}
-                  </div>
+                      <div>
+                        <span>Pay at service</span>
+                        <strong>LKR {item.totalPrice.toLocaleString()}</strong>
+                      </div>
+                      <div>
+                        <span>Note</span>
+                        <strong>Booking will be saved without online payment.</strong>
+                      </div>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
@@ -347,22 +414,53 @@ export default function CartPage() {
                 <strong>LKR {totals.total.toLocaleString()}</strong>
               </div>
               <div className={styles.summaryLine}>
-                <span>Payable now</span>
-                <strong>LKR {totals.payable.toLocaleString()}</strong>
+                <span>{checkoutMode === "online" ? "Payable now" : "Pay at service"}</span>
+                <strong>
+                  LKR {checkoutMode === "online" ? totals.payable.toLocaleString() : totals.total.toLocaleString()}
+                </strong>
+              </div>
+              <div className={styles.checkoutModeSelector}>
+                <div className={styles.checkoutModeText}>
+                  <span>Checkout mode</span>
+                  <strong>{checkoutMode === "online" ? "Pay now" : "Pay in service"}</strong>
+                </div>
+                <div className={styles.segmentedControl}>
+                  <button
+                    type="button"
+                    className={checkoutMode === "online" ? styles.segmentActive : ""}
+                    onClick={() => setCheckoutMode("online")}
+                  >
+                    Pay now
+                  </button>
+                  <button
+                    type="button"
+                    className={checkoutMode === "service" ? styles.segmentActive : ""}
+                    onClick={() => setCheckoutMode("service")}
+                  >
+                    Pay in service
+                  </button>
+                </div>
               </div>
               <div className={styles.gatewayNote}>
-                Full service and oil change can use full or half payment. Bodywash
-                stays full payment only. Checkout opens PayHere Sandbox.
+                {checkoutMode === "online"
+                  ? "Full service and oil change can use full or half payment. Bodywash stays full payment only."
+                  : "Your booking will be confirmed now and you can pay when you arrive for the service."}
               </div>
               {paymentMessage && <div className={styles.paymentMessage}>{paymentMessage}</div>}
               {checkoutError && <div className={styles.checkoutError}>{checkoutError}</div>}
               <button
                 type="button"
                 className={styles.checkoutBtn}
-                onClick={handleCheckout}
+                onClick={checkoutMode === "online" ? handlePayNow : handlePayInService}
                 disabled={isCheckingOut}
               >
-                {isCheckingOut ? "Opening PayHere..." : "Proceed to PayHere Sandbox"}
+                {isCheckingOut
+                  ? checkoutMode === "online"
+                    ? "Opening PayHere..."
+                    : "Saving booking..."
+                  : checkoutMode === "online"
+                  ? "Pay now"
+                  : "Pay in service"}
               </button>
               <button
                 type="button"

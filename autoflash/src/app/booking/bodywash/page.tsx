@@ -25,8 +25,6 @@ import styles from "./Bodywash.module.css";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
-const BOOKING_ANIMATION_URL =
-  "https://lottie.host/7353aba1-c97c-4e10-b12f-2a18b2049ea2/c085qzdABB.lottie";
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type SavedVehicleType = VehicleType | Lowercase<VehicleType>;
@@ -235,7 +233,6 @@ export default function BookingPage() {
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
   const [isCartTransitionVisible, setIsCartTransitionVisible] = useState(false);
-  const [isBookingTransitionVisible, setIsBookingTransitionVisible] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -451,31 +448,9 @@ export default function BookingPage() {
     setIsCartTransitionVisible(true);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleContinueToCart = (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateBooking()) return;
-
-    try {
-      const res = await fetch("/api/bookings?type=bodywash", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(buildBookingPayload()),
-      });
-
-      const data = await res.json();
-
-      if (res.ok && data.success) {
-        setIsBookingTransitionVisible(true);
-      } else {
-        alert(data.error || "Booking failed");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Server error");
-    }
+    handleAddToCart();
   };
   useEffect(() => {
     const fetchProfile = async () => {
@@ -586,14 +561,6 @@ useEffect(() => {
   return (
     <main className={`${styles.page} ${inter.className}`}>
       {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
-      {isBookingTransitionVisible && (
-        <CartTransition
-          animationUrl={BOOKING_ANIMATION_URL}
-          title="Booking confirmed"
-          message="Taking you back home when the animation finishes..."
-          onComplete={() => router.push("/", { scroll: true })}
-        />
-      )}
 
       {/* STEP 01 */}
       <section className={styles.heroSection}>
@@ -961,7 +928,7 @@ useEffect(() => {
                 time and fill all required form fields.
               </p>
 
-              <form className={styles.finalForm} onSubmit={handleSubmit}>
+              <form className={styles.finalForm} onSubmit={handleContinueToCart}>
                 {vehicles.length > 0 && (
                   <div className={styles.selectWrap}>
                     <select
@@ -1041,25 +1008,16 @@ useEffect(() => {
   Bodywash online payments are full payment only.
 </div>
 
-<div className={styles.finalActions}>
-  <button
-    type="button"
-    className={styles.secondarySubmitBtn}
-    disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
-    onClick={handleAddToCart}
-  >
-    Add to cart
-  </button>
-
-  <button
-    type="submit"
-    className={styles.submitBtn}
-    disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
-  >
-    Book now
-  </button>
-</div>
-              </form>
+  <div className={styles.finalActions}>
+    <button
+      type="submit"
+      className={styles.submitBtn}
+      disabled={!currentPlan || !bookingDate || !bookingTime || isSelectedTimeFull || isSelectedTimePast}
+    >
+      Continue to cart
+    </button>
+  </div>
+                </form>
             </div>
           </div>
         </div>

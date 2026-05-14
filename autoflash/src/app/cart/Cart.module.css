@@ -190,6 +190,37 @@
   color: #fff;
 }
 
+.checkoutModeSelector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 12px 0 2px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #0f172a;
+  color: #fff;
+}
+
+.checkoutModeText {
+  min-width: 0;
+}
+
+.checkoutModeText span {
+  display: block;
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.checkoutModeText strong {
+  display: block;
+  margin-top: 4px;
+}
+
 .paymentSelector span {
   display: block;
   color: #cbd5e1;
@@ -222,6 +253,21 @@
   color: #dbe4ef;
   font-weight: 900;
   cursor: pointer;
+}
+
+.checkoutModeSelector .segmentedControl {
+  width: min(100%, 280px);
+}
+
+@media (max-width: 640px) {
+  .checkoutModeSelector {
+    align-items: stretch;
+  }
+
+  .checkoutModeSelector .segmentedControl {
+    width: 100%;
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 .segmentedControl .segmentActive {

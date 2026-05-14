@@ -40,11 +40,13 @@ export default function PaymentReturnPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get("payment");
-    const orderId = params.get("order_id") || "";
+    const storedOrderId = window.localStorage.getItem("autoflashPendingOrderId") || "";
+    const orderId = params.get("order_id") || storedOrderId;
 
-    if (paymentStatus !== "success") {
+    if (paymentStatus === "cancel") {
       setIsError(true);
-      setMessage("Payment was not completed. Returning to your cart...");
+      setMessage("Payment was cancelled. Returning to your cart...");
+      window.localStorage.removeItem("autoflashPendingOrderId");
       const timer = window.setTimeout(() => router.replace("/cart"), HOME_REDIRECT_DELAY);
       return () => window.clearTimeout(timer);
     }
@@ -65,6 +67,7 @@ export default function PaymentReturnPage() {
         if (!Array.isArray(pendingItems) || pendingItems.length === 0) {
           setMessage("Payment completed. Returning home...");
           window.localStorage.removeItem("autoflashPendingCheckout");
+          window.localStorage.removeItem("autoflashPendingOrderId");
           if (processedKey) window.localStorage.setItem(processedKey, "true");
           window.setTimeout(() => router.replace("/"), HOME_REDIRECT_DELAY);
           return;
@@ -164,6 +167,7 @@ export default function PaymentReturnPage() {
         addPaymentHistory(historyItems);
         saveCartItems(remainingItems);
         window.localStorage.removeItem("autoflashPendingCheckout");
+        window.localStorage.removeItem("autoflashPendingOrderId");
         if (processedKey) window.localStorage.setItem(processedKey, "true");
 
         setMessage(

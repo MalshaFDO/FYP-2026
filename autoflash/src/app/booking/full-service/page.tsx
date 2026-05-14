@@ -14,9 +14,6 @@ import CartTransition from "@/components/CartTransition/CartTransition";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
 const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
-const BOOKING_ANIMATION_URL =
-  "https://lottie.host/7353aba1-c97c-4e10-b12f-2a18b2049ea2/c085qzdABB.lottie";
-
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type PricingVehicleType = "sedan" | "suv" | "pickup" | "minivan";
 
@@ -80,8 +77,6 @@ type ExtraServiceOption = {
   price?: number;
   priceByVehicle?: Record<VehicleType, number>;
 };
-
-type CheckoutAction = "cart" | "book";
 
 const carImages: Record<VehicleType, string> = {
   Sedan: "/01.png",
@@ -256,7 +251,6 @@ export default function FullServicePage() {
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
   const [slotBookings, setSlotBookings] = useState<SlotBooking[]>([]);
   const [isCartTransitionVisible, setIsCartTransitionVisible] = useState(false);
-  const [isBookingTransitionVisible, setIsBookingTransitionVisible] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
   const [now, setNow] = useState(() => new Date());
   const [touchStartX, setTouchStartX] = useState<number | null>(null);
@@ -302,12 +296,11 @@ export default function FullServicePage() {
   const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
   const [hasPromptedQuotationConfirmation, setHasPromptedQuotationConfirmation] =
     useState(false);
-  const [guestDetailsAction, setGuestDetailsAction] =
-    useState<CheckoutAction | null>(null);
-  const [guestDetailsForm, setGuestDetailsForm] = useState({
-    customerName: "",
-    mobile: "",
-    vehicleNumber: "",
+    const [guestDetailsVisible, setGuestDetailsVisible] = useState(false);
+    const [guestDetailsForm, setGuestDetailsForm] = useState({
+      customerName: "",
+      mobile: "",
+      vehicleNumber: "",
   });
   const [guestDetailsError, setGuestDetailsError] = useState("");
   const [input, setInput] = useState("");
@@ -886,7 +879,7 @@ export default function FullServicePage() {
     totalPrice: data.quote?.total ?? 0,
   });
 
-  const openGuestDetailsForm = (action: CheckoutAction) => {
+  const openGuestDetailsForm = () => {
     if (!validateCheckoutBooking(bookingData, { requireCustomerDetails: false })) return;
 
     setGuestDetailsForm({
@@ -895,12 +888,12 @@ export default function FullServicePage() {
       vehicleNumber: bookingData.vehicleNumber ?? "",
     });
     setGuestDetailsError("");
-    setGuestDetailsAction(action);
+    setGuestDetailsVisible(true);
   };
 
   const handleAddQuoteToCart = (data: BookingData = bookingData) => {
     if (!hasRequiredCustomerDetails(data)) {
-      openGuestDetailsForm("cart");
+      openGuestDetailsForm();
       return;
     }
 
@@ -923,40 +916,8 @@ export default function FullServicePage() {
       bookingPayload: payload,
     });
 
-    setGuestDetailsAction(null);
+    setGuestDetailsVisible(false);
     setIsCartTransitionVisible(true);
-  };
-
-  const handleBookQuoteNow = async (data: BookingData = bookingData) => {
-    if (!hasRequiredCustomerDetails(data)) {
-      openGuestDetailsForm("book");
-      return;
-    }
-
-    if (!validateCheckoutBooking(data)) return;
-
-    try {
-      const res = await fetch("/api/bookings?type=fullservice", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(buildFullServicePayload(data)),
-      });
-
-      const responseData = await res.json();
-
-      if (res.ok && responseData.success) {
-        setGuestDetailsAction(null);
-        setIsChatOpen(false);
-        setIsBookingTransitionVisible(true);
-      } else {
-        alert(responseData.error || "Booking failed");
-      }
-    } catch (error) {
-      console.error(error);
-      alert("Server error");
-    }
   };
 
   const handleGuestDetailsSubmit = () => {
@@ -988,29 +949,14 @@ export default function FullServicePage() {
 
     setBookingData(updatedBookingData);
     setGuestDetailsError("");
-
-    if (guestDetailsAction === "cart") {
-      handleAddQuoteToCart(updatedBookingData);
-      return;
-    }
-
-    if (guestDetailsAction === "book") {
-      void handleBookQuoteNow(updatedBookingData);
-    }
+    setGuestDetailsVisible(false);
+    handleAddQuoteToCart(updatedBookingData);
   };
 
   return (
     <main className={`${styles.page} ${inter.className}`}>
       {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
-      {isBookingTransitionVisible && (
-        <CartTransition
-          animationUrl={BOOKING_ANIMATION_URL}
-          title="Booking confirmed"
-          message="Taking you back home when the animation finishes..."
-          onComplete={() => router.push("/", { scroll: true })}
-        />
-      )}
-      
+
       {/* STEP 01 - HERO SECTION */}
       <section className={styles.heroSection}>
         <div className={styles.contentWrapper}>
@@ -1492,28 +1438,25 @@ export default function FullServicePage() {
                   <span>Ready to continue</span>
                   <strong>LKR {(bookingData.quote?.total ?? 0).toLocaleString()}</strong>
                 </div>
-                <p className={styles.paymentHint}>
-                  Add to cart to choose full or half payment at checkout.
-                </p>
-                <div className={styles.checkoutActions}>
-                  <button type="button" onClick={() => handleAddQuoteToCart()}>
-                    Add to cart
-                  </button>
-                  <button type="button" onClick={() => void handleBookQuoteNow()}>
-                    Book now
-                  </button>
-                </div>
-                {guestDetailsAction && (
-                  <div className={styles.guestDetailsForm}>
-                    <div className={styles.guestDetailsHeader}>
-                      <span>Guest details</span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGuestDetailsAction(null);
-                          setGuestDetailsError("");
-                        }}
-                      >
+                  <p className={styles.paymentHint}>
+                    Add this booking to the cart, then choose how you want to pay there.
+                  </p>
+                  <div className={styles.checkoutActions}>
+                    <button type="button" onClick={() => handleAddQuoteToCart()}>
+                      Continue to cart
+                    </button>
+                  </div>
+                  {guestDetailsVisible && (
+                    <div className={styles.guestDetailsForm}>
+                      <div className={styles.guestDetailsHeader}>
+                        <span>Guest details</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setGuestDetailsVisible(false);
+                            setGuestDetailsError("");
+                          }}
+                        >
                         Cancel
                       </button>
                     </div>
@@ -1560,15 +1503,15 @@ export default function FullServicePage() {
                     {guestDetailsError && (
                       <div className={styles.guestDetailsError}>{guestDetailsError}</div>
                     )}
-                    <button
-                      type="button"
-                      className={styles.guestDetailsSubmit}
-                      onClick={handleGuestDetailsSubmit}
-                    >
-                      {guestDetailsAction === "cart" ? "Continue to cart" : "Confirm booking"}
-                    </button>
-                  </div>
-                )}
+                      <button
+                        type="button"
+                        className={styles.guestDetailsSubmit}
+                        onClick={handleGuestDetailsSubmit}
+                      >
+                        Continue to cart
+                      </button>
+                    </div>
+                  )}
               </div>
             </div>
           )}
