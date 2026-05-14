@@ -229,6 +229,37 @@ const Header = () => {
           <span></span>
         </button>
 
+        <div className={styles.mobileRightActions}>
+          <button
+            type="button"
+            className={styles.profileLink}
+            aria-label={t.profile}
+            title={t.profile}
+            onClick={openProfile}
+          >
+            {profileImage ? (
+              <Image
+                src={profileImage}
+                alt=""
+                width={35}
+                height={35}
+                className={styles.profileImage}
+                unoptimized
+              />
+            ) : (
+              <FaUserCircle />
+            )}
+          </button>
+
+          <button
+            type="button"
+            className={styles.mobileHeaderLanguage}
+            onClick={() => setLanguage(language === "en" ? "si" : "en")}
+          >
+            {language === "en" ? "SI" : "EN"}
+          </button>
+        </div>
+
         <div className={`${styles.mobileMenu} ${menuOpen ? styles.show : ""}`}>
           <div className={styles.mobileLanguageSwitch}>
             <button

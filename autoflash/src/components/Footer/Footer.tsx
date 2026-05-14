@@ -52,69 +52,55 @@ const Footer = () => {
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
-        <div className={styles.panel}>
-          <div className={styles.brandSection}>
-            <span className={styles.kicker}>Premium Auto Care</span>
-            <h2 className={styles.logo}>
-              AUTO <span className={styles.highlight}>FLASH</span>
-            </h2>
-            <p className={styles.tagline}>{t.tagline}</p>
-            <p className={styles.contactLine}>{t.contactLine}</p>
-            <div className={styles.actions}>
-              <Link href="/booking" className={styles.primaryAction}>
-                {t.bookingCta}
-              </Link>
+        {/* BRAND SECTION */}
+        <div className={styles.brandSection}>
+          <span className={styles.kicker}>Premium Auto Care</span>
+          <h2 className={styles.logo}>
+            AUTO <span className={styles.highlight}>FLASH</span>
+          </h2>
+          <p className={styles.tagline}>{t.tagline}</p>
+          <p className={styles.contactLine}>{t.contactLine}</p>
+          <Link href="/booking" className={styles.primaryAction}>
+            {t.bookingCta}
+          </Link>
+        </div>
+
+        {/* QUICK LINKS */}
+        <div className={styles.section}>
+          <h3 className={styles.heading}>{t.quickLinks}</h3>
+          <ul className={styles.list}>
+            <li><Link href="/inventory">{t.inventory}</Link></li>
+            <li><Link href="/booking">{t.booking}</Link></li>
+            <li><Link href="/about">{t.about}</Link></li>
+          </ul>
+        </div>
+
+        {/* VISIT US */}
+        <div className={styles.section}>
+          <h3 className={styles.heading}>{t.visit}</h3>
+          <div className={styles.contactCard}>
+            <FaMapMarkerAlt className={styles.icon} />
+            <div>
+              <span className={styles.contactLabel}>{t.visit}</span>
+              <span className={styles.contactValue}>{t.location}</span>
             </div>
           </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.heading}>{t.quickLinks}</h3>
-            <ul className={styles.list}>
-              <li>
-                <Link href="/inventory">{t.inventory}</Link>
-              </li>
-              <li>
-                <Link href="/booking">{t.booking}</Link>
-              </li>
-              <li>
-                <Link href="/about">{t.about}</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.heading}>{t.visit}</h3>
-            <ul className={styles.list}>
-              <li className={styles.contactCard}>
-                <FaMapMarkerAlt className={styles.icon} />
-                <div>
-                  <span className={styles.contactLabel}>{t.visit}</span>
-                  <span className={styles.contactValue}>{t.location}</span>
-                </div>
-              </li>
-              <li className={styles.contactCard}>
-                <FaPhoneAlt className={styles.icon} />
-                <div>
-                  <span className={styles.contactLabel}>{t.callUs}</span>
-                  <span className={styles.contactValue}>+94 76 824 8676</span>
-                </div>
-              </li>
-            </ul>
-          </div>
-
-          <div className={styles.section}>
-            <h3 className={styles.heading}>{t.followUs}</h3>
-            <div className={styles.socials}>
-              <a href="https://www.facebook.com/autoflashwennappuwa" className={styles.socialLink} aria-label="Facebook">
-                <FaFacebook />
-              </a>
-              <a href="https://www.instagram.com/auto_flash_?igsh=MTlpMDI4MnpzeHVpNg%3D%3D&utm_source=qr" className={styles.socialLink} aria-label="Instagram">
-                <FaInstagram />
-              </a>
-              <a href="https://api.whatsapp.com/send/?phone=%2B94768248676&text&type=phone_number&app_absent=0" className={styles.socialLink} aria-label="WhatsApp">
-                <FaWhatsapp />
-              </a>
+          <div className={styles.contactCard}>
+            <FaPhoneAlt className={styles.icon} />
+            <div>
+              <span className={styles.contactLabel}>{t.callUs}</span>
+              <span className={styles.contactValue}>+94 76 824 8676</span>
             </div>
+          </div>
+        </div>
+
+        {/* FOLLOW US */}
+        <div className={styles.section}>
+          <h3 className={styles.heading}>{t.followUs}</h3>
+          <div className={styles.socials}>
+            <a href="https://facebook.com" className={styles.socialLink}><FaFacebook /></a>
+            <a href="https://instagram.com" className={styles.socialLink}><FaInstagram /></a>
+            <a href="https://wa.me/94768248676" className={styles.socialLink}><FaWhatsapp /></a>
           </div>
         </div>
       </div>

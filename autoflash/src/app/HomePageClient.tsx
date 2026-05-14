@@ -1,173 +1,134 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { FaChevronRight } from "react-icons/fa";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import Link from "next/link";
+import { 
+  FaRocket, 
+  FaCalendarAlt, 
+  FaBrain, 
+  FaMoneyBillWave, 
+  FaCar, 
+  FaFileInvoiceDollar, 
+  FaTools, 
+  FaCheckCircle 
+} from "react-icons/fa";
 import styles from "./Home.module.css";
 
 const copy = {
   en: {
     heroSubtitle: "MODERN EQUIPMENT",
-    heroTitle: "Car Wash",
+    heroTitle: "Vehicle Service",
     heroDescription:
-      "A clean car is essential for maintaining its resale value and ensuring a presentable appearance on the road.",
-    readMore: "Read More",
-    orderNow: "Order Now",
+      "A clean Vehicle is essential for maintaining its resale value and ensuring a presentable appearance on the road.",
+    // New Hero Buttons
+    btnBodyWash: "Body Wash",
+    btnFullService: "Full Service",
+    btnOilChange: "Oil Change",
+    
     accentText: "SMART PLATFORM",
     sectionTitle: "Smart Vehicle Service & Quotation",
     sectionDesc:
       "AutoFlash simplifies vehicle servicing with AI-powered quotations, online booking, and transparent pricing without phone-call delays.",
-    callForBooking: "Call for booking",
-    learnMore: "Learn More",
     features: [
-      { icon: "⚡", title: "Instant Quotations", text: "AI-generated pricing in seconds." },
-      { icon: "📆", title: "Online Booking", text: "Book services anytime, anywhere." },
-      { icon: "🧠", title: "Smart System", text: "Centralized service management." },
-      { icon: "💰", title: "Transparent Pricing", text: "No hidden costs or confusion." },
+      { icon: <FaRocket />, title: "Instant Quotations", text: "AI-generated pricing in seconds." },
+      { icon: <FaCalendarAlt />, title: "Online Booking", text: "Book services anytime, anywhere." },
+      { icon: <FaBrain />, title: "Smart System", text: "Centralized service management." },
+      { icon: <FaMoneyBillWave />, title: "Transparent Pricing", text: "No hidden costs or confusion." },
     ],
     howTitle: "How AutoFlash Works",
     steps: [
-      { number: "01", title: "Select Service", text: "Choose vehicle and service type." },
-      { number: "02", title: "Get Quotation", text: "Instant AI-powered pricing." },
-      { number: "03", title: "Book Slot", text: "Select date and time." },
-      { number: "04", title: "Service Done", text: "Visit and complete service." },
+      { number: "01", title: "Select Service", text: "Choose vehicle and service type.", icon: <FaCar /> },
+      { number: "02", title: "Get Quotation", text: "Instant AI-powered pricing.", icon: <FaFileInvoiceDollar /> },
+      { number: "03", title: "Book Slot", text: "Pick a time that fits you.", icon: <FaCalendarAlt /> },
+      { number: "04", title: "Service Done", text: "Professional care for your car.", icon: <FaTools /> },
     ],
-    servicesTitle: "Our Services",
+    servicesTitle: "Our Main Tracks",
     services: [
-      { title: "Premium Wash", text: "Fast, perfect cleaning." },
-      { title: "Full Service", text: "Routine inspection and care." },
-      { title: "Engine Check", text: "Advanced diagnostics." },
-      { title: "Detailing", text: "Interior and exterior care." },
+      { title: "Body Wash", text: "Premium exterior & interior cleaning.", link: "/booking" },
+      { title: "Full Service", text: "Complete mechanical checkup & oil change.", link: "/booking" },
+      { title: "Detailing", text: "Professional cut & polish services. Contact us for details.", link: "/contact" },
+      { title: "Hybrid Care", text: "Specialized maintenance for hybrid vehicles.", link: "/booking" }
     ],
-    whyTitle: "Why Choose AutoFlash",
-    whyList: [
-      "AI-powered quotations",
-      "No hidden costs",
-      "Fast online booking",
-      "Modern equipment",
-      "Built for Sri Lanka",
-    ],
-    ctaTitle: "Ready to Service Your Vehicle?",
-    ctaText: "Get a quotation or book your service in minutes.",
+    ctaTitle: "Ready to Experience AutoFlash?",
+    ctaText: "Join the modern way of vehicle maintenance today.",
     getQuotation: "Get Quotation",
-    bookService: "Book Service",
+    bookService: "Book Now"
   },
   si: {
     heroSubtitle: "නවීන උපකරණ",
-    heroTitle: "කාර් වොෂ්",
-    heroDescription:
-      "ඔබගේ වාහනය පිරිසිදුව තබා ගැනීම එහි නැවත විකිණීමේ වටිනාකම සහ පාරේ හොඳ පෙනුම රැකගැනීමට වැදගත්ය.",
-    readMore: "තවත් බලන්න",
-    orderNow: "දැන් අයදුම් කරන්න",
+    heroTitle: "රථවාහන සත්කාරය",
+    heroDescription: "ඔබේ වාහනයේ වටිනාකම සහ පෙනුම සුරැකීමට ක්‍රමවත් පිරිසිදු කිරීමක් අත්‍යවශ්‍ය වේ.",
+    btnBodyWash: "Body Wash",
+    btnFullService: "Full Service",
+    btnOilChange: "Oil Change",
+    
     accentText: "ස්මාර්ට් පද්ධතිය",
-    sectionTitle: "ස්මාර්ට් වාහන සේවා සහ මිල ගණන්",
-    sectionDesc:
-      "AutoFlash AI මගින් මිල ගණන්, ඔන්ලයින් වෙන්කරවාගැනීම සහ පැහැදිලි මිලකරණය සමඟ වාහන සේවාව පහසු කරයි.",
-    callForBooking: "වෙන්කරවා ගැනීමට අමතන්න",
-    learnMore: "වැඩිදුර දැනගන්න",
+    sectionTitle: "ස්මාර්ට් සේවා සහ මිල ගණන්",
+    sectionDesc: "AutoFlash හරහා දුරකථන ඇමතුම් ප්‍රමාදයකින් තොරව AI තාක්ෂණයෙන් මිල ගණන් සහ බුකින් පහසුකම් ලබාගත හැක.",
     features: [
-      { icon: "⚡", title: "ක්ෂණික මිල ගණන්", text: "තත්පර කිහිපයකින් AI මිල ගණන්." },
-      { icon: "📆", title: "ඔන්ලයින් වෙන්කරවා ගැනීම", text: "ඕනෑම වෙලාවක සේවා වෙන්කරන්න." },
-      { icon: "🧠", title: "ස්මාර්ට් පද්ධතිය", text: "මධ්‍යගත සේවා කළමනාකරණය." },
-      { icon: "💰", title: "පැහැදිලි මිලකරණය", text: "සැඟවුණු ගාස්තු නොමැත." },
+      { icon: <FaRocket />, title: "ක්ෂණික මිල ගණන්", text: "තත්පර කිහිපයකින් මිල දැනගන්න." },
+      { icon: <FaCalendarAlt />, title: "ඔන්ලයින් බුකින්", text: "ඔබට පහසු වෙලාවක් වෙන්කරගන්න." },
+      { icon: <FaBrain />, title: "ස්මාර්ට් පද්ධතිය", text: "සියල්ල එකම තැනකින් පාලනය වේ." },
+      { icon: <FaMoneyBillWave />, title: "විනිවිද පෙනෙන මිල", text: "සැඟවුණු ගාස්තු නොමැත." },
     ],
-    howTitle: "AutoFlash ක්‍රියා කරන ආකාරය",
+    howTitle: "AutoFlash ක්‍රියාකරන ආකාරය",
     steps: [
-      { number: "01", title: "සේවාව තෝරන්න", text: "වාහනය සහ සේවා වර්ගය තෝරන්න." },
-      { number: "02", title: "මිල ගණන් ලබාගන්න", text: "ක්ෂණික AI මිල ගණන්." },
-      { number: "03", title: "වේලාව වෙන්කරන්න", text: "දිනය සහ වේලාව තෝරන්න." },
-      { number: "04", title: "සේවාව සම්පූර්ණ කරන්න", text: "පැමිණ සේවාව ලබාගන්න." },
+      { number: "01", title: "සේවාව තෝරන්න", text: "වාහනය සහ සේවා වර්ගය තෝරන්න.", icon: <FaCar /> },
+      { number: "02", title: "මිල දැනගන්න", text: "ක්ෂණික මිල ගණන් ලබාගන්න.", icon: <FaFileInvoiceDollar /> },
+      { number: "03", title: "වෙලාවක් වෙන් කරන්න", text: "පහසු දිනයක් සහ වේලාවක් තෝරන්න.", icon: <FaCalendarAlt /> },
+      { number: "04", title: "සේවාව ලබාගන්න", text: "විශ්වාසදායක සේවාවක් ලබාගන්න.", icon: <FaTools /> },
     ],
-    servicesTitle: "අපගේ සේවා",
+    servicesTitle: "ප්‍රධාන සේවාවන්",
     services: [
-      { title: "ප්‍රිමියම් වොෂ්", text: "වේගවත් හා නිවැරදි පිරිසිදු කිරීම." },
-      { title: "සම්පූර්ණ සේවාව", text: "නිතිපතා පරීක්ෂාව සහ නඩත්තු." },
-      { title: "එන්ජින් පරීක්ෂාව", text: "උසස් දෝෂ විමර්ශනය." },
-      { title: "ඩීටේලින්", text: "ඇතුළත සහ පිටත රැකවරණය." },
+      { title: "Body Wash", text: "උසස් තත්ත්වයේ පිරිසිදු කිරීම්.", link: "/booking" },
+      { title: "Full Service", text: "සම්පූර්ණ යාන්ත්‍රික පරීක්ෂාවන්.", link: "/booking" },
+      { title: "Detailing", text: "වෘත්තීය මට්ටමේ ඔප දැමීම්. වැඩි විස්තර සඳහා විමසන්න.", link: "/contact" },
+      { title: "Hybrid Care", text: "හයිබ්‍රිඩ් වාහන සඳහා විශේෂිත සේවා.", link: "/booking" }
     ],
-    whyTitle: "AutoFlash තෝරාගත යුත්තේ ඇයි",
-    whyList: [
-      "AI මගින් මිල ගණන්",
-      "සැඟවුණු ගාස්තු නැත",
-      "වේගවත් ඔන්ලයින් වෙන්කරවාගැනීම",
-      "නවීන උපකරණ",
-      "ශ්‍රී ලංකාව සඳහා නිර්මාණය කර ඇත",
-    ],
-    ctaTitle: "ඔබගේ වාහනයට සේවාවක් ලබාදීමට සූදානම්ද?",
-    ctaText: "මිනිත්තු කිහිපයකින් මිල ගණන් ලබාගෙන සේවාව වෙන්කරන්න.",
+    ctaTitle: "AutoFlash අත්දැකීම ලබා ගැනීමට සූදානම්ද?",
+    ctaText: "අදම ඔබේ වාහනය සඳහා නවීනතම සේවාව වෙන්කරවා ගන්න.",
     getQuotation: "මිල ගණන් ලබාගන්න",
-    bookService: "සේවාව වෙන්කරන්න",
-  },
+    bookService: "දැන් වෙන්කරන්න"
+  }
 } as const;
 
 export default function HomePageClient() {
-  const revealRef = useRef<HTMLDivElement>(null);
   const { language } = useLanguage();
-  const t = copy[language];
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add(styles.isVisible);
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (revealRef.current) observer.observe(revealRef.current);
-    return () => observer.disconnect();
-  }, []);
+  const t = copy[language as keyof typeof copy] || copy.en;
 
   return (
     <main className={styles.pageWrapper}>
+      {/* --- HERO --- */}
       <section className={styles.hero}>
-        <video autoPlay muted loop playsInline className={styles.bgVideo}>
+        <video autoPlay muted loop className={styles.bgVideo}>
           <source src="/BGV.mp4" type="video/mp4" />
         </video>
-        <div className={styles.videoOverlay}></div>
-
+        <div className={styles.videoOverlay} />
         <div className={styles.heroContent}>
           <span className={styles.heroSubtitle}>{t.heroSubtitle}</span>
           <h1 className={styles.heroTitle}>{t.heroTitle}</h1>
           <p className={styles.heroDescription}>{t.heroDescription}</p>
+          
+          {/* UPDATED: 3 Hero Buttons */}
           <div className={styles.heroBtns}>
-            <button className={styles.btnRed}>
-              {t.readMore} <FaChevronRight size={10} />
-            </button>
-            <button className={styles.btnGold}>
-              {t.orderNow} <FaChevronRight size={10} />
-            </button>
+            <Link href="/booking/bodywash" className={styles.btnRed}>{t.btnBodyWash}</Link>
+            <Link href="/booking/full-service" className={styles.btnGold}>{t.btnFullService}</Link>
+            <Link href="/booking/full-service?plan=oil" className={styles.btnTransparent}>{t.btnOilChange}</Link>
           </div>
         </div>
       </section>
 
-      <section ref={revealRef} className={`${styles.contentSection} ${styles.revealEffect}`}>
+      {/* --- FEATURES --- */}
+      <section className={styles.featureSection}>
         <div className={styles.container}>
-          <div className={styles.mainInfo}>
-            <div className={styles.textSide}>
-              <span className={styles.accentText}>{t.accentText}</span>
-              <h2 className={styles.sectionTitle}>{t.sectionTitle}</h2>
-              <p className={styles.sectionDesc}>{t.sectionDesc}</p>
-
-              <div className={styles.contactInfo}>
-                <span className={styles.label}>{t.callForBooking}</span>
-                <span className={styles.phone}> +94 76 824 8676</span>
-              </div>
-
-              <button className={styles.btnRedSquare}>
-                {t.learnMore} <FaChevronRight size={10} />
-              </button>
-            </div>
-
-            <div className={styles.imageSide}>
-              <img src="/REDCAR.png" alt="Vehicle" className={styles.carImage} />
-            </div>
+          <div className={styles.sectionHeader}>
+            <span className={styles.accentText}>{t.accentText}</span>
+            <h2 className={styles.sectionTitle}>{t.sectionTitle}</h2>
+            <p className={styles.sectionDesc}>{t.sectionDesc}</p>
           </div>
-
-          <div className={styles.featuresGrid}>
-            {t.features.map((feature) => (
-              <div key={feature.title} className={styles.featureItem}>
+          <div className={styles.featureGrid}>
+            {t.features.map((feature, i) => (
+              <div key={i} className={styles.featureCard}>
                 <div className={styles.featureIcon}>{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.text}</p>
@@ -177,13 +138,17 @@ export default function HomePageClient() {
         </div>
       </section>
 
+      {/* --- HOW IT WORKS --- */}
       <section className={styles.howSection}>
         <div className={styles.container}>
           <h2 className={styles.centerTitleLight}>{t.howTitle}</h2>
-          <div className={styles.stepsGrid}>
+          <div className={styles.howGrid}>
             {t.steps.map((step) => (
               <div key={step.number} className={styles.stepCard}>
-                <span>{step.number}</span>
+                <div className={styles.stepHeader}>
+                  <span className={styles.stepNumber}>{step.number}</span>
+                  <div className={styles.stepIcon}>{step.icon}</div>
+                </div>
                 <h3>{step.title}</h3>
                 <p>{step.text}</p>
               </div>
@@ -192,38 +157,30 @@ export default function HomePageClient() {
         </div>
       </section>
 
+      {/* --- SERVICES --- */}
       <section className={styles.servicesSection}>
         <div className={styles.container}>
           <h2 className={styles.centerTitle}>{t.servicesTitle}</h2>
           <div className={styles.servicesGrid}>
             {t.services.map((service) => (
-              <div key={service.title} className={styles.serviceCard}>
+              <Link href={service.link} key={service.title} className={styles.serviceCard} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <h3>{service.title}</h3>
                 <p>{service.text}</p>
-              </div>
+                <div className={styles.checkIcon}><FaCheckCircle /></div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className={styles.whySection}>
-        <div className={styles.container}>
-          <h2 className={styles.centerTitleLight}>{t.whyTitle}</h2>
-          <ul className={styles.whyList}>
-            {t.whyList.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        </div>
-      </section>
-
+      {/* --- CTA --- */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaContent}>
           <h2>{t.ctaTitle}</h2>
           <p>{t.ctaText}</p>
           <div className={styles.heroBtns}>
-            <button className={styles.btnRed}>{t.getQuotation}</button>
-            <button className={styles.btnGold}>{t.bookService}</button>
+            <Link href="/booking/full-service" className={styles.btnRed}>{t.getQuotation}</Link>
+            <Link href="/booking/bodywash" className={styles.btnGold}>{t.bookService}</Link>
           </div>
         </div>
       </section>

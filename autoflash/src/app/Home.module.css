@@ -1,7 +1,13 @@
 .pageWrapper {
-  background-colour: #000;
+  background-color: #000;
   width: 100%;
   overflow-x: hidden;
+}
+
+.container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 24px;
 }
 
 /* --- HERO --- */
@@ -28,7 +34,7 @@
 .videoOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 0;
 }
 
@@ -37,62 +43,135 @@
   z-index: 1;
   text-align: center;
   color: #fff;
-  max-width: 800px;
 }
 
-.heroSubtitle { color: #e31e24; letter-spacing: 4px; font-weight: 800; font-size: 14px; }
-.heroTitle { font-size: clamp(2.5rem, 8vw, 5rem); font-weight: 900; text-transform: uppercase; margin: 10px 0; }
-.heroDescription { font-size: 1.1rem; color: #ddd; margin-bottom: 30px; }
+.heroSubtitle { color: #e31e24; letter-spacing: 5px; font-weight: 800; text-transform: uppercase; }
+.heroTitle { font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 900; margin: 15px 0; text-transform: uppercase; line-height: 1; }
+.heroDescription { font-size: 1.2rem; color: rgba(255,255,255,0.8); margin-bottom: 40px; max-width: 800px; margin-inline: auto; }
+
+/* --- FEATURES --- */
+.featureSection { padding: 120px 0; background: #0a0a0a; color: #fff; }
+.sectionHeader { text-align: center; margin-bottom: 70px; }
+.accentText { color: #e31e24; font-weight: 800; letter-spacing: 3px; }
+.sectionTitle { font-size: 45px; font-weight: 900; margin: 15px 0; }
+
+.featureGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; }
+
+.featureCard {
+  background: #111;
+  padding: 50px 35px;
+  border-radius: 35px; /* Round edges */
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: transform 0.3s ease, border-color 0.3s ease;
+  text-align: center;
+}
+
+.featureCard:hover { border-color: #e31e24; transform: translateY(-10px); }
+.featureIcon { font-size: 45px; color: #e31e24; margin-bottom: 25px; }
+
+/* --- HOW IT WORKS --- */
+.howSection { background: #000; padding: 120px 0; color: #fff; }
+.centerTitleLight { text-align: center; font-size: 45px; font-weight: 900; margin-bottom: 70px; }
+.howGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; }
+
+.stepCard {
+  background: #0a0a0a;
+  padding: 45px 35px;
+  border-radius: 40px; /* Highly rounded */
+  border: 1px solid #1a1a1a;
+}
+
+.stepHeader { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.stepNumber { font-size: 50px; font-weight: 900; color: #e31e24; opacity: 0.2; line-height: 1; }
+.stepIcon { font-size: 30px; color: #e31e24; }
+
+/* --- SERVICES (LIGHT SECTION) --- */
+.servicesSection { background: #fff; padding: 120px 0; color: #000; }
+.centerTitle { text-align: center; font-size: 45px; font-weight: 900; margin-bottom: 60px; text-transform: uppercase; }
+
+.servicesGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; }
+
+.serviceCard {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 50px 35px;
+  text-align: center;
+  border-radius: 35px; /* Rounded edges */
+  transition: 0.4s;
+}
+
+.serviceCard:hover { background: #e31e24; color: #fff; transform: scale(1.05); }
+.checkIcon { font-size: 24px; margin-top: 20px; opacity: 0.2; }
+.serviceCard:hover .checkIcon { opacity: 1; }
 
 /* --- BUTTONS --- */
-.heroBtns { display: flex; gap: 15px; justify-content: center; }
-.btnRed { background: #e31e24; color: white; padding: 16px 35px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
-.btnGold { background: #c5a367; color: black; padding: 16px 35px; border-radius: 50px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
+.heroBtns { display: flex; gap: 20px; justify-content: center; }
+.btnRed, .btnGold {
+  padding: 18px 40px;
+  border-radius: 60px; /* Pill shape */
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: 0.3s;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
 
-/* --- SECTION 2 (WHITE) --- */
-.contentSection { background: #fff; padding: 100px 0; color: #000; }
-.container { max-width: 1200px; margin: 0 auto; padding: 0 30px; }
-.mainInfo { display: flex; align-items: center; gap: 60px; margin-bottom: 100px; }
-.textSide, .imageSide { flex: 1; }
-.carImage { width: 100%; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.1)); }
-.accentText { color: #e31e24; font-weight: 800; font-size: 13px; letter-spacing: 2px; }
-.sectionTitle { font-size: 40px; font-weight: 900; margin: 15px 0; line-height: 1.1; }
-.phone { font-size: 28px; font-weight: 900; color: #e31e24; }
-.btnRedSquare { background: #e31e24; color: white; padding: 15px 35px; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+.btnRed { background: #e31e24; color: #fff; }
+.btnGold { background: #fff; color: #000; }
+.btnRed:hover, .btnGold:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
 
-/* --- FEATURES GRID --- */
-.featuresGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 30px; border-top: 1px solid #eee; padding-top: 60px; }
-.featureItem h3 { font-size: 18px; margin: 15px 0 10px; font-weight: 900; }
-.featureItem p { font-size: 14px; color: #777; }
-.featureIcon { font-size: 40px; }
+.heroBtns { 
+  display: flex; 
+  gap: 15px; 
+  justify-content: center; 
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
 
-/* --- HOW IT WORKS (DARK) --- */
-.howSection { background: #0a0a0a; padding: 100px 0; color: #fff; }
-.centerTitleLight { text-align: center; font-size: 40px; font-weight: 900; margin-bottom: 50px; }
-.stepsGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.stepCard { background: #111; padding: 30px; border: 1px solid #222; position: relative; }
-.stepCard span { font-size: 30px; font-weight: 900; color: #e31e24; opacity: 0.3; }
+.btnTransparent {
+  padding: 18px 40px;
+  border-radius: 60px;
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: 0.3s;
+  border: 2px solid #fff;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+}
 
-/* --- SERVICES (WHITE) --- */
-.servicesSection { background: #fff; padding: 100px 0; color: #000; }
-.centerTitle { text-align: center; font-size: 40px; font-weight: 900; margin-bottom: 50px; }
-.servicesGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-.serviceCard { border: 1px solid #eee; padding: 25px; text-align: center; transition: 0.3s; }
-.serviceCard:hover { background: #e31e24; color: #fff; }
+.btnTransparent:hover {
+  background: #fff;
+  color: #000;
+  transform: translateY(-3px);
+}
 
-/* --- WHY AUTOFLASH --- */
-.whySection { background: #000; padding: 80px 0; color: #fff; text-align: center; }
-.whyList { list-style: none; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 30px; }
-.whyList li { background: #111; padding: 10px 20px; border: 1px solid #c5a367; border-radius: 50px; color: #c5a367; }
+.serviceCard {
+  display: block;
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 50px 35px;
+  text-align: center;
+  border-radius: 35px; 
+  transition: 0.4s;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
 
 /* --- CTA --- */
-.ctaSection { padding: 100px 0; text-align: center; background: #e31e24; color: #fff; }
-
-/* --- ANIMATION --- */
-.revealEffect { opacity: 0; transform: translateY(100px); transition: all 1s ease-out; }
-.isVisible { opacity: 1; transform: translateY(0); }
-
-@media (max-width: 1024px) {
-  .mainInfo { flex-direction: column; text-align: center; }
-  .featuresGrid, .stepsGrid, .servicesGrid { grid-template-columns: repeat(2, 1fr); }
+.ctaSection {
+  background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('/cta-bg.jpg');
+  background-size: cover;
+  padding: 140px 0;
+  text-align: center;
+  color: #fff;
 }
+
+.ctaContent h2 { font-size: 50px; font-weight: 900; margin-bottom: 25px; }
+.ctaContent p { font-size: 1.3rem; color: #aaa; margin-bottom: 45px; }
