@@ -1,0 +1,204 @@
+/* --- BASE & LAYOUT --- */
+.page { background-color: #ffffff; color: #111; overflow-x: hidden; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* --- HERO SECTION: Dashboard Glow --- */
+.heroSection {
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.95) 100%), url('/bookingbg.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 160px 0 100px;
+  color: white;
+  border-bottom: 5px solid #ff3b3b;
+}
+
+.heroContent { text-align: center; margin-bottom: 80px; }
+
+.heroTitle { 
+  font-size: clamp(2.5rem, 6vw, 4.2rem); 
+  margin: 20px 0; 
+  color: white !important; 
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.heroText { 
+  color: rgba(255,255,255,0.7) !important; 
+  max-width: 750px; 
+  margin: 0 auto 40px; 
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+/* HERO SNAPSHOT GRID */
+.heroSnapshotGrid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 30px;
+  margin-top: 60px;
+}
+
+@media (max-width: 900px) { .heroSnapshotGrid { grid-template-columns: 1fr; } }
+
+.snapshotCard {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  padding: 40px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
+
+.metricsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.metricItem {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  border-left: 3px solid #ff3b3b;
+}
+
+.metricNum { font-size: 1.5rem; font-weight: 900; color: #ff3b3b; }
+
+/* --- GRID SECTION (Spacious) --- */
+.gridSection { padding: 120px 0; background: #ffffff; }
+
+.splitLayout { 
+  display: grid; 
+  grid-template-columns: 1.8fr 1fr; 
+  gap: 80px; 
+}
+
+@media (max-width: 1000px) { .splitLayout { grid-template-columns: 1fr; gap: 60px; } }
+
+/* --- THE FLOATING CARDS --- */
+.valueCard, .aboutCompactCard, .highlightCard, .timelineItem {
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 20px;
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  margin-bottom: 25px;
+}
+
+.valueCard:hover, .aboutCompactCard:hover, .highlightCard:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 35px 70px rgba(0, 0, 0, 0.12);
+  border-color: rgba(255, 59, 59, 0.2);
+}
+
+.valuesGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 25px;
+  margin-top: 40px;
+}
+
+@media (max-width: 600px) { .valuesGrid { grid-template-columns: 1fr; } }
+
+/* --- BUTTONS: Slanted & Framed --- */
+.heroActions, .ctaActions { 
+  display: flex; 
+  gap: 25px; 
+  justify-content: center; 
+  align-items: center; 
+}
+
+/* Red Slanted Button */
+.primaryBtn { 
+  background: #ff3b3b; 
+  color: white !important; 
+  padding: 16px 45px; 
+  font-weight: 900; 
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0% 100%);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: inline-flex;
+  text-decoration: none;
+}
+
+.primaryBtn:hover { transform: scale(1.05); background: #e62e2e; }
+
+/* Framed Secondary Button (Two lines) */
+.secondaryBtn { 
+  background: transparent; 
+  color: inherit !important;
+  padding: 12px 25px; 
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  position: relative;
+  display: inline-flex;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.heroSection .secondaryBtn { color: white !important; }
+
+.secondaryBtn::before, .secondaryBtn::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: currentColor;
+}
+
+.secondaryBtn::before { top: 0; }
+.secondaryBtn::after { bottom: 0; }
+
+.secondaryBtn:hover { opacity: 0.7; }
+
+/* --- JOURNEY TIMELINE --- */
+.journeySection { padding: 100px 0; background: #fcfcfc; }
+.timelineGrid { 
+  display: grid; 
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+  gap: 30px; 
+  margin-top: 50px;
+}
+
+.timelineTag { 
+  background: #111; color: white; 
+  padding: 5px 12px; border-radius: 5px; 
+  font-weight: 900; display: inline-block; margin-bottom: 15px;
+}
+
+/* --- CTA SECTION --- */
+.ctaSection { padding: 100px 0; }
+.ctaBox { 
+  background: #000; 
+  padding: 80px 40px; 
+  border-radius: 30px; 
+  text-align: center; 
+  color: white;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+}
+
+.ctaTitle { font-size: 3rem; color: white !important; margin-bottom: 20px; }
+.ctaText { color: rgba(255,255,255,0.6) !important; max-width: 600px; margin: 0 auto 40px; }
+
+/* --- TAGS --- */
+.cardTag, .eyebrow, .brandTag { 
+  color: #ff3b3b; 
+  font-weight: 900; 
+  font-size: 0.85rem; 
+  letter-spacing: 4px; 
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
