@@ -4,11 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   addPaymentHistory,
-  CartItem,
   getCartItems,
-  PaymentHistoryItem,
   saveCartItems,
 } from "@/lib/cart";
+import type { CartItem, PaymentHistoryItem } from "@/lib/cart";
 
 const HOME_REDIRECT_DELAY = 1800;
 
