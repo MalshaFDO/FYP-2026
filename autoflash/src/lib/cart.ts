@@ -7,6 +7,11 @@ export interface CartItem {
   paymentOption: CartPaymentOption;
   totalPrice: number;
   payableAmount: number;
+  paidAmount?: number;
+  remainingAmount?: number;
+  paymentStage?: "initial" | "remaining";
+  bookingId?: string;
+  paymentStatus?: "Pending" | "Partially Paid" | "Paid";
   bookingDate: string;
   bookingTime: string;
   vehicleLabel: string;
@@ -18,6 +23,7 @@ export interface CartItem {
 
 const CART_KEY = "autoflashCart";
 const CART_EVENT = "autoflash-cart-updated";
+const PAYMENT_HISTORY_KEY = "autoflashPaymentHistory";
 
 export function getCartItems(): CartItem[] {
   if (typeof window === "undefined") return [];
@@ -58,6 +64,52 @@ export function clearCart() {
 
 export function getPaymentAmount(totalPrice: number, option: CartPaymentOption) {
   return option === "half" ? Math.ceil(totalPrice / 2) : totalPrice;
+}
+
+export interface PaymentHistoryItem {
+  id: string;
+  orderId: string;
+  bookingId?: string;
+  serviceType: string;
+  customerName?: string;
+  mobile?: string;
+  bookingDate: string;
+  bookingTime: string;
+  totalPrice: number;
+  paidAmount: number;
+  remainingAmount: number;
+  paymentOption: CartPaymentOption;
+  paymentStage: "initial" | "remaining";
+  status: "Partially Paid" | "Paid";
+  paidAt: string;
+}
+
+export function getPaymentHistory(): PaymentHistoryItem[] {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const parsed = JSON.parse(window.localStorage.getItem(PAYMENT_HISTORY_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+export function addPaymentHistory(items: Omit<PaymentHistoryItem, "id" | "paidAt">[]) {
+  if (typeof window === "undefined" || items.length === 0) return;
+
+  const nextItems = items.map((item) => ({
+    ...item,
+    id: `${item.orderId}-${item.bookingId || item.serviceType}-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`,
+    paidAt: new Date().toISOString(),
+  }));
+
+  window.localStorage.setItem(
+    PAYMENT_HISTORY_KEY,
+    JSON.stringify([...nextItems, ...getPaymentHistory()])
+  );
 }
 
 export { CART_EVENT };
