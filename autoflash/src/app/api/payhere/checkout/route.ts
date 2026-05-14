@@ -19,6 +19,16 @@ function createOrderId() {
   return `AF-${stamp}-${random}`;
 }
 
+function normalizeOrigin(value: string) {
+  const trimmed = value.trim().replace(/\/+$/, "");
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 export async function POST(req: Request) {
   try {
     const { items } = (await req.json()) as { items?: CheckoutCartItem[] };
@@ -60,7 +70,7 @@ export async function POST(req: Request) {
             : undefined,
         phone: primaryItem.mobile,
       },
-      origin,
+      origin: normalizeOrigin(origin),
     });
 
     return NextResponse.json({ success: true, ...checkout });
@@ -74,4 +84,3 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
-

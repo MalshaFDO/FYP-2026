@@ -86,6 +86,10 @@ export default function LoginPage() {
 
       const data = await res.json();
 
+      if (data?.isNewUser) {
+        throw new Error("This mobile number is not registered. Please sign up first.");
+      }
+
       if (!res.ok) {
         throw new Error(data.message || "Unable to send OTP right now.");
       }

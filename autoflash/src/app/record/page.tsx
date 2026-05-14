@@ -473,6 +473,12 @@ export default function RecordPage() {
         const res = await fetch("/api/feature-settings/e-record-book", {
           cache: "no-store",
         });
+
+        if (res.status === 404) {
+          setRecordBookEnabled(false);
+          return;
+        }
+
         const data = await parseJsonResponse(res);
 
         if (!res.ok || !data?.success) {
@@ -772,6 +778,10 @@ export default function RecordPage() {
 
       const data = await parseJsonResponse(res);
 
+      if (data?.isNewUser) {
+        throw new Error("This mobile number is not registered. Please sign up first.");
+      }
+
       if (!res.ok) {
         throw new Error(data.message || "Failed to send OTP");
       }
@@ -1056,6 +1066,10 @@ export default function RecordPage() {
       });
 
       const data = await parseJsonResponse(res);
+
+      if (data?.isNewUser) {
+        throw new Error("This mobile number is not registered. Please sign up first.");
+      }
 
       if (!res.ok) {
         throw new Error(data.message || "Failed to send OTP");

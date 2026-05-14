@@ -29,8 +29,7 @@ export async function POST(req: Request) {
         {
           message: "This mobile number is not registered. Please sign up first.",
           isNewUser: true,
-        },
-        { status: 404 }
+        }
       );
     }
 

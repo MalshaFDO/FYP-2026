@@ -419,28 +419,6 @@ export default function CartPage() {
                   LKR {checkoutMode === "online" ? totals.payable.toLocaleString() : totals.total.toLocaleString()}
                 </strong>
               </div>
-              <div className={styles.checkoutModeSelector}>
-                <div className={styles.checkoutModeText}>
-                  <span>Checkout mode</span>
-                  <strong>{checkoutMode === "online" ? "Pay now" : "Pay in service"}</strong>
-                </div>
-                <div className={styles.segmentedControl}>
-                  <button
-                    type="button"
-                    className={checkoutMode === "online" ? styles.segmentActive : ""}
-                    onClick={() => setCheckoutMode("online")}
-                  >
-                    Pay now
-                  </button>
-                  <button
-                    type="button"
-                    className={checkoutMode === "service" ? styles.segmentActive : ""}
-                    onClick={() => setCheckoutMode("service")}
-                  >
-                    Pay in service
-                  </button>
-                </div>
-              </div>
               <div className={styles.gatewayNote}>
                 {checkoutMode === "online"
                   ? "Full service and oil change can use full or half payment. Bodywash stays full payment only."
@@ -448,20 +426,32 @@ export default function CartPage() {
               </div>
               {paymentMessage && <div className={styles.paymentMessage}>{paymentMessage}</div>}
               {checkoutError && <div className={styles.checkoutError}>{checkoutError}</div>}
-              <button
-                type="button"
-                className={styles.checkoutBtn}
-                onClick={checkoutMode === "online" ? handlePayNow : handlePayInService}
-                disabled={isCheckingOut}
-              >
-                {isCheckingOut
-                  ? checkoutMode === "online"
-                    ? "Opening PayHere..."
-                    : "Saving booking..."
-                  : checkoutMode === "online"
-                  ? "Pay now"
-                  : "Pay in service"}
-              </button>
+              <div className={styles.checkoutActions}>
+                <button
+                  type="button"
+                  className={`${styles.checkoutBtn} ${checkoutMode === "online" ? styles.segmentActive : ""}`}
+                  onClick={() => {
+                    setCheckoutMode("online");
+                    handlePayNow();
+                  }}
+                  disabled={isCheckingOut}
+                >
+                  {isCheckingOut && checkoutMode === "online" ? "Opening PayHere..." : "Pay now"}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.checkoutBtn} ${styles.checkoutLaterBtn} ${
+                    checkoutMode === "service" ? styles.segmentActive : ""
+                  }`}
+                  onClick={() => {
+                    setCheckoutMode("service");
+                    handlePayInService();
+                  }}
+                  disabled={isCheckingOut}
+                >
+                  {isCheckingOut && checkoutMode === "service" ? "Saving booking..." : "Pay later"}
+                </button>
+              </div>
               <button
                 type="button"
                 className={styles.clearBtn}
