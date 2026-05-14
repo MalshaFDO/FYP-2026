@@ -1,0 +1,258 @@
+/* --- BASE SETUP --- */
+.page { background-color: #ffffff; color: #111; overflow-x: hidden; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+/* --- HERO SECTION: Dashboard Glow (Consistent with Pic 1) --- */
+.heroSection {
+  background: radial-gradient(circle at center, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.95) 100%), url('/bookingbg.jpg');
+  background-size: cover;
+  background-position: center;
+  padding: 160px 0 120px;
+  text-align: center;
+  color: white;
+  border-bottom: 5px solid #ff3b3b; /* Red accent line from Pic 1 */
+}
+
+.heroTitle { 
+  font-size: clamp(2.5rem, 6vw, 4.5rem); 
+  margin: 20px 0; 
+  color: white !important; 
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.heroSubtitle { 
+  color: rgba(255,255,255,0.7) !important; 
+  max-width: 700px; 
+  margin: 0 auto 48px; 
+  font-size: 1.2rem;
+  line-height: 1.6;
+}
+
+/* --- QUICK CARDS: Floating Header Cards --- */
+.quickCardRow { 
+  display: flex; 
+  gap: 24px; 
+  justify-content: center; 
+  margin-top: 60px; 
+  flex-wrap: wrap; 
+}
+
+.quickCard { 
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  padding: 30px; 
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 250px;
+  transition: all 0.3s ease;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+}
+
+.quickCard:hover {
+  transform: translateY(-10px);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.quickCard p { font-size: 1.3rem; color: white; margin-top: 10px; font-weight: 600; }
+
+/* --- GRID SECTION: Fixing Compactness (Pic 2) --- */
+.gridSection { 
+  padding: 120px 0; 
+  background: #ffffff; 
+}
+
+.splitLayout { 
+  display: grid; 
+  grid-template-columns: 1fr 2fr; 
+  gap: 80px; /* Spacious gap to prevent cramped look */
+  align-items: start;
+}
+
+@media (max-width: 1000px) { 
+  .splitLayout { grid-template-columns: 1fr; gap: 50px; } 
+}
+
+/* --- LOGIC CARD: The Dark Side --- */
+.logicCard { 
+  background: #0f0f0f;
+  color: white;
+  padding: 60px 40px; 
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+}
+
+.logicCard h2 { color: white !important; font-size: 2.2rem; margin-bottom: 30px; }
+
+.checkList { list-style: none; padding: 0; }
+.checkList li { 
+  margin-bottom: 25px; 
+  padding-left: 35px; 
+  color: #ddd;
+  font-size: 1.1rem;
+  line-height: 1.4;
+  position: relative;
+}
+
+.checkList li::before {
+  content: "→";
+  position: absolute;
+  left: 0;
+  color: #ff3b3b;
+  font-weight: 900;
+}
+
+/* --- INFO CARDS: Right Side Floating & Shadow --- */
+.blockGrid { 
+  display: grid; 
+  grid-template-columns: 1fr 1fr; 
+  gap: 30px; 
+}
+
+@media (max-width: 600px) { .blockGrid { grid-template-columns: 1fr; } }
+
+.infoCard { 
+  padding: 45px 35px; 
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #f0f0f0;
+  /* Floating Shadow Effect */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.infoCard:hover {
+  transform: translateY(-12px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12);
+  border-color: #ff3b3b; /* Subtle red border on hover */
+}
+
+.infoCard h3 { color: #111 !important; font-size: 1.5rem; margin-bottom: 15px; }
+.infoCard p { color: #666 !important; line-height: 1.6; }
+
+/* --- FAQ SECTION --- */
+.faqSection { padding: 120px 0; background: #f8f8f8; }
+.sectionHeader { text-align: center; margin-bottom: 60px; }
+.sectionHeader h2 { font-size: 2.8rem; color: #111 !important; }
+
+.faqGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 30px; }
+.faqCard { 
+  background: white; 
+  padding: 40px; 
+  border-radius: 16px; 
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
+}
+
+.faqCard:hover { transform: translateY(-5px); }
+.faqCard h4 { color: #111 !important; margin-bottom: 15px; font-size: 1.3rem; }
+
+/* --- BUTTONS: Slanted Race-Style (Matches Image) --- */
+.heroActions, .ctaActions { 
+  display: flex; 
+  gap: 20px; 
+  justify-content: center; 
+  align-items: center; /* Ensures text aligns if height varies */
+  margin-top: 30px; 
+}
+
+/* The "Book Now" Red Slanted Button */
+.primaryBtn { 
+  background: #ff3b3b; 
+  color: white !important; 
+  padding: 14px 40px; 
+  font-weight: 900; /* Extra bold for that impact */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* This creates the sharp slant seen in image_e967bc.png */
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0% 100%);
+  
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  min-width: 180px;
+}
+
+.primaryBtn:hover {
+  background: #e62e2e;
+  transform: scale(1.05);
+  filter: brightness(1.1);
+}
+
+/* The "Quick Booking" / "Call Support" button with framing lines */
+.secondaryBtn { 
+  background: transparent; 
+  color: white !important;
+  padding: 14px 30px; 
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  position: relative; /* Required for absolute positioning of lines */
+  transition: all 0.3s ease;
+}
+
+/* The Top Line */
+.secondaryBtn::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+/* The Bottom Line */
+.secondaryBtn::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+
+.secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.heroSection .secondaryBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- CTA BOX: Dark Finish --- */
+.ctaBox { 
+  background: #000000;
+  padding: 100px 40px; 
+  border-radius: 32px; 
+  text-align: center; 
+  color: white;
+  margin-top: 80px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ctaTitle { font-size: 3rem; color: white !important; margin-bottom: 20px; }
+.ctaText { color: rgba(255,255,255,0.6) !important; max-width: 600px; margin: 0 auto 40px; }
+
+/* --- TAGS --- */
+.stepTag, .cardTag { 
+  color: #ff3b3b; 
+  font-weight: 900; 
+  font-size: 0.9rem; 
+  letter-spacing: 4px; 
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: block;
+}
