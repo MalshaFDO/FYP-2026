@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
@@ -80,6 +80,8 @@ type ExtraServiceOption = {
   price?: number;
   priceByVehicle?: Record<VehicleType, number>;
 };
+
+type CheckoutAction = "cart" | "book";
 
 const carImages: Record<VehicleType, string> = {
   Sedan: "/01.png",
@@ -271,6 +273,15 @@ export default function FullServicePage() {
         window.localStorage.getItem("accessToken")
       : null;
 
+  const scrollToSection = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const handleVehicleTypeSelect = useCallback((type: VehicleType) => {
+    setVehicle(type);
+    scrollToSection("fullservice-plans");
+  }, [scrollToSection]);
+
   const updateWeekOffset = (offset: number) => {
     setWeekOffset(offset);
     setSelectedDate(getFirstAvailableDayIso(offset, closedDays));
@@ -291,6 +302,14 @@ export default function FullServicePage() {
   const [isGeneratingQuote, setIsGeneratingQuote] = useState(false);
   const [hasPromptedQuotationConfirmation, setHasPromptedQuotationConfirmation] =
     useState(false);
+  const [guestDetailsAction, setGuestDetailsAction] =
+    useState<CheckoutAction | null>(null);
+  const [guestDetailsForm, setGuestDetailsForm] = useState({
+    customerName: "",
+    mobile: "",
+    vehicleNumber: "",
+  });
+  const [guestDetailsError, setGuestDetailsError] = useState("");
   const [input, setInput] = useState("");
   const [stage, setStage] = useState<
     | "start"
@@ -521,7 +540,7 @@ export default function FullServicePage() {
         ? (currentIndex + 1) % vehicleTypes.length
         : (currentIndex - 1 + vehicleTypes.length) % vehicleTypes.length;
 
-    setVehicle(vehicleTypes[nextIndex]);
+    handleVehicleTypeSelect(vehicleTypes[nextIndex]);
   };
 
   const handleVehicleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
@@ -819,13 +838,23 @@ export default function FullServicePage() {
 
   const getServiceTitle = () => (selectedPlan === "oil" ? "Oil Change" : "Full Service");
 
-  const validateCheckoutBooking = () => {
-    if (!bookingData.quote?.total) {
+  const hasRequiredCustomerDetails = (data: BookingData) =>
+    Boolean(
+      String(data.customerName ?? "").trim() &&
+        String(data.mobile ?? "").trim() &&
+        String(data.vehicleNumber ?? "").trim()
+    );
+
+  const validateCheckoutBooking = (
+    data: BookingData = bookingData,
+    { requireCustomerDetails = true } = {}
+  ) => {
+    if (!data.quote?.total) {
       alert("Please generate the quotation before adding this booking to cart.");
       return false;
     }
 
-    if (!bookingData.customerName || !bookingData.mobile || !bookingData.vehicleNumber) {
+    if (requireCustomerDetails && !hasRequiredCustomerDetails(data)) {
       alert("Please complete customer name, mobile number, and vehicle number in the chat before payment.");
       return false;
     }
@@ -844,8 +873,8 @@ export default function FullServicePage() {
     return true;
   };
 
-  const buildFullServicePayload = () => ({
-    ...bookingData,
+  const buildFullServicePayload = (data: BookingData = bookingData) => ({
+    ...data,
     serviceType: getServiceTitle(),
     serviceCategory: "fullservice",
     vehicleType: pricingVehicleTypeMap[vehicle],
@@ -853,14 +882,31 @@ export default function FullServicePage() {
     additionalServices: selectedAdditionalServices,
     bookingDate: selectedDate,
     bookingTime: selectedTime,
-    vehicleModel: bookingData.vehicle,
-    totalPrice: bookingData.quote?.total ?? 0,
+    vehicleModel: data.vehicle,
+    totalPrice: data.quote?.total ?? 0,
   });
 
-  const handleAddQuoteToCart = () => {
-    if (!validateCheckoutBooking()) return;
+  const openGuestDetailsForm = (action: CheckoutAction) => {
+    if (!validateCheckoutBooking(bookingData, { requireCustomerDetails: false })) return;
 
-    const payload = buildFullServicePayload();
+    setGuestDetailsForm({
+      customerName: bookingData.customerName ?? "",
+      mobile: bookingData.mobile ?? "",
+      vehicleNumber: bookingData.vehicleNumber ?? "",
+    });
+    setGuestDetailsError("");
+    setGuestDetailsAction(action);
+  };
+
+  const handleAddQuoteToCart = (data: BookingData = bookingData) => {
+    if (!hasRequiredCustomerDetails(data)) {
+      openGuestDetailsForm("cart");
+      return;
+    }
+
+    if (!validateCheckoutBooking(data)) return;
+
+    const payload = buildFullServicePayload(data);
     const totalPrice = Number(payload.totalPrice) || 0;
 
     addCartItem({
@@ -871,17 +917,23 @@ export default function FullServicePage() {
       payableAmount: totalPrice,
       bookingDate: selectedDate,
       bookingTime: selectedTime,
-      vehicleLabel: String(bookingData.selectedVehicleLabel || bookingData.vehicle || vehicle),
-      customerName: bookingData.customerName,
-      mobile: bookingData.mobile,
+      vehicleLabel: String(data.selectedVehicleLabel || data.vehicle || vehicle),
+      customerName: data.customerName,
+      mobile: data.mobile,
       bookingPayload: payload,
     });
 
+    setGuestDetailsAction(null);
     setIsCartTransitionVisible(true);
   };
 
-  const handleBookQuoteNow = async () => {
-    if (!validateCheckoutBooking()) return;
+  const handleBookQuoteNow = async (data: BookingData = bookingData) => {
+    if (!hasRequiredCustomerDetails(data)) {
+      openGuestDetailsForm("book");
+      return;
+    }
+
+    if (!validateCheckoutBooking(data)) return;
 
     try {
       const res = await fetch("/api/bookings?type=fullservice", {
@@ -889,20 +941,61 @@ export default function FullServicePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(buildFullServicePayload()),
+        body: JSON.stringify(buildFullServicePayload(data)),
       });
 
-      const data = await res.json();
+      const responseData = await res.json();
 
-      if (res.ok && data.success) {
+      if (res.ok && responseData.success) {
+        setGuestDetailsAction(null);
         setIsChatOpen(false);
         setIsBookingTransitionVisible(true);
       } else {
-        alert(data.error || "Booking failed");
+        alert(responseData.error || "Booking failed");
       }
     } catch (error) {
       console.error(error);
       alert("Server error");
+    }
+  };
+
+  const handleGuestDetailsSubmit = () => {
+    const customerName = guestDetailsForm.customerName.trim();
+    const mobile = guestDetailsForm.mobile.trim();
+    const vehicleNumber = formatVehicleNumber(guestDetailsForm.vehicleNumber.trim());
+
+    if (!customerName) {
+      setGuestDetailsError("Please enter your name.");
+      return;
+    }
+
+    if (!/^0\d{9}$/.test(mobile)) {
+      setGuestDetailsError("Please enter a valid 10-digit mobile number, for example 0771234567.");
+      return;
+    }
+
+    if (!vehicleNumber) {
+      setGuestDetailsError("Please enter your vehicle number.");
+      return;
+    }
+
+    const updatedBookingData = {
+      ...bookingData,
+      customerName,
+      mobile,
+      vehicleNumber,
+    };
+
+    setBookingData(updatedBookingData);
+    setGuestDetailsError("");
+
+    if (guestDetailsAction === "cart") {
+      handleAddQuoteToCart(updatedBookingData);
+      return;
+    }
+
+    if (guestDetailsAction === "book") {
+      void handleBookQuoteNow(updatedBookingData);
     }
   };
 
@@ -929,7 +1022,7 @@ export default function FullServicePage() {
               <button
                 key={type}
                 className={`${styles.typeBtn} ${vehicle === type ? styles.activeBtn : ""}`}
-                onClick={() => setVehicle(type)}
+                onClick={() => handleVehicleTypeSelect(type)}
               >
                 {type}
               </button>
@@ -964,7 +1057,7 @@ export default function FullServicePage() {
       </section>
 
       {/* STEP 02 - SERVICE PACKAGES */}
-      <section className={styles.planSection}>
+      <section id="fullservice-plans" className={styles.planSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 02</p>
           <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Service Type</h2>
@@ -973,7 +1066,10 @@ export default function FullServicePage() {
             {/* FULL SERVICE CARD */}
             <div 
               className={`${styles.planCard} ${selectedPlan === 'full' ? styles.activePlan : ""}`}
-              onClick={() => setSelectedPlan('full')}
+              onClick={() => {
+                setSelectedPlan('full');
+                scrollToSection("fullservice-addons");
+              }}
             >
               <FaTools className={styles.mainIcon} />
               <h3 className={styles.planName}>Full Service</h3>
@@ -989,7 +1085,10 @@ export default function FullServicePage() {
             {/* OIL CHANGE CARD */}
             <div 
               className={`${styles.planCard} ${selectedPlan === 'oil' ? styles.activePlan : ""}`}
-              onClick={() => setSelectedPlan('oil')}
+              onClick={() => {
+                setSelectedPlan('oil');
+                scrollToSection("fullservice-addons");
+              }}
             >
               <FaOilCan className={styles.mainIcon} />
               <h3 className={styles.planName}>Oil Change</h3>
@@ -1006,7 +1105,7 @@ export default function FullServicePage() {
       </section>
 
       {/* STEP 03 - ADD-ONS */}
-      <section className={styles.addonsSection}>
+      <section id="fullservice-addons" className={styles.addonsSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 03</p>
           <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Add Extra Services</h2>
@@ -1016,7 +1115,10 @@ export default function FullServicePage() {
               <div 
                 key={item.id} 
                 className={`${styles.addonBox} ${extras.includes(item.id) ? styles.addonSelected : ""}`}
-                onClick={() => toggleExtra(item.id)}
+                onClick={() => {
+                  toggleExtra(item.id);
+                  scrollToSection("fullservice-datetime");
+                }}
               >
                 <div className={styles.addonInfo}>
                   <h4>{item.name}</h4>
@@ -1043,7 +1145,10 @@ export default function FullServicePage() {
                     <div 
                       key={item.id} 
                       className={`${styles.addonBox} ${extras.includes(item.id) ? styles.addonSelected : ""}`}
-                      onClick={() => toggleExtra(item.id)}
+                      onClick={() => {
+                        toggleExtra(item.id);
+                        scrollToSection("fullservice-datetime");
+                      }}
                     >
                       <div className={styles.addonInfo}>
                         <h4>{item.name}</h4>
@@ -1061,7 +1166,7 @@ export default function FullServicePage() {
 
         </div>
       </section>
-      <section className={styles.dateTimeSection}>
+      <section id="fullservice-datetime" className={styles.dateTimeSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 04</p>
           <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
@@ -1180,15 +1285,16 @@ export default function FullServicePage() {
                         const isSelected = selectedDate === item.isoDate && selectedTime === time;
 
                         return (
-                          <div
-                            key={time}
-                            className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
-                            onClick={() => {
-                              if (isUnavailable) return;
-                              setSelectedDate(item.isoDate);
-                              setSelectedTime(time);
-                            }}
-                          >
+                            <div
+                              key={time}
+                              className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
+                              onClick={() => {
+                                if (isUnavailable) return;
+                                setSelectedDate(item.isoDate);
+                                setSelectedTime(time);
+                                scrollToSection("fullservice-ai-quote");
+                              }}
+                            >
                             <span className={styles.timeText}>{time}</span>
                             <div className={styles.slotBox}>
                               {[1, 2].map((slotNo) => (
@@ -1231,7 +1337,7 @@ export default function FullServicePage() {
         </div>
       </section>
 
-      <section className={styles.aiBookingSection}>
+      <section id="fullservice-ai-quote" className={styles.aiBookingSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 05</p>
           <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Get AI Quote and Confirm</h2>
@@ -1390,13 +1496,79 @@ export default function FullServicePage() {
                   Add to cart to choose full or half payment at checkout.
                 </p>
                 <div className={styles.checkoutActions}>
-                  <button type="button" onClick={handleAddQuoteToCart}>
+                  <button type="button" onClick={() => handleAddQuoteToCart()}>
                     Add to cart
                   </button>
-                  <button type="button" onClick={handleBookQuoteNow}>
+                  <button type="button" onClick={() => void handleBookQuoteNow()}>
                     Book now
                   </button>
                 </div>
+                {guestDetailsAction && (
+                  <div className={styles.guestDetailsForm}>
+                    <div className={styles.guestDetailsHeader}>
+                      <span>Guest details</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGuestDetailsAction(null);
+                          setGuestDetailsError("");
+                        }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                    <label>
+                      Name
+                      <input
+                        value={guestDetailsForm.customerName}
+                        onChange={(e) =>
+                          setGuestDetailsForm((current) => ({
+                            ...current,
+                            customerName: e.target.value,
+                          }))
+                        }
+                        placeholder="Your name"
+                      />
+                    </label>
+                    <label>
+                      Mobile number
+                      <input
+                        value={guestDetailsForm.mobile}
+                        onChange={(e) =>
+                          setGuestDetailsForm((current) => ({
+                            ...current,
+                            mobile: e.target.value,
+                          }))
+                        }
+                        inputMode="tel"
+                        placeholder="0771234567"
+                      />
+                    </label>
+                    <label>
+                      Vehicle number
+                      <input
+                        value={guestDetailsForm.vehicleNumber}
+                        onChange={(e) =>
+                          setGuestDetailsForm((current) => ({
+                            ...current,
+                            vehicleNumber: e.target.value,
+                          }))
+                        }
+                        placeholder="CAK-6494"
+                      />
+                    </label>
+                    {guestDetailsError && (
+                      <div className={styles.guestDetailsError}>{guestDetailsError}</div>
+                    )}
+                    <button
+                      type="button"
+                      className={styles.guestDetailsSubmit}
+                      onClick={handleGuestDetailsSubmit}
+                    >
+                      {guestDetailsAction === "cart" ? "Continue to cart" : "Confirm booking"}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -13,14 +13,15 @@ import {
 } from "react-icons/fa";
 import {
   CART_EVENT,
-  CartItem,
   CartPaymentOption,
   clearCart,
   getPaymentAmount,
   getCartItems,
+  getPaymentHistory,
   removeCartItem,
   saveCartItems,
 } from "@/lib/cart";
+import type { CartItem, PaymentHistoryItem } from "@/lib/cart";
 import styles from "./Cart.module.css";
 
 export default function CartPage() {
@@ -28,6 +29,7 @@ export default function CartPage() {
   const [checkoutError, setCheckoutError] = useState("");
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [paymentMessage, setPaymentMessage] = useState("");
+  const [paymentHistory, setPaymentHistory] = useState<PaymentHistoryItem[]>([]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -109,7 +111,10 @@ export default function CartPage() {
   }, []);
 
   useEffect(() => {
-    const syncCart = () => setItems(getCartItems());
+    const syncCart = () => {
+      setItems(getCartItems());
+      setPaymentHistory(getPaymentHistory());
+    };
 
     syncCart();
     window.addEventListener("storage", syncCart);
@@ -271,12 +276,18 @@ export default function CartPage() {
                     <div>
                       <span>Payment choice</span>
                       <strong>
-                        {item.serviceCategory === "bodywash"
+                        {item.paymentStage === "remaining"
+                          ? "Remaining balance"
+                          : item.serviceCategory === "bodywash"
                           ? "Full payment required"
                           : "Choose before gateway"}
                       </strong>
                     </div>
-                    {item.serviceCategory === "fullservice" ? (
+                    {item.paymentStage === "remaining" ? (
+                      <div className={styles.lockedPayment}>
+                        <FaLock /> Pay balance
+                      </div>
+                    ) : item.serviceCategory === "fullservice" ? (
                       <div className={styles.segmentedControl}>
                         <button
                           type="button"
@@ -307,10 +318,20 @@ export default function CartPage() {
                     </div>
                     <div>
                       <span>
-                        {item.paymentOption === "half" ? "Half payment" : "Full payment"}
+                        {item.paymentStage === "remaining"
+                          ? "Remaining payment"
+                          : item.paymentOption === "half"
+                          ? "Half payment"
+                          : "Full payment"}
                       </span>
                       <strong>LKR {item.payableAmount.toLocaleString()}</strong>
                     </div>
+                    {item.remainingAmount ? (
+                      <div>
+                        <span>Balance after paid</span>
+                        <strong>LKR {item.remainingAmount.toLocaleString()}</strong>
+                      </div>
+                    ) : null}
                   </div>
                 </article>
               ))}
@@ -357,6 +378,34 @@ export default function CartPage() {
           </>
         )}
       </section>
+
+      {paymentHistory.length > 0 && (
+        <section className={styles.historySection}>
+          <div className={styles.historyHeader}>
+            <p className={styles.eyebrow}>Payment History</p>
+            <h2>Recent payments</h2>
+          </div>
+          <div className={styles.historyList}>
+            {paymentHistory.slice(0, 8).map((payment) => (
+              <article key={payment.id} className={styles.historyItem}>
+                <div>
+                  <strong>{payment.serviceType}</strong>
+                  <span>
+                    {payment.bookingDate} at {payment.bookingTime}
+                  </span>
+                </div>
+                <div>
+                  <span>{payment.status}</span>
+                  <strong>LKR {payment.paidAmount.toLocaleString()}</strong>
+                  {payment.remainingAmount > 0 && (
+                    <small>Remaining LKR {payment.remainingAmount.toLocaleString()}</small>
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

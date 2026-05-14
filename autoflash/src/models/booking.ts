@@ -32,7 +32,18 @@ const BookingSchema = new mongoose.Schema({
   paymentStatus: { type: String },
   paymentOption: { type: String, enum: ["full", "half"] },
   paidAmount: { type: Number },
+  remainingAmount: { type: Number },
   paymentOrderId: { type: String },
+  paymentHistory: [
+    {
+      orderId: { type: String },
+      amount: { type: Number },
+      paymentOption: { type: String },
+      paymentStage: { type: String },
+      status: { type: String },
+      paidAt: { type: Date, default: Date.now },
+    },
+  ],
   notes: { type: String },
 
   status: {

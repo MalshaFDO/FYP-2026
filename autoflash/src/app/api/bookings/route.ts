@@ -122,6 +122,25 @@ export async function POST(req: Request) {
       vehicleId: vehicleId || undefined,
       serviceCategory,
       totalPrice: Number(payload?.totalPrice ?? 0),
+      paidAmount: Number(payload?.paidAmount ?? 0),
+      remainingAmount: Math.max(
+        0,
+        Number(payload?.remainingAmount ?? 0)
+      ),
+      paymentStatus: payload?.paymentStatus || "Pending",
+      paymentHistory:
+        Number(payload?.paidAmount ?? 0) > 0
+          ? [
+              {
+                orderId: payload?.paymentOrderId,
+                amount: Number(payload?.paidAmount ?? 0),
+                paymentOption: payload?.paymentOption,
+                paymentStage: "initial",
+                status: payload?.paymentStatus || "Paid",
+                paidAt: new Date(),
+              },
+            ]
+          : [],
       hourSlot: existingCount + 1,
     });
     return NextResponse.json({ success: true, booking });

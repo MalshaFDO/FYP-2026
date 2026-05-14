@@ -74,8 +74,12 @@
   font-size: 2rem;
 }
 
-.cartShell {
+.cartShell,
+.historySection {
   max-width: 1240px;
+}
+
+.cartShell {
   margin: -44px auto 0;
   padding: 0 24px 88px;
   display: grid;
@@ -91,7 +95,8 @@
 
 .cartItem,
 .summary,
-.emptyState {
+.emptyState,
+.historySection {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(226, 232, 240, 0.92);
   border-radius: 8px;
@@ -240,7 +245,7 @@
 
 .priceRow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px;
   padding-top: 18px;
   border-top: 1px solid #e5e7eb;
@@ -422,6 +427,60 @@
   padding: 0 30px;
 }
 
+.historySection {
+  margin: -56px auto 88px;
+  padding: 26px;
+}
+
+.historyHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.historyHeader h2 {
+  margin: 4px 0 0;
+  font-size: 1.45rem;
+}
+
+.historyList {
+  display: grid;
+  gap: 12px;
+}
+
+.historyItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.historyItem strong,
+.historyItem span,
+.historyItem small {
+  display: block;
+}
+
+.historyItem strong {
+  color: #111827;
+}
+
+.historyItem span,
+.historyItem small {
+  color: #6b7280;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.historyItem > div:last-child {
+  text-align: right;
+}
+
 @media (max-width: 960px) {
   .hero,
   .cartShell {
@@ -456,6 +515,10 @@
     padding: 0 16px 64px;
   }
 
+  .historySection {
+    margin: -36px 16px 64px;
+  }
+
   .cartItem,
   .summary,
   .emptyState {
@@ -470,5 +533,13 @@
 
   .segmentedControl {
     width: 100%;
+  }
+
+  .historyItem {
+    grid-template-columns: 1fr;
+  }
+
+  .historyItem > div:last-child {
+    text-align: left;
   }
 }

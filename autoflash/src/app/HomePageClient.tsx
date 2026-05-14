@@ -17,7 +17,7 @@ import styles from "./Home.module.css";
 const copy = {
   en: {
     heroSubtitle: "MODERN EQUIPMENT",
-    heroTitle: "Vehicle Service",
+    heroTitle: "Vehicle Services",
     heroDescription:
       "A clean Vehicle is essential for maintaining its resale value and ensuring a presentable appearance on the road.",
     // New Hero Buttons

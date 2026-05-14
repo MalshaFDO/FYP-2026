@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode, TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
@@ -229,7 +229,7 @@ export default function BookingPage() {
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
-  const [selectedPlanId, setSelectedPlanId] = useState<number>(3);
+  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
   const [selectedExtras, setSelectedExtras] = useState<number[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedTime, setSelectedTime] = useState('02:00 pm');
@@ -248,6 +248,17 @@ export default function BookingPage() {
         window.localStorage.getItem("authToken") ||
         window.localStorage.getItem("accessToken")
       : null;
+
+  const scrollToSection = useCallback((id: string) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  const handleVehicleTypeSelect = useCallback((type: VehicleType) => {
+    setVehicle(type);
+    setSelectedPlanId(null);
+    scrollToSection("bodywash-plans");
+  }, [scrollToSection]);
+
   const updateWeekOffset = (offset: number) => {
     setWeekOffset(offset);
     setSelectedDate(getFirstAvailableDayIso(offset, closedDays));
@@ -292,8 +303,7 @@ export default function BookingPage() {
         ? (currentIndex + 1) % vehicleTypes.length
         : (currentIndex - 1 + vehicleTypes.length) % vehicleTypes.length;
 
-    setVehicle(vehicleTypes[nextIndex]);
-    setSelectedPlanId(3);
+    handleVehicleTypeSelect(vehicleTypes[nextIndex]);
   };
 
   const handleVehicleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
@@ -376,6 +386,10 @@ export default function BookingPage() {
   };
 
   const validateBooking = () => {
+    if (!currentPlan) {
+      alert("Please select a washing plan");
+      return false;
+    }
     if (!firstName || !vehicleNumber || !phone) {
       alert("Please fill required fields");
       return false;
@@ -562,6 +576,7 @@ useEffect(() => {
         savedVehicleTypeMap[selectedVehicle.vehicleType.toLowerCase()] ?? "Sedan";
 
       setVehicle(normalizedVehicleType);
+      setSelectedPlanId(null);
       setVehicleNumber(formatVehicleNumber(selectedVehicle.vehicleNumber));
       setVehicleModel(`${selectedVehicle.brand} ${selectedVehicle.model}`.trim());
     }
@@ -590,10 +605,7 @@ useEffect(() => {
               <button
                 key={type}
                 className={`${styles.typeBtn} ${vehicle === type ? styles.activeBtn : ""}`}
-                onClick={() => {
-                  setVehicle(type);
-                  setSelectedPlanId(3);
-                }}
+                onClick={() => handleVehicleTypeSelect(type)}
               >
                 {type}
               </button>
@@ -628,7 +640,7 @@ useEffect(() => {
       </section>
 
       {/* STEP 02 - UPDATED WITH FEATURES AND HOVER */}
-      <section className={styles.plansSection}>
+      <section id="bodywash-plans" className={styles.plansSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 02</p>
           <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Washing Plan</h2>
@@ -661,7 +673,10 @@ useEffect(() => {
                 </div>
 
                 <button
-                  onClick={() => setSelectedPlanId(plan.id)}
+                  onClick={() => {
+                    setSelectedPlanId(plan.id);
+                    scrollToSection("bodywash-additional");
+                  }}
                   className={`${styles.planBtn} ${selectedPlanId === plan.id ? styles.selectedBtn : styles.unselectedBtn}`}
                 >
                   {selectedPlanId === plan.id ? <>Selected <FaCheck/></> : <>Select plan <FaArrowAltCircleRight/></>}
@@ -673,7 +688,7 @@ useEffect(() => {
       </section>
 
       {/* STEP 03 */}
-      <section className={styles.additionalSection}>
+      <section id="bodywash-additional" className={styles.additionalSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 03</p>
           <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Additional Services</h2>
@@ -684,7 +699,10 @@ useEffect(() => {
               <div
                 key={service.id}
                 className={`${styles.additionalCard} ${selectedExtras.includes(service.id) ? styles.extraSelected : ""}`}
-                onClick={() => toggleExtra(service.id)}
+                onClick={() => {
+                  toggleExtra(service.id);
+                  scrollToSection("bodywash-datetime");
+                }}
               >
                 <div className={styles.cardInternal}>
                   <div className={styles.serviceIcon}>{service.icon}</div>
@@ -707,7 +725,7 @@ useEffect(() => {
       </section>
 
      {/* STEP 04 - DATE AND TIME */}
-<section className={styles.dateTimeSection}>
+     <section id="bodywash-datetime" className={styles.dateTimeSection}>
   <div className={styles.containerLarge}>
     <p className={styles.stepTagCenter}>STEP 04</p>
     <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
@@ -829,15 +847,16 @@ useEffect(() => {
                 const isBlocked = isFull || isPast;
                 const isSelected = selectedDate === item.isoDate && selectedTime === time;
                 return (
-                  <div 
-                    key={time} 
-                    className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
-                    onClick={() => {
-                      if (isUnavailable) return;
-                      setSelectedDate(item.isoDate);
-                      setSelectedTime(time);
-                    }}
-                  >
+                    <div
+                  key={time} 
+                  className={`${styles.timeSlot} ${isSelected ? styles.timeSelected : ""} ${isBlocked ? styles.timeFull : ""} ${isAdminClosed ? styles.timeClosed : ""}`}
+                  onClick={() => {
+                    if (isUnavailable) return;
+                    setSelectedDate(item.isoDate);
+                    setSelectedTime(time);
+                    scrollToSection("bodywash-summary");
+                  }}
+                >
                     <span className={styles.timeText}>{time}</span>
                     <div className={styles.slotBox}>
                       {[1, 2, 3].map((slotNo) => (
@@ -881,7 +900,7 @@ useEffect(() => {
       </div>
 </section>
       {/* ================= STEP 05 ================= */}
-      <section className={styles.summarySection}>
+      <section id="bodywash-summary" className={styles.summarySection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 05</p>
           <h2 className={`${styles.sectionTitle} ${oswald.className}`}>
