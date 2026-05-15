@@ -23,6 +23,14 @@
   gap: 22px;
 }
 
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
 .kicker {
   margin: 0;
   text-transform: uppercase;
@@ -187,9 +195,52 @@
 
   .hero {
     min-height: auto;
+    gap: 24px;
   }
 
   .formCard {
     padding: 22px;
+    border-radius: 24px;
   }
+
+  .brandPanel h1 {
+    font-size: clamp(2.2rem, 11vw, 3.2rem);
+  }
+
+  .description,
+  .metrics span,
+  .formHeader span {
+    line-height: 1.65;
+  }
+}
+
+:global(html[data-theme="light"]) .page {
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 24%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 24%),
+    linear-gradient(180deg, #f8fbfd 0%, #eaf2f8 100%);
+  color: var(--admin-text);
+}
+
+:global(html[data-theme="light"]) .brandPanel h1,
+:global(html[data-theme="light"]) .formHeader h2 {
+  color: var(--admin-text);
+}
+
+:global(html[data-theme="light"]) .description,
+:global(html[data-theme="light"]) .metrics span,
+:global(html[data-theme="light"]) .formHeader span {
+  color: var(--admin-muted);
+}
+
+:global(html[data-theme="light"]) .metrics div,
+:global(html[data-theme="light"]) .formCard {
+  background: var(--admin-panel-bg);
+  border-color: var(--admin-border);
+}
+
+:global(html[data-theme="light"]) .field input {
+  background: var(--admin-input-bg);
+  border-color: var(--admin-input-border);
+  color: var(--admin-text);
 }

@@ -32,6 +32,28 @@ const BookingSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    serviceCategory: String,
+    paymentStatus: String,
+    paymentOption: String,
+    paidAmount: {
+      type: Number,
+      default: 0,
+    },
+    remainingAmount: {
+      type: Number,
+      default: 0,
+    },
+    paymentOrderId: String,
+    paymentHistory: [
+      {
+        orderId: String,
+        amount: Number,
+        paymentOption: String,
+        paymentStage: String,
+        status: String,
+        paidAt: Date,
+      },
+    ],
   },
   { timestamps: true }
 );

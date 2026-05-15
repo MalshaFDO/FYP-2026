@@ -3,6 +3,7 @@
 :root {
   --background: #07131e;
   --foreground: #e6edf7;
+  --admin-content-bg: linear-gradient(180deg, rgba(4, 12, 20, 0.2), rgba(4, 12, 20, 0.38));
   --admin-bg:
     radial-gradient(circle at top left, rgba(34, 211, 238, 0.16), transparent 26%),
     radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.18), transparent 28%),
@@ -16,6 +17,37 @@
   --admin-accent: #67e8f9;
   --admin-accent-strong: #21c7d8;
   --admin-shadow: 0 24px 60px rgba(2, 8, 20, 0.34);
+  --admin-panel-bg: rgba(12, 24, 39, 0.78);
+  --admin-panel-strong-bg: rgba(12, 24, 39, 0.92);
+  --admin-soft-bg: rgba(9, 20, 34, 0.72);
+  --admin-input-bg: rgba(2, 8, 20, 0.56);
+  --admin-input-border: rgba(103, 232, 249, 0.14);
+  --admin-subtle-text: #9fb0c7;
+}
+
+html[data-theme="light"] {
+  --background: #eef6fb;
+  --foreground: #102031;
+  --admin-content-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(234, 242, 248, 0.9));
+  --admin-bg:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(59, 130, 246, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fbfd 0%, #eaf2f8 46%, #dfeaf3 100%);
+  --admin-surface: rgba(255, 255, 255, 0.82);
+  --admin-surface-strong: rgba(255, 255, 255, 0.96);
+  --admin-border: rgba(15, 23, 42, 0.08);
+  --admin-border-strong: rgba(37, 99, 235, 0.28);
+  --admin-muted: #52667c;
+  --admin-text: #102031;
+  --admin-accent: #0f766e;
+  --admin-accent-strong: #0b7285;
+  --admin-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+  --admin-panel-bg: rgba(255, 255, 255, 0.86);
+  --admin-panel-strong-bg: rgba(255, 255, 255, 0.96);
+  --admin-soft-bg: rgba(255, 255, 255, 0.72);
+  --admin-input-bg: rgba(255, 255, 255, 0.9);
+  --admin-input-border: rgba(15, 23, 42, 0.12);
+  --admin-subtle-text: #52667c;
 }
 
 @theme inline {
@@ -30,18 +62,35 @@
 }
 
 html {
-  background: #06111d;
+  background: var(--background);
+  overflow-x: hidden;
 }
 
 body {
+  margin: 0;
   min-height: 100vh;
   background: var(--admin-bg);
+  background-attachment: fixed;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  overflow-x: hidden;
 }
 
 a {
   color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
 }
 
 .admin-page-card {
@@ -81,8 +130,8 @@ a {
 .admin-textarea {
   width: 100%;
   border-radius: 16px;
-  border: 1px solid rgba(125, 211, 252, 0.18);
-  background: rgba(2, 8, 20, 0.56);
+  border: 1px solid var(--admin-input-border);
+  background: var(--admin-input-bg);
   color: var(--admin-text);
   outline: none;
   transition: border-color 0.18s ease, transform 0.18s ease, background 0.18s ease;
@@ -99,21 +148,21 @@ a {
 
 .admin-input::placeholder,
 .admin-textarea::placeholder {
-  color: #6f849a;
+  color: var(--admin-subtle-text);
 }
 
 .admin-input:focus,
 .admin-select:focus,
 .admin-textarea:focus {
   border-color: var(--admin-border-strong);
-  background: rgba(4, 15, 27, 0.72);
+  background: var(--admin-panel-strong-bg);
   transform: translateY(-1px);
 }
 
 .admin-pill {
-  border: 1px solid rgba(125, 211, 252, 0.14);
+  border: 1px solid var(--admin-border);
   border-radius: 999px;
-  background: rgba(9, 20, 34, 0.72);
+  background: var(--admin-soft-bg);
   color: var(--admin-muted);
   padding: 10px 16px;
 }

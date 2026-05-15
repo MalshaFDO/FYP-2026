@@ -1,47 +1,51 @@
 .dashboard {
-  max-width: 1200px;
+  max-width: 1560px;
   margin: 0 auto;
-  color: #f8fafc;
+  color: var(--admin-text);
+  display: grid;
+  gap: 22px;
 }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(300px, 0.8fr);
-  gap: 28px;
-  margin-bottom: 28px;
-  padding: 34px 36px;
-  border-radius: 28px;
-  background:
-    radial-gradient(circle at top left, rgba(34, 211, 238, 0.12), transparent 26%),
-    rgba(12, 24, 39, 0.72);
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
-  backdrop-filter: blur(12px);
-  align-items: center;
+  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  gap: 22px;
 }
 
-.heroContent {
+.heroCopy,
+.heroPanel,
+.metricCard,
+.panelCard,
+.tableSection {
+  border: 1px solid var(--admin-border);
+  background: var(--admin-panel-bg);
+  border-radius: 26px;
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCopy {
   display: grid;
-  gap: 18px;
-  max-width: 680px;
+  gap: 0;
+  padding: 30px;
 }
 
 .eyebrow {
-  margin: 0;
-  color: #67e8f9;
+  margin: 0 0 14px;
+  color: var(--admin-accent);
   text-transform: uppercase;
   letter-spacing: 0.16em;
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   font-weight: 700;
 }
 
 .heroTitle {
   margin: 0;
   display: grid;
-  gap: 6px;
-  font-size: clamp(2.4rem, 4vw, 4.8rem);
+  gap: 8px;
+  font-size: clamp(2.4rem, 4vw, 4.6rem);
   line-height: 0.95;
-  max-width: 10ch;
+  max-width: 12ch;
   letter-spacing: -0.03em;
 }
 
@@ -50,127 +54,180 @@
 }
 
 .heroDescription {
-  margin: 0;
+  margin: 18px 0 0;
   max-width: 56ch;
-  color: #9fb0c7;
+  color: var(--admin-muted);
   line-height: 1.7;
   font-size: 1.02rem;
 }
 
-.heroMetaPanel {
-  display: grid;
-  gap: 18px;
-  padding: 22px;
-  border-radius: 24px;
-  background: rgba(7, 18, 30, 0.68);
-  border: 1px solid rgba(125, 211, 252, 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+.quickActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
 }
 
-.heroMeta {
+.quickActions span,
+.sectionPill {
+  border: 1px solid var(--admin-border);
+  border-radius: 999px;
+  background: var(--admin-soft-bg);
+  color: var(--admin-muted);
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.heroPanel {
+  padding: 28px;
   display: grid;
+  gap: 22px;
+  align-content: center;
+  justify-items: center;
+}
+
+.heroRing {
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  padding: 20px;
+  background:
+    radial-gradient(circle at center, var(--admin-panel-strong-bg) 56%, transparent 57%),
+    conic-gradient(from 210deg, var(--admin-accent) 0deg, var(--admin-accent-strong) 95deg, var(--admin-accent) 180deg, rgba(103, 232, 249, 0.18) 280deg, rgba(103, 232, 249, 0.18) 360deg);
+  box-shadow: inset 0 0 0 1px var(--admin-border), 0 24px 48px rgba(2, 8, 20, 0.26);
+}
+
+.heroRingInner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  background: var(--admin-surface);
+}
+
+.heroRingInner span {
+  color: var(--admin-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.heroRingInner strong {
+  font-size: 4rem;
+  line-height: 0.9;
+}
+
+.heroRingInner small {
+  color: var(--admin-muted);
+}
+
+.heroStats {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  grid-template-columns: 1fr;
 }
 
-.heroMetaItem {
-  min-width: 0;
-  padding: 14px 16px;
+.heroStats div {
+  padding: 16px 14px;
   border-radius: 18px;
-  background: rgba(8, 20, 33, 0.7);
-  border: 1px solid rgba(125, 211, 252, 0.12);
+  background: var(--admin-soft-bg);
+  border: 1px solid var(--admin-border);
+  text-align: center;
 }
 
-.heroMetaLabel {
+.heroStats span,
+.metricCard span,
+.stateRow span,
+.sectionKicker {
   display: block;
-  margin-bottom: 6px;
-  color: #91a7bd;
-  font-size: 0.78rem;
+  color: var(--admin-muted);
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.heroMetaValue {
-  display: block;
-  color: #f8fafc;
-  font-size: 1.25rem;
+  letter-spacing: 0.16em;
   font-weight: 700;
 }
 
-.heroMetaNote {
-  color: #7f95aa;
-  font-size: 0.92rem;
-  line-height: 1.6;
+.heroStats strong,
+.metricCard strong,
+.stateRow strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--admin-text);
+  font-size: 1.4rem;
 }
 
-.cards {
+.statGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
 }
 
-.card {
-  background: rgba(12, 24, 39, 0.7);
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  border-radius: 22px;
-  padding: 1.5rem;
-  transition: transform 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 18px 44px rgba(2, 8, 20, 0.2);
-  backdrop-filter: blur(10px);
+.metricCard {
+  padding: 20px;
+  min-height: 108px;
 }
 
-.card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(103, 232, 249, 0.34);
+.metricCard strong {
+  font-size: 1.75rem;
 }
 
-.card h3 {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #93a8bd;
-  margin: 0 0 0.5rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+.dualGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 22px;
 }
 
-.card p {
-  font-size: 2rem;
-  font-weight: 700;
-  margin: 0;
-  color: #ffffff;
-}
-
-.chartSection {
-  margin-bottom: 28px;
-  background: rgba(12, 24, 39, 0.74);
-  border-radius: 24px;
-  padding: 1.5rem;
-  overflow-x: auto;
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
-  backdrop-filter: blur(12px);
-}
-
+.panelCard,
 .tableSection {
-  background: rgba(12, 24, 39, 0.74);
-  border-radius: 24px;
-  padding: 1.5rem;
-  overflow-x: auto;
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
-  backdrop-filter: blur(12px);
+  padding: 24px;
 }
 
-.chartSection h2,
-.tableSection h2 {
-  font-size: 1.25rem;
-  margin: 0 0 1.25rem;
-  color: #f1f5f9;
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.sectionHeader h3,
+.tableSection h3 {
+  margin: 6px 0 0;
+  color: var(--admin-text);
+  font-size: 1.2rem;
 }
 
 .chartFrame {
-  min-height: 320px;
+  min-height: 340px;
+}
+
+.stateList {
+  display: grid;
+  gap: 12px;
+}
+
+.stateRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--admin-soft-bg);
+  border: 1px solid var(--admin-border);
+}
+
+.stateRow strong {
+  margin-top: 0;
+}
+
+.tableSection {
+  overflow-x: auto;
 }
 
 .table {
@@ -181,8 +238,8 @@
 
 .table th {
   padding: 1rem;
-  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
-  color: #93a8bd;
+  border-bottom: 1px solid var(--admin-border);
+  color: var(--admin-muted);
   font-weight: 600;
   font-size: 0.85rem;
   text-transform: uppercase;
@@ -191,9 +248,9 @@
 
 .table td {
   padding: 1rem;
-  border-bottom: 1px solid rgba(125, 211, 252, 0.06);
+  border-bottom: 1px solid var(--admin-border);
   font-size: 0.9rem;
-  color: #cbd5e1;
+  color: var(--admin-text);
 }
 
 .status {
@@ -225,29 +282,41 @@
 .cancelled {
   background-color: #ef4444;
 }
-/* Loading state centering */
+
 .loading {
   text-align: center;
   margin-top: 20%;
   font-weight: 500;
   letter-spacing: 1px;
-  color: #ffffff;
+  color: var(--admin-text);
 }
 
 @media (max-width: 640px) {
   .hero {
     grid-template-columns: 1fr;
-    padding: 22px 20px;
-  }
-
-  .card,
-  .chartSection,
-  .tableSection {
-    padding: 1.1rem;
   }
 
   .heroTitle {
     max-width: none;
-    font-size: 2.6rem;
+    font-size: 2.5rem;
+  }
+
+  .heroCopy,
+  .heroPanel,
+  .metricCard,
+  .panelCard,
+  .tableSection {
+    padding: 18px;
+  }
+
+  .statGrid,
+  .dualGrid,
+  .heroStats {
+    grid-template-columns: 1fr;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.85rem 0.75rem;
   }
 }

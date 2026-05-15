@@ -44,6 +44,7 @@ export async function POST(req: Request) {
     const service = body?.service?.toString()?.trim?.() ?? "";
     const bookingRef = body?.bookingRef?.toString()?.trim?.() ?? "";
     const message = body?.message?.toString()?.trim?.() ?? "";
+    const paymentMessage = body?.paymentMessage?.toString()?.trim?.() ?? "";
 
     if (!phone) {
       return NextResponse.json(
@@ -80,15 +81,19 @@ Service: ${service}
 Ref: ${bookingRef}
 
 Please arrive 10 minutes early.
+`;
 
-Thank you for choosing AutoFlash.`;
+    const finalMessage =
+      paymentMessage && !message
+        ? `${smsMessage}\n\n${paymentMessage}\n\nThank you for choosing AutoFlash.`
+        : smsMessage;
 
     const response = await axios.post(
       process.env.SMS_API_URL as string,
       null,
       {
         params: {
-          m: smsMessage,
+          m: finalMessage,
           r: formattedPhone,
           a: process.env.SMS_SENDER_ID,
           u: process.env.SMS_USERNAME,

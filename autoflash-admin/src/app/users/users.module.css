@@ -1,0 +1,258 @@
+.page {
+  display: grid;
+  gap: 22px;
+  color: #f8fafc;
+}
+
+.heroCard,
+.panel,
+.statCard {
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(12, 24, 39, 0.76);
+  border-radius: 26px;
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCard {
+  padding: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.heroCopy h2,
+.panelHeader h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.heroCopy p {
+  margin: 12px 0 0;
+  max-width: 62ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+}
+
+.kicker,
+.sectionKicker {
+  margin: 0 0 8px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.searchBlock {
+  display: grid;
+  gap: 12px;
+  min-width: min(100%, 420px);
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.statCard {
+  padding: 18px 20px;
+}
+
+.statCard span {
+  color: #8ca4bb;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.statCard strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.9rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 22px;
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.countPill {
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(9, 20, 34, 0.72);
+  color: #b5c5d8;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.userTable {
+  display: grid;
+  gap: 12px;
+}
+
+.userHead,
+.userRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) 0.8fr 0.8fr 0.4fr;
+  align-items: center;
+  gap: 14px;
+}
+
+.userHead {
+  padding: 0 4px 8px;
+  color: #8ca4bb;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.userRow {
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(125, 211, 252, 0.1);
+  background: rgba(8, 20, 33, 0.68);
+}
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userCell strong,
+.adminCard strong {
+  display: block;
+  color: #f8fafc;
+}
+
+.userCell span,
+.adminCard span,
+.adminMeta small {
+  display: block;
+  color: #90a4ba;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #12bfd6, #22c7b8);
+  color: #05131f;
+  font-weight: 900;
+}
+
+.roleBadge,
+.adminBadge {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(9, 20, 34, 0.78);
+  color: #f8fafc;
+  font-weight: 800;
+  font-size: 0.78rem;
+}
+
+.statusActive {
+  color: #22c55e;
+  font-weight: 800;
+}
+
+.actionButton {
+  border: 0;
+  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  background: rgba(125, 211, 252, 0.08);
+  color: #f8fafc;
+  cursor: pointer;
+}
+
+.adminList {
+  display: grid;
+  gap: 12px;
+}
+
+.adminCard {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(8, 20, 33, 0.68);
+  border: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.adminMeta {
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.empty {
+  margin: 0;
+  padding: 2rem 0;
+  text-align: center;
+  color: #8ca4bb;
+}
+
+@media (max-width: 960px) {
+  .heroCard,
+  .grid,
+  .statsRow {
+    grid-template-columns: 1fr;
+  }
+
+  .heroCard {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel,
+  .heroCard {
+    padding: 18px;
+  }
+
+  .userHead {
+    display: none;
+  }
+
+  .userRow {
+    grid-template-columns: 1fr;
+  }
+
+  .adminCard {
+    flex-direction: column;
+  }
+
+  .adminMeta {
+    justify-items: start;
+    text-align: left;
+  }
+}

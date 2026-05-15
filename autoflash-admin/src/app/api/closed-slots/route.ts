@@ -52,8 +52,6 @@ export async function POST(req: Request) {
     if (bookingHour >= startHour && bookingHour < endHour) {
       booking.status = "Cancelled";
       await booking.save();
-
-      // Here you can trigger email + whatsapp cancel
     }
   }
 

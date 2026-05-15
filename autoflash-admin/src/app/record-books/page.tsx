@@ -456,7 +456,7 @@ export default function RecordBooksPage() {
             <p className={styles.headerEyebrow}>Admin Record Book</p>
             <h2>Vehicle Lube Service Record</h2>
             <p className={styles.headerNote}>
-              Search by vehicle number to load and update the latest service entries.
+              Search by vehicle number to load the book, then unlock it for users when it is ready.
             </p>
             <div
               style={{
@@ -478,8 +478,8 @@ export default function RecordBooksPage() {
                   : featureSaving
                   ? "Saving..."
                   : recordBookEnabled
-                  ? "Deactivate For Users"
-                  : "Activate For Users"}
+                  ? "Lock For Users"
+                  : "Unlock For Users"}
               </button>
               <span
                 style={{

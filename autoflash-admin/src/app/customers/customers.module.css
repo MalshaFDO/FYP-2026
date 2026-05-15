@@ -1,0 +1,331 @@
+.container {
+  display: grid;
+  gap: 24px;
+  color: #f8fafc;
+}
+
+.heroCard,
+.panel {
+  border-radius: 28px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(12, 24, 39, 0.74);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(260px, 360px);
+  gap: 20px;
+  padding: 30px;
+}
+
+.heroCopy {
+  min-width: 0;
+}
+
+.kicker {
+  margin: 0 0 12px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.02;
+}
+
+.copy {
+  margin: 0;
+  max-width: 62ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+}
+
+.sectionKicker {
+  margin: 0 0 8px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.heroStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-self: start;
+}
+
+.heroStats article {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(7, 18, 30, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.heroStats span {
+  display: block;
+  color: #91a7bd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.heroStats strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.7rem;
+}
+
+.panel {
+  padding: 28px;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.panelHeader h3 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.countPill {
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: rgba(9, 20, 34, 0.72);
+  color: #b5c5d8;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.controls {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.filterRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.filterButton,
+.activeFilter {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.filterButton {
+  background: rgba(7, 18, 30, 0.6);
+  color: #9fb0c7;
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.activeFilter {
+  background: linear-gradient(135deg, #12bfd6, #22c7b8);
+  color: #06202a;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at top right, rgba(103, 232, 249, 0.08), transparent 28%),
+    rgba(7, 18, 30, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+  min-width: 0;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.cardHeader h3,
+.cardHeader p {
+  margin: 0;
+}
+
+.cardHeader p {
+  color: #9fb0c7;
+  font-size: 0.92rem;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.detailGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.detail {
+  display: grid;
+  gap: 4px;
+  padding: 14px 15px;
+  border-radius: 20px;
+  background: rgba(2, 8, 20, 0.4);
+  border: 1px solid rgba(125, 211, 252, 0.08);
+  min-width: 0;
+}
+
+.detail span,
+.detail strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.detail strong {
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+.detailWide {
+  grid-column: 1 / -1;
+}
+
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(103, 232, 249, 0.12);
+  color: #cffafe;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.meta {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.meta span,
+.lastBooking span {
+  color: #91a7bd;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.meta strong,
+.lastBooking strong {
+  font-size: 0.95rem;
+}
+
+.vehicleList {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.vehicleChip {
+  padding: 14px 15px;
+  border-radius: 18px;
+  background: rgba(2, 8, 20, 0.58);
+  border: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.vehicleChip strong,
+.vehicleChip span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.vehicleChip span {
+  color: #9fb0c7;
+  margin-top: 4px;
+}
+
+.lastBooking {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(125, 211, 252, 0.12);
+  display: grid;
+  gap: 6px;
+}
+
+.lastBooking small {
+  color: #67e8f9;
+  font-weight: 700;
+}
+
+.muted {
+  color: #9fb0c7;
+}
+
+.error {
+  color: #fca5a5;
+  margin: 0 0 16px;
+}
+
+@media (max-width: 960px) {
+  .heroCard {
+    grid-template-columns: 1fr;
+  }
+
+  .heroStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .detailGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .panel,
+  .heroCard {
+    padding: 18px;
+  }
+
+  .heroStats {
+    grid-template-columns: 1fr;
+  }
+
+  .panelHeader {
+    flex-direction: column;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .badge {
+    white-space: normal;
+  }
+
+  .detailGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .detailWide {
+    grid-column: auto;
+  }
+}

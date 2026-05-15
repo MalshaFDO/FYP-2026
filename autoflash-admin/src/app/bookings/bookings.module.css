@@ -1,210 +1,279 @@
+/* bookings.module.css */
+
 .container {
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 1.5rem;
   color: #f8fafc;
+  background-color: #020b13; /* Matching the deep navy/black from the image */
+  min-height: 100vh;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-.container h2 {
-  font-size: clamp(1.8rem, 2.8vw, 2.5rem);
-  margin: 0;
-  font-weight: 700;
-  color: #ffffff;
-}
-
+/* --- Hero/Header Card --- */
 .hero {
-  display: grid;
-  gap: 14px;
-  margin-bottom: 24px;
+  background: rgba(13, 25, 39, 0.6);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Accent glow behind the header icon/text */
+.hero::before {
+  content: "";
+  position: absolute;
+  top: -50px;
+  left: -50px;
+  width: 150px;
+  height: 150px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+  pointer-events: none;
 }
 
 .eyebrow {
-  margin: 0;
+  margin: 0 0 4px 0;
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #67e8f9;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #0ea5e9; /* Vibrant blue label */
+}
+
+.hero h2 {
+  font-size: 2.4rem;
+  margin: 0;
+  font-weight: 900;
+  color: #ffffff;
 }
 
 .description {
-  margin: 0;
-  max-width: 68ch;
-  color: #9fb0c7;
-  line-height: 1.7;
+  margin: 8px 0 0 0;
+  color: #94a3b8;
+  font-size: 0.9rem;
 }
 
+/* --- Controls (Filter & Search) --- */
 .controls {
-  display: grid;
-  gap: 16px;
-  margin-bottom: 24px;
+  background: rgba(13, 25, 39, 0.4);
   padding: 20px;
-  border-radius: 24px;
-  background: rgba(12, 24, 39, 0.74);
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
-  backdrop-filter: blur(12px);
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .searchRow {
-  display: flex;
+  margin-bottom: 24px;
 }
 
 .searchInput {
-  max-width: 420px;
+  width: 100%;
+  max-width: 600px;
+  background: rgba(2, 11, 19, 0.8) !important;
+  border: 1px solid rgba(56, 189, 248, 0.2) !important;
+  color: #fff !important;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.searchInput:focus {
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 15px rgba(14, 165, 233, 0.2);
+  outline: none;
 }
 
 .filterRow {
   display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 12px;
+  background: rgba(2, 11, 19, 0.5);
+  padding: 8px;
+  border-radius: 14px;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .filterButton {
-  padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
   cursor: pointer;
-  background: rgba(9, 20, 34, 0.72);
-  color: #9fb0c7;
-  transition: all 0.18s ease;
-}
-
-.filterButton:hover {
-  border-color: rgba(103, 232, 249, 0.22);
-  color: #f8fafc;
+  transition: all 0.2s ease;
 }
 
 .filterButtonActive {
-  background: linear-gradient(135deg, rgba(16, 48, 66, 0.98), rgba(18, 77, 82, 0.84));
-  color: #f8fdff;
-  border-color: rgba(103, 232, 249, 0.28);
+  background: #00d2ff; /* That specific cyan blue from the image */
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 210, 255, 0.3);
 }
 
+/* --- The Table Grid --- */
 .tableWrap {
-  background: rgba(12, 24, 39, 0.74);
+  background: rgba(13, 25, 39, 0.6);
   border-radius: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(125, 211, 252, 0.14);
-  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
-  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 10px;
 }
 
 .table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0;
-  table-layout: auto;
+  border-spacing: 0 8px; /* Creates that space between rows */
 }
 
 .table th {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 1.25rem 1rem;
   text-align: left;
-  font-size: 0.85rem;
+  padding: 16px 20px;
+  font-size: 0.7rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #93a8bd;
-  border-bottom: 1px solid rgba(125, 211, 252, 0.12);
+  color: #00d2ff; /* Cyan headers */
+  letter-spacing: 0.15em;
 }
 
 .table td {
-  padding: 1.25rem 1rem;
-  font-size: 0.95rem;
-  color: #cbd5e1;
-  border-bottom: 1px solid rgba(125, 211, 252, 0.06);
+  padding: 18px 20px;
+  background: rgba(2, 11, 19, 0.4); /* Individual row transparency */
   vertical-align: middle;
 }
 
-.table tr:last-child td {
-  border-bottom: none;
-}
+.table tr td:first-child { border-radius: 12px 0 0 12px; }
+.table tr td:last-child { border-radius: 0 12px 12px 0; }
 
 .table tr:hover td {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(56, 189, 248, 0.05);
 }
 
-.additionalBadgeContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-width: 220px;
-}
-
-.serviceBadge {
-  background: rgba(6, 182, 212, 0.12);
-  color: #9ae6f0;
-  padding: 4px 9px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  border: 1px solid rgba(103, 232, 249, 0.16);
-  white-space: nowrap;
-}
-
-.table td {
-  padding: 1rem 0.75rem;
-}
-
-.statusSelect {
-  padding: 8px 12px;
-  border-radius: 20px;
-  border: 0;
-  color: white;
-  font-weight: 700;
-  cursor: pointer;
-  outline: none;
-}
-
-.pending {
-  background-color: #fbbf24;
-  color: #1f2937;
-}
-
-.confirmed {
-  background-color: #0ea5e9;
-}
-
-.inprogress {
-  background-color: #14b8a6;
-}
-
-.completed {
-  background-color: #22c55e;
-}
-
-.cancelled {
-  background-color: #ef4444;
-}
-
+/* --- Content Styling --- */
 .cellHeading {
-  font-weight: 600;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: #ffffff;
+  letter-spacing: 0.02em;
 }
 
 .cellSubtle {
-  font-size: 0.82rem;
-  color: #91a7bd;
+  font-size: 0.8rem;
+  color: #64748b;
+  font-family: monospace;
 }
 
 .vehicleAccent {
-  font-size: 0.85rem;
-  color: #67e8f9;
-  margin-top: 2px;
+  background: rgba(0, 210, 255, 0.1);
+  color: #00d2ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 1px solid rgba(0, 210, 255, 0.2);
 }
 
+/* Container to hold the service pills */
+.additionalBadgeContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 250px;
+  align-items: center;
+}
+
+.serviceBadge {
+  background: rgba(6, 182, 212, 0.05); /* Subtle dark fill */
+  color: #ffffff !important;           /* Forced white text as requested */
+  padding: 4px 12px;
+  border-radius: 8px;                 /* Squared-off pill look from your reference */
+  font-size: 0.75rem;
+  font-weight: 800;                   /* Heavy weight to match the bold look */
+  border: 1px solid #00d2ff;          /* Vibrant cyan border from reference */
+  white-space: nowrap;
+  text-transform: uppercase;         
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.serviceBadge:hover {
+  border-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0, 210, 255, 0.3);
+  transition: all 0.2s ease;
+}
+
+.dateCell {
+  display: flex;
+  flex-direction: column; /* Stacks year on top of month/date */
+  gap: 2px;
+  line-height: 1.2;
+}
+
+.dateCell strong {
+  color: #ffffff; /* Year in bold white */
+  font-size: 1rem;
+  font-weight: 800;
+  display: block;
+}
+
+.dateCell span {
+  color: #94a3b8; /* Month-Day in muted slate for visual hierarchy */
+  font-size: 0.85rem;
+  font-weight: 500;
+  display: block;
+  letter-spacing: 0.04em;
+}
+/* Fallback text when no services are selected */
 .emptyText {
-  color: #6f849a;
-  font-size: 0.85rem;
+  color: #475569;
+  font-size: 0.8rem;
+  font-style: italic;
+  opacity: 0.7;
+}
+/* Status Badges */
+.statusSelect {
+  width: 130px;
+  padding: 10px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 900;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-transform: uppercase;
 }
 
-@media (max-width: 768px) {
-  .controls {
-    padding: 16px;
-  }
+.confirmed { background: #0ea5e9; color: #fff; }
+.pending { background: #f59e0b; color: #fff; }
+.inprogress { background: #06b6d4; color: #fff; }
+.cancelled { background: #ef4444; color: #fff; }
 
-  .searchInput {
-    max-width: none;
-  }
+/* Payment Badges */
+.paymentPaid {
+  background: rgba(34, 197, 94, 0.1);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
 
-  .tableWrap {
-    overflow-x: auto;
-  }
+.paymentPending {
+  background: rgba(148, 163, 184, 0.1);
+  color: #94a3b8;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+/* Custom Scrollbar for the dark theme */
+.tableWrap::-webkit-scrollbar {
+  height: 8px;
+}
+.tableWrap::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.2);
+  border-radius: 10px;
 }

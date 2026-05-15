@@ -1,5 +1,6 @@
 import "./globals.css";
 import AppShell from "@/components/AppShell/AppShell";
+import { AdminLanguageProvider } from "@/components/providers/AdminLanguageProvider";
 
 export default function RootLayout({
   children,
@@ -9,7 +10,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <AppShell>{children}</AppShell>
+        <AdminLanguageProvider>
+          <AppShell>{children}</AppShell>
+        </AdminLanguageProvider>
       </body>
     </html>
   );

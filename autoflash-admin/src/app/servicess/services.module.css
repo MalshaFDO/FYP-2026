@@ -1,0 +1,193 @@
+.container {
+  display: grid;
+  gap: 24px;
+  color: #f8fafc;
+}
+
+.heroCard,
+.panel {
+  border-radius: 28px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(12, 24, 39, 0.74);
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 32px;
+}
+
+.kicker {
+  margin: 0 0 12px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.copy {
+  margin: 0;
+  max-width: 68ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+}
+
+.heroStats {
+  display: grid;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.heroStats div,
+.vehiclePanel {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(7, 18, 30, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.heroStats span {
+  display: block;
+  color: #91a7bd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.heroStats strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.7rem;
+}
+
+.panel {
+  padding: 28px;
+}
+
+.panelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.panelHeader h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.panelHeader p {
+  margin: 0;
+  color: #9fb0c7;
+}
+
+.secondaryButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  background: rgba(103, 232, 249, 0.12);
+  color: #d9fbff;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(125, 211, 252, 0.1);
+  text-align: left;
+}
+
+.table th {
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.75rem;
+}
+
+.priceInput {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(2, 8, 20, 0.58);
+  color: #ffffff;
+  padding: 12px 14px;
+}
+
+.fullGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.vehiclePanel h4 {
+  margin: 0 0 14px;
+}
+
+.vehicleFields {
+  display: grid;
+  gap: 12px;
+}
+
+.fieldRow {
+  display: grid;
+  gap: 6px;
+}
+
+.fieldRow span {
+  font-size: 0.75rem;
+  color: #91a7bd;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.sharedGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.success {
+  color: #67e8a6;
+  font-weight: 700;
+}
+
+.error {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .heroCard,
+  .panelHeader {
+    grid-template-columns: 1fr;
+  }
+}

@@ -70,6 +70,10 @@ export async function POST(req: Request) {
   let bookingTime = "";
   let bookingRef = "";
   let additionalServices = "None";
+  let paymentStatus = "";
+  let paidAmount = "";
+  let remainingAmount = "";
+  let paymentMessage = "";
 
   try {
     const body = await req.json();
@@ -101,6 +105,10 @@ bookingTime =
       body?.reference?.toString()?.trim?.() ??
       "";
     additionalServices = formatAdditionalServices(body?.additionalServices);
+    paymentStatus = body?.paymentStatus?.toString()?.trim?.() ?? "";
+    paidAmount = body?.paidAmount?.toString()?.trim?.() ?? "";
+    remainingAmount = body?.remainingAmount?.toString()?.trim?.() ?? "";
+    paymentMessage = body?.paymentMessage?.toString()?.trim?.() ?? "";
     bookingDate = toMMDDYYYY(bookingDate);
   } 
   catch {
@@ -124,6 +132,28 @@ bookingTime =
   if (!vehicleNumber) vehicleNumber = "Not provided";
   if (!price) price = "Not provided";
   if (!venue) venue = "Autoflash Service Center";
+
+  const toAmount = (value: string) => {
+    const parsed = Number(value.replace(/,/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
+  const normalizedPaymentStatus = paymentStatus.toLowerCase();
+  const hasPaymentInfo = Boolean(
+    paymentMessage ||
+      normalizedPaymentStatus === "paid" ||
+      normalizedPaymentStatus === "partially paid" ||
+      toAmount(paidAmount) > 0 ||
+      toAmount(remainingAmount) > 0
+  );
+  const totalAmount = toAmount(price);
+  const paymentSummary =
+    paymentMessage ||
+    (normalizedPaymentStatus === "paid" || normalizedPaymentStatus === "partially paid" || toAmount(paidAmount) > 0
+      ? toAmount(remainingAmount) > 0
+        ? `We have received a partial payment of Rs. ${toAmount(paidAmount).toLocaleString()}. Remaining balance: Rs. ${toAmount(remainingAmount).toLocaleString()}.`
+        : `We have received your full payment of Rs. ${(toAmount(paidAmount) || totalAmount).toLocaleString()}.`
+      : "No online payment has been recorded yet.");
 
   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailPattern.test(to)) {
@@ -215,12 +245,22 @@ bookingTime =
                 <td style="padding:8px;"><strong>Total Price</strong></td>
                 <td style="padding:8px; color:#e10600; font-weight:bold;">Rs. ${price}</td>
               </tr>
+              ${
+                hasPaymentInfo
+                  ? `
+              <tr>
+                <td style="padding:8px; border-top:1px solid #eee;"><strong>Payment</strong></td>
+                <td style="padding:8px; border-top:1px solid #eee;">${paymentSummary}</td>
+              </tr>
+              `
+                  : ""
+              }
             </table>
 
             <u><b><p style="margin-top:20px; color:#b91c1c" >Please arrive 10 minutes before your scheduled time.</p></b></u>
-            <p style="margin-top:30px;">Thank you for choosing <strong>Autoflash</strong>.</p>
             <hr style="margin-top:30px;" />
             <p style="font-size:12px; color:#777;">If you have any questions, reply to this email or contact us directly At +9476 824 8676.</p>
+            <p style="margin-top:18px;">Thank you for choosing <strong>Autoflash</strong>.</p>
             </div>
           </div>
         </div>

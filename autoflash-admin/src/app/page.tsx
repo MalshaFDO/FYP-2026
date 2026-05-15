@@ -4,6 +4,14 @@ import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 import RevenueChart from "@/components/RevenueChart";
 
+const STATUS_CLASSES: Record<string, string> = {
+  Pending: styles.pending,
+  Confirmed: styles.confirmed,
+  "In Progress": styles.inprogress,
+  Completed: styles.completed,
+  Cancelled: styles.cancelled,
+};
+
 const formatServiceType = (serviceType?: string) => {
   const key = serviceType?.trim().toLowerCase();
   if (key === "full") return "Full Service";
@@ -12,29 +20,20 @@ const formatServiceType = (serviceType?: string) => {
 };
 
 const formatCustomerName = (name?: string) => (name || "").trim().toUpperCase();
-
 const formatValue = (value?: string) => (value ? value.trim() : "-");
 
 const formatVehicleNumber = (vehicleNumber?: string) => {
-  let formattedVehicleNumber = vehicleNumber
-    ?.toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-
+  let formattedVehicleNumber = vehicleNumber?.toUpperCase().replace(/[^A-Z0-9]/g, "");
   if (formattedVehicleNumber) {
     const match = formattedVehicleNumber.match(/^([A-Z]+)(\d+)$/);
-
     if (match) {
-      const letters = match[1];
-      const numbers = match[2];
-      formattedVehicleNumber = `${letters} - ${numbers}`;
+      formattedVehicleNumber = `${match[1]} - ${match[2]}`;
     }
   }
-
   return formattedVehicleNumber || "-";
 };
 
-const formatBookingTime = (booking: any) =>
-  formatValue(booking?.bookingTime || booking?.time);
+const formatBookingTime = (booking: any) => formatValue(booking?.bookingTime || booking?.time);
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<any>(null);
@@ -50,106 +49,116 @@ export default function DashboardPage() {
   return (
     <div className={styles.dashboard}>
       <section className={styles.hero}>
-        <div className={styles.heroContent}>
-          <p className={styles.eyebrow}>Admin Overview</p>
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>Admin Control Room</p>
           <h2 className={styles.heroTitle}>
-            <span>Keep bookings,</span>
-            <span>customers, and</span>
-            <span>revenue in sync.</span>
+            Modern operations,
+            <span>bookings, revenue, and customers in one view.</span>
           </h2>
           <p className={styles.heroDescription}>
-            Monitor bookings, revenue, and recent activity from one clean admin
-            workspace built for faster daily operations.
+            A denser dashboard for daily operations with live booking stats, monthly revenue,
+            and quick health checks.
           </p>
+          <div className={styles.quickActions}>
+            <span>Bookings</span>
+            <span>Customers</span>
+            <span>Vehicles</span>
+            <span>Record Books</span>
+          </div>
         </div>
 
-        <div className={styles.heroMetaPanel}>
-          <div className={styles.heroMeta}>
-            <div className={styles.heroMetaItem}>
-              <span className={styles.heroMetaLabel}>Open Jobs</span>
-              <span className={styles.heroMetaValue}>{stats.pendingCount}</span>
-            </div>
-            <div className={styles.heroMetaItem}>
-              <span className={styles.heroMetaLabel}>Today</span>
-              <span className={styles.heroMetaValue}>{stats.todaysBookings}</span>
-            </div>
-            <div className={styles.heroMetaItem}>
-              <span className={styles.heroMetaLabel}>Revenue</span>
-              <span className={styles.heroMetaValue}>LKR {stats.monthlyRevenue}</span>
+        <div className={styles.heroPanel}>
+          <div className={styles.heroRing}>
+            <div className={styles.heroRingInner}>
+              <span>Today</span>
+              <strong>{stats.todaysBookings}</strong>
+              <small>active bookings</small>
             </div>
           </div>
-          <div className={styles.heroMetaNote}>
-            Live snapshot of the admin workspace for today.
+
+          <div className={styles.heroStats}>
+            <div>
+              <span>Pending</span>
+              <strong>{stats.pendingCount}</strong>
+            </div>
+            <div>
+              <span>Confirmed</span>
+              <strong>{stats.confirmedCount}</strong>
+            </div>
+            <div>
+              <span>Completed</span>
+              <strong>{stats.completedCount}</strong>
+            </div>
           </div>
         </div>
       </section>
 
-      <div className={styles.cards}>
-        <div className={styles.card}>
-          <h3>Total Bookings</h3>
-          <p>{stats.totalBookings}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Total Customers</h3>
-          <p>{stats.totalCustomers}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Today's Bookings</h3>
-          <p>{stats.todaysBookings}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Pending</h3>
-          <p>{stats.pendingCount}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Confirmed</h3>
-          <p>{stats.confirmedCount}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>In Progress</h3>
-          <p>{stats.inProgressCount}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Completed</h3>
-          <p>{stats.completedCount}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Cancelled</h3>
-          <p>{stats.cancelledCount}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Total Revenue</h3>
-          <p>LKR {stats.totalRevenue}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>Completed Revenue</h3>
-          <p>LKR {stats.completedRevenue}</p>
-        </div>
-
-        <div className={styles.card}>
-          <h3>This Month Revenue</h3>
-          <p>LKR {stats.monthlyRevenue}</p>
-        </div>
-      </div>
-
-      <section className={styles.chartSection}>
-        <h2>Revenue Overview</h2>
-        <div className={styles.chartFrame}>
-          <RevenueChart data={stats.monthlyChartData} />
-        </div>
+      <section className={styles.statGrid}>
+        {[
+          ["Total bookings", stats.totalBookings],
+          ["Total customers", stats.totalCustomers],
+          ["Open jobs", stats.pendingCount],
+          ["In progress", stats.inProgressCount],
+          ["Completed", stats.completedCount],
+          ["Cancelled", stats.cancelledCount],
+          ["Revenue total", `LKR ${stats.totalRevenue}`],
+          ["Completed revenue", `LKR ${stats.completedRevenue}`],
+          ["Monthly revenue", `LKR ${stats.monthlyRevenue}`],
+        ].map(([label, value]) => (
+          <article key={label} className={styles.metricCard}>
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </article>
+        ))}
       </section>
 
-      <div className={styles.tableSection}>
-        <h2>Recent Bookings</h2>
+      <section className={styles.dualGrid}>
+        <article className={styles.panelCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionKicker}>Revenue overview</p>
+              <h3>Monthly earnings trend</h3>
+            </div>
+            <span className={styles.sectionPill}>Live data</span>
+          </div>
+          <div className={styles.chartFrame}>
+            <RevenueChart data={stats.monthlyChartData} />
+          </div>
+        </article>
+
+        <article className={styles.panelCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <p className={styles.sectionKicker}>Queue health</p>
+              <h3>Booking state breakdown</h3>
+            </div>
+          </div>
+
+          <div className={styles.stateList}>
+            {[
+              ["Pending", stats.pendingCount],
+              ["Confirmed", stats.confirmedCount],
+              ["In progress", stats.inProgressCount],
+              ["Completed", stats.completedCount],
+              ["Cancelled", stats.cancelledCount],
+            ].map(([label, value]) => (
+              <div key={label} className={styles.stateRow}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className={styles.tableSection}>
+        <div className={styles.sectionHeader}>
+          <div>
+            <p className={styles.sectionKicker}>Recent activity</p>
+            <h3>Latest bookings</h3>
+          </div>
+          <span className={styles.sectionPill}>{stats.recentBookings.length} items</span>
+        </div>
 
         <table className={styles.table}>
           <thead>
@@ -163,38 +172,40 @@ export default function DashboardPage() {
               <th>Status</th>
             </tr>
           </thead>
-
           <tbody>
-            {stats.recentBookings.map((booking: any) => (
-              <tr key={booking._id}>
-                <td>{formatCustomerName(booking.customerName)}</td>
-                <td>{formatValue(booking.mobile)}</td>
-                <td>{formatVehicleNumber(booking.vehicleNumber)}</td>
-                <td>{booking.vehicle}</td>
-                <td>{formatServiceType(booking.serviceType)}</td>
-                <td>{formatBookingTime(booking)}</td>
-                <td>
-                  <span
-                    className={`${styles.status} ${
-                      booking.status === "Pending"
-                        ? styles.pending
-                        : booking.status === "Confirmed"
-                        ? styles.confirmed
-                        : booking.status === "In Progress"
-                        ? styles.inprogress
-                        : booking.status === "Completed"
-                        ? styles.completed
-                        : styles.cancelled
-                    }`}
-                  >
-                    {booking.status}
-                  </span>
+            {stats.recentBookings.length > 0 ? (
+              stats.recentBookings.map((booking: any) => (
+                <tr key={booking._id}>
+                  <td>{formatCustomerName(booking.customerName)}</td>
+                  <td>{formatValue(booking.mobile)}</td>
+                  <td>{formatVehicleNumber(booking.vehicleNumber)}</td>
+                  <td>{booking.vehicle}</td>
+                  <td>{formatServiceType(booking.serviceType)}</td>
+                  <td>{formatBookingTime(booking)}</td>
+                  <td>
+                    <span className={`${styles.status} ${STATUS_CLASSES[booking.status] || ""}`}>
+                      {booking.status}
+                    </span>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={7}
+                  style={{
+                    textAlign: "center",
+                    padding: "2rem",
+                    color: "var(--admin-muted)",
+                  }}
+                >
+                  No recent bookings found.
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
-      </div>
+      </section>
     </div>
   );
 }

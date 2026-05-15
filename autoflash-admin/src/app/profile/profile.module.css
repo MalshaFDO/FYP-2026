@@ -1,0 +1,243 @@
+.page {
+  display: grid;
+  gap: 22px;
+  color: #f8fafc;
+}
+
+.heroCard,
+.panel {
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(12, 24, 39, 0.76);
+  border-radius: 26px;
+  box-shadow: 0 20px 48px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCard {
+  padding: 26px;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.heroIdentity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.avatar {
+  width: 74px;
+  height: 74px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #12bfd6, #22c7b8);
+  color: #05131f;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.heroCard h2,
+.panelHeader h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.kicker {
+  margin: 0 0 8px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.roleBadge,
+.emailBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(9, 20, 34, 0.72);
+  font-weight: 800;
+}
+
+.emailBadge {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.heroMeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  min-width: min(100%, 520px);
+}
+
+.heroMeta article {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(8, 20, 33, 0.68);
+  border: 1px solid rgba(125, 211, 252, 0.1);
+}
+
+.heroMeta span,
+.copy,
+.muted,
+.saved,
+.accessList span {
+  color: #8ca4bb;
+}
+
+.heroMeta strong,
+.accessList strong {
+  display: block;
+  margin-top: 6px;
+  color: #f8fafc;
+  font-size: 1.05rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 22px;
+}
+
+.panel {
+  padding: 24px;
+}
+
+.panelHeader {
+  margin-bottom: 16px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.formGrid label,
+.fullWidth {
+  display: grid;
+  gap: 8px;
+}
+
+.formGrid label span,
+.fullWidth span {
+  color: #8ca4bb;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.fullWidth {
+  grid-column: 1 / -1;
+}
+
+.actions {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.secondaryButton {
+  border-radius: 16px;
+  border: 1px solid rgba(125, 211, 252, 0.16);
+  background: rgba(9, 20, 34, 0.72);
+  color: #f8fafc;
+  padding: 13px 18px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.sideStack {
+  display: grid;
+  gap: 22px;
+}
+
+.copy {
+  line-height: 1.7;
+  margin: 0 0 18px;
+}
+
+.accessList {
+  display: grid;
+  gap: 14px;
+}
+
+.green {
+  color: #22c55e;
+}
+
+@media (max-width: 960px) {
+  .heroCard,
+  .grid,
+  .heroMeta {
+    grid-template-columns: 1fr;
+  }
+
+  .heroCard {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .panel,
+  .heroCard {
+    padding: 18px;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+:global(html[data-theme="light"]) .page {
+  color: var(--admin-text);
+}
+
+:global(html[data-theme="light"]) .heroCard,
+:global(html[data-theme="light"]) .panel {
+  background: var(--admin-panel-bg);
+  border-color: var(--admin-border);
+}
+
+:global(html[data-theme="light"]) .heroMeta article,
+:global(html[data-theme="light"]) .secondaryButton {
+  background: var(--admin-soft-bg);
+  border-color: var(--admin-border);
+}
+
+:global(html[data-theme="light"]) .heroMeta span,
+:global(html[data-theme="light"]) .copy,
+:global(html[data-theme="light"]) .muted,
+:global(html[data-theme="light"]) .saved,
+:global(html[data-theme="light"]) .accessList span,
+:global(html[data-theme="light"]) .formGrid label span,
+:global(html[data-theme="light"]) .fullWidth span {
+  color: var(--admin-muted);
+}
+
+:global(html[data-theme="light"]) .heroCard h2,
+:global(html[data-theme="light"]) .panelHeader h3,
+:global(html[data-theme="light"]) .heroMeta strong,
+:global(html[data-theme="light"]) .accessList strong {
+  color: var(--admin-text);
+}

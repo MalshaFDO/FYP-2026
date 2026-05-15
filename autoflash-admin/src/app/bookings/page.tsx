@@ -106,13 +106,6 @@ const formatVehicleNumber = (vehicleNumber?: string) => {
 const formatCustomerName = (name?: string) => (name || "").trim().toUpperCase();
 const formatBookingTime = (booking: any) =>
   booking?.bookingTime || booking?.time || booking?.date || "-";
-const formatWhatsappPhone = (mobile?: string) => {
-  const raw = mobile?.toString().trim() || "";
-  if (!raw) return "";
-  if (raw.startsWith("0")) return "94" + raw.substring(1);
-  if (raw.startsWith("+")) return raw.substring(1);
-  return raw;
-};
 const formatSmsPhone = (mobile?: string) => {
   const raw = mobile?.toString().trim() || "";
   if (!raw) return "";
@@ -124,6 +117,55 @@ const buildBookingRef = (booking: any) =>
   booking?.bookingRef ||
   booking?.reference ||
   `AF-${String(booking?._id || Date.now()).slice(-6).toUpperCase()}`;
+const formatMoney = (value?: number) => `LKR ${Number(value || 0).toLocaleString()}`;
+const formatPaymentStatus = (booking: any) => {
+  if (booking?.paymentStatus) return booking.paymentStatus;
+  if (Number(booking?.paidAmount || 0) > 0) return "Paid";
+  return "Pending";
+};
+
+const buildPaymentNote = (booking: any) => {
+  const paymentStatus = formatPaymentStatus(booking);
+  const paidAmount = Number(booking?.paidAmount || 0);
+  const remainingAmount = Number(booking?.remainingAmount || 0);
+  const totalPrice = Number(booking?.totalPrice || booking?.price || booking?.amount || 0);
+
+  if (paymentStatus === "Paid" || (paidAmount > 0 && remainingAmount === 0)) {
+    return `We have received your full payment of ${formatMoney(paidAmount || totalPrice)}.`;
+  }
+
+  if (paidAmount > 0) {
+    return `We have received a partial payment of ${formatMoney(paidAmount)}. Remaining balance: ${formatMoney(remainingAmount)}.`;
+  }
+
+  return "";
+};
+
+const formatStackedDate = (value?: string) => {
+  const raw = value?.trim() || "";
+  if (!raw) return { year: "-", monthDay: "-" };
+
+  const isoMatch = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})(?:$|T|\s)/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return {
+      year,
+      monthDay: `${month.padStart(2, "0")}-${day.padStart(2, "0")}`,
+    };
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return {
+      year: String(parsed.getFullYear()),
+      monthDay: `${String(parsed.getMonth() + 1).padStart(2, "0")}-${String(
+        parsed.getDate()
+      ).padStart(2, "0")}`,
+    };
+  }
+
+  return { year: raw, monthDay: "-" };
+};
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<any[]>([]);
@@ -170,6 +212,8 @@ export default function BookingsPage() {
       const bookingDate = booking.bookingDate || booking.date || "";
       const bookingTime = booking.bookingTime || "";
       const serviceLabel = formatServiceType(booking.serviceType);
+      const paymentNote = buildPaymentNote(booking);
+      const paymentStatus = formatPaymentStatus(booking);
       const payload = {
         bookingRef,
         name: booking.customerName,
@@ -182,6 +226,11 @@ export default function BookingsPage() {
         bookingTime,
         date: bookingDate,
         time: bookingTime,
+        paymentStatus,
+        paidAmount: booking.paidAmount ?? 0,
+        remainingAmount: booking.remainingAmount ?? 0,
+        totalPrice: booking.totalPrice ?? booking.price ?? booking.amount ?? 0,
+        paymentMessage: paymentNote,
       };
 
       if (status === "Confirmed") {
@@ -191,16 +240,6 @@ export default function BookingsPage() {
           body: JSON.stringify({
             ...payload,
             to: booking.email,
-          }),
-        });
-
-        await fetch("/api/whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...payload,
-            phone: formatWhatsappPhone(booking.mobile),
-            template: "confirm",
           }),
         });
 
@@ -217,6 +256,7 @@ export default function BookingsPage() {
               bookingTime,
               service: serviceLabel,
               bookingRef,
+              paymentMessage: paymentNote,
             }),
           });
         }
@@ -229,16 +269,6 @@ export default function BookingsPage() {
           body: JSON.stringify({
             ...payload,
             to: booking.email,
-          }),
-        });
-
-        await fetch("/api/whatsapp", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...payload,
-            phone: formatWhatsappPhone(booking.mobile),
-            template: "cancel",
           }),
         });
 
@@ -348,6 +378,7 @@ Thank you for choosing AutoFlash.`;
               <th>Additional Services</th>
               <th>Date</th>
               <th>Time</th>
+              <th>Payment</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -385,8 +416,37 @@ Thank you for choosing AutoFlash.`;
                   </div>
                 </td>
 
-                <td>{booking.bookingDate || booking.date || "-"}</td>
+                <td>
+                  {(() => {
+                    const stackedDate = formatStackedDate(booking.bookingDate || booking.date || "");
+                    return (
+                      <div className={styles.dateCell}>
+                        <strong>{stackedDate.year}</strong>
+                        <span>{stackedDate.monthDay}</span>
+                      </div>
+                    );
+                  })()}
+                </td>
                 <td>{booking.bookingTime || booking.time || "-"}</td>
+                <td>
+                  <div className={styles.paymentCell}>
+                    <span
+                      className={
+                        Number(booking.remainingAmount || 0) > 0
+                          ? styles.paymentPartial
+                          : formatPaymentStatus(booking) === "Paid"
+                          ? styles.paymentPaid
+                          : styles.paymentPending
+                      }
+                    >
+                      {formatPaymentStatus(booking)}
+                    </span>
+                    <strong>{formatMoney(booking.paidAmount)}</strong>
+                    {Number(booking.remainingAmount || 0) > 0 && (
+                      <small>Due {formatMoney(booking.remainingAmount)}</small>
+                    )}
+                  </div>
+                </td>
 
                 <td>
                   <select
