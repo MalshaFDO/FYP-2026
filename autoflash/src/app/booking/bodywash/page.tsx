@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ReactNode, TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
@@ -20,6 +20,7 @@ import {
 import { PiEngineFill } from "react-icons/pi";
 import { addCartItem, getPaymentAmount } from "@/lib/cart";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
+import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
 import CartTransition from "@/components/CartTransition/CartTransition";
 import styles from "./Bodywash.module.css";
 
@@ -132,26 +133,6 @@ const pricing: Record<VehicleType, Plan[]> = {
   ],
 };
 
-const additionalServices: ExtraService[] = [
-  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Cleans, conditions, and protects leather from cracks and fading." },
-  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Water-repellent coating improving visibility during rain on glass surfaces." },
-  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Eliminates sticky tar spots from paint without damaging finish." },
-  {
-    id: 4,
-    name: "Engine Wash",
-    time: "45 min",
-    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
-    icon: <PiEngineFill/>,
-    desc: "Removes dirt and grease from engine for better performance.",
-  },
-  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Restores clarity by removing oxidation and yellowing from headlights." },
-
-  { id: 6, name: "UnderBody Wax", time: "30 min",
-    priceByVehicle: { Sedan: 1600, SUV: 1950, Pickup: 2450, MiniVan: 2800 }, 
-    icon: <FaCar />, 
-    desc: "Protective coating preventing rust and corrosion underneath vehicle." },
-];
-
 const hasPriceByVehicle = (extra: ExtraService): extra is Extract<ExtraService, { priceByVehicle: Record<VehicleType, number> }> =>
   "priceByVehicle" in extra;
 
@@ -224,6 +205,7 @@ export default function BookingPage() {
   const [email, setEmail] = useState("");
   const [notes, setNotes] = useState("");
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
+  const [vehicleCatalog, setVehicleCatalog] = useState(getFallbackVehicleCatalog());
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
@@ -279,6 +261,15 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
+    const loadCatalog = async () => {
+      const entries = await fetchVehicleCatalog();
+      setVehicleCatalog(entries);
+    };
+
+    loadCatalog();
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60 * 1000);
     return () => clearInterval(timer);
   }, []);
@@ -321,6 +312,28 @@ export default function BookingPage() {
     setTouchStartX(null);
   };
   const currentPlan = pricing[vehicle].find(p => p.id === selectedPlanId);
+const additionalServices: ExtraService[] = [
+  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Cleans, conditions, and protects leather from cracks and fading." },
+  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Water-repellent coating improving visibility during rain on glass surfaces." },
+  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Eliminates sticky tar spots from paint without damaging finish." },
+  {
+    id: 4,
+    name: "Engine Wash",
+    time: "45 min",
+    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
+    icon: <PiEngineFill/>,
+    desc: "Removes dirt and grease from engine for better performance.",
+  },
+  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Restores clarity by removing oxidation and yellowing from headlights." },
+
+  { id: 6, name: "UnderBody Wax", time: "30 min",
+    priceByVehicle: { Sedan: 1600, SUV: 1950, Pickup: 2450, MiniVan: 2800 }, 
+    icon: <FaCar />, 
+    desc: "Protective coating preventing rust and corrosion underneath vehicle." },
+];
+  const vehicleImage =
+    vehicleCatalog.find((entry) => entry.category.trim().toLowerCase() === vehicle.toLowerCase())
+      ?.imageUrl || carImages[vehicle];
   const extrasTotal = selectedExtras.reduce((total, id) => {
     const extra = additionalServices.find(e => e.id === id);
     return total + (extra ? getExtraPrice(extra, vehicle) : 0);
@@ -588,7 +601,7 @@ useEffect(() => {
           <AnimatePresence mode="wait">
             <motion.img
               key={vehicle}
-              src={carImages[vehicle]}
+              src={vehicleImage}
               alt={vehicle}
               className={styles.displayCar}
               initial={{ opacity: 0, x: 100 }}

@@ -19,6 +19,7 @@ const copy = {
       { href: "/contact", label: "Contact" },
     ],
     bookNow: "Book Now",
+    cart: "Cart",
     profile: "Profile",
     goHome: "Go to AutoFlash home",
     openMenu: "Open navigation menu",
@@ -34,10 +35,11 @@ const copy = {
       { href: "/contact", label: "සම්බන්ධ වන්න" },
     ],
     bookNow: "දැන් වෙන්කරන්න",
+    cart: "කරත්තය",
     profile: "පැතිකඩ",
     goHome: "AutoFlash මුල් පිටුවට යන්න",
-    openMenu: "නැවිගේෂන් මෙනුව විවෘත කරන්න",
-    closeMenu: "නැවිගේෂන් මෙනුව වසන්න",
+    openMenu: "සංචාලන මෙනුව විවෘත කරන්න",
+    closeMenu: "සංචාලන මෙනුව වසන්න",
     english: "English",
     sinhala: "සිංහල",
   },
@@ -60,9 +62,7 @@ const Header = () => {
   const t = copy[language];
 
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 40);
-    };
+    const onScroll = () => setScrolled(window.scrollY > 40);
 
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
@@ -101,13 +101,9 @@ const Header = () => {
         const nextProfileImage =
           typeof data?.user?.profileImage === "string" ? data.user.profileImage : "";
 
-        if (!ignore) {
-          setProfileImage(nextProfileImage);
-        }
+        if (!ignore) setProfileImage(nextProfileImage);
       } catch {
-        if (!ignore) {
-          setProfileImage("");
-        }
+        if (!ignore) setProfileImage("");
       }
     };
 
@@ -147,13 +143,7 @@ const Header = () => {
     <>
       <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
         <Link href="/" className={styles.logoWrapper} aria-label={t.goHome}>
-          <Image
-            src="/AFLOGO.png"
-            alt="AutoFlash Logo"
-            width={250}
-            height={100}
-            priority
-          />
+          <Image src="/AFLOGO.png" alt="AutoFlash Logo" width={250} height={100} priority />
         </Link>
 
         <nav className={styles.nav} aria-label="Primary navigation">
@@ -182,15 +172,16 @@ const Header = () => {
             </button>
           </div>
 
-          <button
-            type="button"
-            className={styles.bookingBtn}
-            onClick={() => setShowModal(true)}
-          >
+          <button type="button" className={styles.bookingBtn} onClick={() => setShowModal(true)}>
             {t.bookNow}
           </button>
 
-          <Link href="/cart" className={styles.cartLink} aria-label="Cart" title="Cart">
+          <Link
+            href="/cart"
+            className={styles.cartLink}
+            aria-label={t.cart}
+            title={t.cart}
+          >
             <FaShoppingCart />
             {cartCount > 0 && <span>{cartCount}</span>}
           </Link>
@@ -297,7 +288,7 @@ const Header = () => {
 
           <Link href="/cart" onClick={() => setMenuOpen(false)}>
             <FaShoppingCart />
-            Cart {cartCount > 0 ? `(${cartCount})` : ""}
+            {t.cart} {cartCount > 0 ? `(${cartCount})` : ""}
           </Link>
 
           <button

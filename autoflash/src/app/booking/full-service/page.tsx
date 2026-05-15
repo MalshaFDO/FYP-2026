@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { TouchEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Oswald, Inter } from 'next/font/google';
@@ -10,6 +10,7 @@ import styles from "./FullService.module.css";
 import { addCartItem } from "@/lib/cart";
 import { calculateServiceQuote } from "@/lib/pricing";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
+import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
 import CartTransition from "@/components/CartTransition/CartTransition";
 
 const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
@@ -242,6 +243,7 @@ export default function FullServicePage() {
   const router = useRouter();
   const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
+  const [vehicleCatalog, setVehicleCatalog] = useState(getFallbackVehicleCatalog());
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
@@ -395,6 +397,16 @@ export default function FullServicePage() {
     fetchBookings();
   }, []);
 
+
+  useEffect(() => {
+    const loadCatalog = async () => {
+      const entries = await fetchVehicleCatalog();
+      setVehicleCatalog(entries);
+    };
+
+    loadCatalog();
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60 * 1000);
     return () => clearInterval(timer);
@@ -535,6 +547,9 @@ export default function FullServicePage() {
 
     handleVehicleTypeSelect(vehicleTypes[nextIndex]);
   };
+  const vehicleImage =
+    vehicleCatalog.find((entry) => entry.category.trim().toLowerCase() === vehicle.toLowerCase())
+      ?.imageUrl || carImages[vehicle];
 
   const handleVehicleTouchStart = (event: TouchEvent<HTMLDivElement>) => {
     setTouchStartX(event.touches[0]?.clientX ?? null);
@@ -984,7 +999,7 @@ export default function FullServicePage() {
           <AnimatePresence mode="wait">
             <motion.img
               key={vehicle}
-              src={carImages[vehicle]}
+              src={vehicleImage}
               alt={vehicle}
               className={styles.displayCar}
               initial={{ opacity: 0, x: 100 }}

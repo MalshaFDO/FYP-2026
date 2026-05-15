@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/providers/LanguageProvider";
 import {
   addPaymentHistory,
   getCartItems,
@@ -10,6 +11,37 @@ import {
 import type { CartItem, PaymentHistoryItem } from "@/lib/cart";
 
 const HOME_REDIRECT_DELAY = 1800;
+
+const copy = {
+  en: {
+    finalizing: "Finalizing your payment...",
+    cancelled: "Payment was cancelled. Returning to your cart...",
+    finalized: "This payment was already finalized. Returning home...",
+    noItems: "Payment completed. Returning home...",
+    remainingFailed: "Failed to update remaining payment",
+    bookingFailed: (serviceType: string) => `Failed to create ${serviceType} booking`,
+    halfSaved: "Half payment saved. Your remaining balance is still in the cart.",
+    fullSaved: "Full payment saved. Your cart is clear.",
+    finalizingFailed: "Payment completed, but finalizing the booking failed.",
+    paymentLabel: "AutoFlash Payment",
+    errorTitle: "Please check your payment",
+    successTitle: "Payment received",
+  },
+  si: {
+    finalizing: "ඔබේ ගෙවීම අවසන් කරමින්...",
+    cancelled: "ගෙවීම අවලංගු විය. ඔබේ කරත්තයට ආපසු යමින්...",
+    finalized: "මෙම ගෙවීම දැනටමත් අවසන් කර ඇත. මුල් පිටුවට යමින්...",
+    noItems: "ගෙවීම සම්පූර්ණ විය. මුල් පිටුවට යමින්...",
+    remainingFailed: "ඉතිරි ගෙවීම යාවත්කාලීන කිරීමට අසමත් විය",
+    bookingFailed: (serviceType: string) => `${serviceType} booking එක සාදන්න අසමත් විය`,
+    halfSaved: "අර්ධ ගෙවීම සුරකින ලදී. ඉතිරි ශේෂය තවමත් කරත්තයේ ඇත.",
+    fullSaved: "සම්පූර්ණ ගෙවීම සුරකින ලදී. ඔබේ කරත්තය දැන් හිස්ය.",
+    finalizingFailed: "ගෙවීම සම්පූර්ණ වූ නමුත් booking අවසන් කිරීම අසමත් විය.",
+    paymentLabel: "AutoFlash ගෙවීම",
+    errorTitle: "කරුණාකර ඔබේ ගෙවීම පරීක්ෂා කරන්න",
+    successTitle: "ගෙවීම ලැබුණි",
+  },
+} as const;
 
 function getRemainingCartItem(item: CartItem, bookingId: string, remainingAmount: number): CartItem {
   return {
@@ -34,7 +66,9 @@ function getRemainingCartItem(item: CartItem, bookingId: string, remainingAmount
 
 export default function PaymentReturnPage() {
   const router = useRouter();
-  const [message, setMessage] = useState("Finalizing your payment...");
+  const { language } = useLanguage();
+  const t = copy[language];
+  const [message, setMessage] = useState<string>(t.finalizing);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => {
@@ -45,7 +79,7 @@ export default function PaymentReturnPage() {
 
     if (paymentStatus === "cancel") {
       setIsError(true);
-      setMessage("Payment was cancelled. Returning to your cart...");
+      setMessage(t.cancelled);
       window.localStorage.removeItem("autoflashPendingOrderId");
       const timer = window.setTimeout(() => router.replace("/cart"), HOME_REDIRECT_DELAY);
       return () => window.clearTimeout(timer);
@@ -54,7 +88,7 @@ export default function PaymentReturnPage() {
     const processedKey = orderId ? `autoflashProcessedOrder:${orderId}` : "";
 
     if (processedKey && window.localStorage.getItem(processedKey)) {
-      setMessage("This payment was already finalized. Returning home...");
+      setMessage(t.finalized);
       const timer = window.setTimeout(() => router.replace("/"), HOME_REDIRECT_DELAY);
       return () => window.clearTimeout(timer);
     }
@@ -65,7 +99,7 @@ export default function PaymentReturnPage() {
         const pendingItems = stored ? (JSON.parse(stored) as CartItem[]) : getCartItems();
 
         if (!Array.isArray(pendingItems) || pendingItems.length === 0) {
-          setMessage("Payment completed. Returning home...");
+          setMessage(t.noItems);
           window.localStorage.removeItem("autoflashPendingCheckout");
           window.localStorage.removeItem("autoflashPendingOrderId");
           if (processedKey) window.localStorage.setItem(processedKey, "true");
@@ -97,7 +131,7 @@ export default function PaymentReturnPage() {
             const data = await res.json();
 
             if (!res.ok || !data.success) {
-              throw new Error(data.error || "Failed to update remaining payment");
+              throw new Error(data.error || t.remainingFailed);
             }
 
             historyItems.push({
@@ -137,9 +171,9 @@ export default function PaymentReturnPage() {
           });
           const data = await res.json();
 
-          if (!res.ok || !data.success) {
-            throw new Error(data.error || `Failed to create ${item.serviceType} booking`);
-          }
+            if (!res.ok || !data.success) {
+              throw new Error(data.error || t.bookingFailed(item.serviceType));
+            }
 
           const bookingId = data.booking?._id?.toString?.() || data.booking?._id || "";
 
@@ -172,8 +206,8 @@ export default function PaymentReturnPage() {
 
         setMessage(
           remainingItems.length > 0
-            ? "Half payment saved. Your remaining balance is still in the cart."
-            : "Full payment saved. Your cart is clear."
+            ? t.halfSaved
+            : t.fullSaved
         );
         window.setTimeout(() => router.replace("/"), HOME_REDIRECT_DELAY);
       } catch (error) {
@@ -181,7 +215,7 @@ export default function PaymentReturnPage() {
         setMessage(
           error instanceof Error
             ? error.message
-            : "Payment completed, but finalizing the booking failed."
+            : t.finalizingFailed
         );
       }
     };
@@ -203,10 +237,10 @@ export default function PaymentReturnPage() {
     >
       <section style={{ maxWidth: 520 }}>
         <p style={{ color: isError ? "#fca5a5" : "#67e8f9", fontWeight: 700 }}>
-          AutoFlash Payment
+          {t.paymentLabel}
         </p>
         <h1 style={{ margin: "0 0 12px", fontSize: "clamp(2rem, 5vw, 3rem)" }}>
-          {isError ? "Please check your payment" : "Payment received"}
+          {isError ? t.errorTitle : t.successTitle}
         </h1>
         <p style={{ color: "#cbd5e1", lineHeight: 1.7 }}>{message}</p>
       </section>

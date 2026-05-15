@@ -9,7 +9,7 @@ export function calculateServiceQuote({
   oilGrade: string;
   vehicle?: string;
   brand?: keyof typeof oilPricing;
-}) {
+}, overrides?: { oilFilter?: number; serviceCharge?: number }) {
   const key = vehicle?.toLowerCase() || "";
 
   // 🔥 Get liters
@@ -28,8 +28,8 @@ export function calculateServiceQuote({
 
   const oilPrice = liters * pricePerLiter;
 
-  const oilFilter = 2500;
-  const serviceCharge = 3000;
+  const oilFilter = overrides?.oilFilter ?? 2500;
+  const serviceCharge = overrides?.serviceCharge ?? 3000;
 
   const total = Math.round(oilPrice + oilFilter + serviceCharge);
 

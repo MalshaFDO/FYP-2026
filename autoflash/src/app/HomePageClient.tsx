@@ -2,15 +2,15 @@
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import Link from "next/link";
-import { 
-  FaRocket, 
-  FaCalendarAlt, 
-  FaBrain, 
-  FaMoneyBillWave, 
-  FaCar, 
-  FaFileInvoiceDollar, 
-  FaTools, 
-  FaCheckCircle 
+import {
+  FaRocket,
+  FaCalendarAlt,
+  FaBrain,
+  FaMoneyBillWave,
+  FaCar,
+  FaFileInvoiceDollar,
+  FaTools,
+  FaCheckCircle,
 } from "react-icons/fa";
 import styles from "./Home.module.css";
 
@@ -19,12 +19,10 @@ const copy = {
     heroSubtitle: "MODERN EQUIPMENT",
     heroTitle: "Vehicle Services",
     heroDescription:
-      "A clean Vehicle is essential for maintaining its resale value and ensuring a presentable appearance on the road.",
-    // New Hero Buttons
+      "A clean vehicle is essential for maintaining its resale value and ensuring a presentable appearance on the road.",
     btnBodyWash: "Body Wash",
     btnFullService: "Full Service",
     btnOilChange: "Oil Change",
-    
     accentText: "SMART PLATFORM",
     sectionTitle: "Smart Vehicle Service & Quotation",
     sectionDesc:
@@ -44,52 +42,53 @@ const copy = {
     ],
     servicesTitle: "Our Main Tracks",
     services: [
-      { title: "Body Wash", text: "Premium exterior & interior cleaning.", link: "/booking" },
-      { title: "Full Service", text: "Complete mechanical checkup & oil change.", link: "/booking" },
-      { title: "Detailing", text: "Professional cut & polish services. Contact us for details.", link: "/contact" },
-      { title: "Hybrid Care", text: "Specialized maintenance for hybrid vehicles.", link: "/booking" }
+      { title: "Body Wash", text: "Premium exterior and interior cleaning.", link: "/booking" },
+      { title: "Full Service", text: "Complete mechanical checkup and oil change.", link: "/booking" },
+      { title: "Detailing", text: "Professional cut and polish services. Contact us for details.", link: "/contact" },
+      { title: "Hybrid Care", text: "Specialized maintenance for hybrid vehicles.", link: "/booking" },
     ],
     ctaTitle: "Ready to Experience AutoFlash?",
     ctaText: "Join the modern way of vehicle maintenance today.",
     getQuotation: "Get Quotation",
-    bookService: "Book Now"
+    bookService: "Book Now",
   },
   si: {
     heroSubtitle: "නවීන උපකරණ",
-    heroTitle: "රථවාහන සත්කාරය",
-    heroDescription: "ඔබේ වාහනයේ වටිනාකම සහ පෙනුම සුරැකීමට ක්‍රමවත් පිරිසිදු කිරීමක් අත්‍යවශ්‍ය වේ.",
-    btnBodyWash: "Body Wash",
-    btnFullService: "Full Service",
-    btnOilChange: "Oil Change",
-    
-    accentText: "ස්මාර්ට් පද්ධතිය",
-    sectionTitle: "ස්මාර්ට් සේවා සහ මිල ගණන්",
-    sectionDesc: "AutoFlash හරහා දුරකථන ඇමතුම් ප්‍රමාදයකින් තොරව AI තාක්ෂණයෙන් මිල ගණන් සහ බුකින් පහසුකම් ලබාගත හැක.",
+    heroTitle: "වාහන සේවා",
+    heroDescription:
+      "වාහනය පිරිසිදුව තබාගැනීම එහි නැවත විකිණීමේ වටිනාකම සහ මාර්ගයේ හොඳ පෙනුම රැක ගැනීමට අත්‍යවශ්‍ය වේ.",
+    btnBodyWash: "බොඩි වොෂ්",
+    btnFullService: "සම්පූර්ණ සේවාව",
+    btnOilChange: "තෙල් වෙනස් කිරීම",
+    accentText: "සැලසුම් බිහිගත වේදිකාව",
+    sectionTitle: "ස්මාර්ට් වාහන සේවාව සහ මිල ගණන්",
+    sectionDesc:
+      "AutoFlash AI ආධාරිත මිල ගණන්, online booking, සහ පැහැදිලි මිලකරණය සමඟ වාහන සේවාව සරල කරයි.",
     features: [
-      { icon: <FaRocket />, title: "ක්ෂණික මිල ගණන්", text: "තත්පර කිහිපයකින් මිල දැනගන්න." },
-      { icon: <FaCalendarAlt />, title: "ඔන්ලයින් බුකින්", text: "ඔබට පහසු වෙලාවක් වෙන්කරගන්න." },
-      { icon: <FaBrain />, title: "ස්මාර්ට් පද්ධතිය", text: "සියල්ල එකම තැනකින් පාලනය වේ." },
-      { icon: <FaMoneyBillWave />, title: "විනිවිද පෙනෙන මිල", text: "සැඟවුණු ගාස්තු නොමැත." },
+      { icon: <FaRocket />, title: "ක්ෂණික මිල ගණන්", text: "තත්පර කිහිපයකින් AI මඟින් මිල ගණන් ලබාගන්න." },
+      { icon: <FaCalendarAlt />, title: "Online Booking", text: "ඕනෑම වේලාවක, ඕනෑම තැනකින් සේවා වෙන්කරන්න." },
+      { icon: <FaBrain />, title: "ස්මාර්ට් පද්ධතිය", text: "කේන්ද්‍රගත සේවා කළමනාකරණය." },
+      { icon: <FaMoneyBillWave />, title: "පැහැදිලි මිලකරණය", text: "රහස් ගාස්තු හෝ අවුල් නැහැ." },
     ],
-    howTitle: "AutoFlash ක්‍රියාකරන ආකාරය",
+    howTitle: "AutoFlash ක්‍රියා කරන ආකාරය",
     steps: [
-      { number: "01", title: "සේවාව තෝරන්න", text: "වාහනය සහ සේවා වර්ගය තෝරන්න.", icon: <FaCar /> },
-      { number: "02", title: "මිල දැනගන්න", text: "ක්ෂණික මිල ගණන් ලබාගන්න.", icon: <FaFileInvoiceDollar /> },
-      { number: "03", title: "වෙලාවක් වෙන් කරන්න", text: "පහසු දිනයක් සහ වේලාවක් තෝරන්න.", icon: <FaCalendarAlt /> },
-      { number: "04", title: "සේවාව ලබාගන්න", text: "විශ්වාසදායක සේවාවක් ලබාගන්න.", icon: <FaTools /> },
+      { number: "01", title: "සේවාව තෝරන්න", text: "වාහන වර්ගය සහ සේවා වර්ගය තෝරන්න.", icon: <FaCar /> },
+      { number: "02", title: "මිල ගණන් ලබාගන්න", text: "ක්ෂණික AI මිල ගණන්.", icon: <FaFileInvoiceDollar /> },
+      { number: "03", title: "වේලාව වෙන්කරන්න", text: "ඔබට ගැළපෙන වේලාවක් තෝරන්න.", icon: <FaCalendarAlt /> },
+      { number: "04", title: "සේවාව අවසන්", text: "ඔබේ වාහනයට වෘත්තීය සත්කාරය.", icon: <FaTools /> },
     ],
-    servicesTitle: "ප්‍රධාන සේවාවන්",
+    servicesTitle: "අපගේ ප්‍රධාන සේවා",
     services: [
-      { title: "Body Wash", text: "උසස් තත්ත්වයේ පිරිසිදු කිරීම්.", link: "/booking" },
-      { title: "Full Service", text: "සම්පූර්ණ යාන්ත්‍රික පරීක්ෂාවන්.", link: "/booking" },
-      { title: "Detailing", text: "වෘත්තීය මට්ටමේ ඔප දැමීම්. වැඩි විස්තර සඳහා විමසන්න.", link: "/contact" },
-      { title: "Hybrid Care", text: "හයිබ්‍රිඩ් වාහන සඳහා විශේෂිත සේවා.", link: "/booking" }
+      { title: "බොඩි වොෂ්", text: "උසස් මට්ටමේ බාහිර සහ අභ්‍යන්තර පිරිසිදු කිරීම.", link: "/booking" },
+      { title: "සම්පූර්ණ සේවාව", text: "සම්පූර්ණ යාන්ත්‍රික පරීක්ෂාව සහ තෙල් වෙනස් කිරීම.", link: "/booking" },
+      { title: "Detailing", text: "වෘත්තීය cut සහ polish සේවාව. වැඩි විස්තර සඳහා අපව අමතන්න.", link: "/contact" },
+      { title: "Hybrid Care", text: "hybrid වාහන සඳහා විශේෂිත නඩත්තුව.", link: "/booking" },
     ],
-    ctaTitle: "AutoFlash අත්දැකීම ලබා ගැනීමට සූදානම්ද?",
-    ctaText: "අදම ඔබේ වාහනය සඳහා නවීනතම සේවාව වෙන්කරවා ගන්න.",
+    ctaTitle: "AutoFlash අත්විඳීමට සූදානම්ද?",
+    ctaText: "වාහන නඩත්තුවේ නවීන ක්‍රමයට අදම එක්වන්න.",
     getQuotation: "මිල ගණන් ලබාගන්න",
-    bookService: "දැන් වෙන්කරන්න"
-  }
+    bookService: "දැන් වෙන්කරන්න",
+  },
 } as const;
 
 export default function HomePageClient() {
@@ -98,7 +97,6 @@ export default function HomePageClient() {
 
   return (
     <main className={styles.pageWrapper}>
-      {/* --- HERO --- */}
       <section className={styles.hero}>
         <video autoPlay muted loop className={styles.bgVideo}>
           <source src="/BGV.mp4" type="video/mp4" />
@@ -108,17 +106,21 @@ export default function HomePageClient() {
           <span className={styles.heroSubtitle}>{t.heroSubtitle}</span>
           <h1 className={styles.heroTitle}>{t.heroTitle}</h1>
           <p className={styles.heroDescription}>{t.heroDescription}</p>
-          
-          {/* UPDATED: 3 Hero Buttons */}
+
           <div className={styles.heroBtns}>
-            <Link href="/booking/bodywash" className={styles.btnRed}>{t.btnBodyWash}</Link>
-            <Link href="/booking/full-service" className={styles.btnGold}>{t.btnFullService}</Link>
-            <Link href="/booking/full-service?plan=oil" className={styles.btnTransparent}>{t.btnOilChange}</Link>
+            <Link href="/booking/bodywash" className={styles.btnRed}>
+              {t.btnBodyWash}
+            </Link>
+            <Link href="/booking/full-service" className={styles.btnGold}>
+              {t.btnFullService}
+            </Link>
+            <Link href="/booking/full-service?plan=oil" className={styles.btnTransparent}>
+              {t.btnOilChange}
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* --- FEATURES --- */}
       <section className={styles.featureSection}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
@@ -138,7 +140,6 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* --- HOW IT WORKS --- */}
       <section className={styles.howSection}>
         <div className={styles.container}>
           <h2 className={styles.centerTitleLight}>{t.howTitle}</h2>
@@ -157,30 +158,39 @@ export default function HomePageClient() {
         </div>
       </section>
 
-      {/* --- SERVICES --- */}
       <section className={styles.servicesSection}>
         <div className={styles.container}>
           <h2 className={styles.centerTitle}>{t.servicesTitle}</h2>
           <div className={styles.servicesGrid}>
             {t.services.map((service) => (
-              <Link href={service.link} key={service.title} className={styles.serviceCard} style={{ textDecoration: 'none', color: 'inherit' }}>
+              <Link
+                href={service.link}
+                key={service.title}
+                className={styles.serviceCard}
+                style={{ textDecoration: "none", color: "inherit" }}
+              >
                 <h3>{service.title}</h3>
                 <p>{service.text}</p>
-                <div className={styles.checkIcon}><FaCheckCircle /></div>
+                <div className={styles.checkIcon}>
+                  <FaCheckCircle />
+                </div>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- CTA --- */}
       <section className={styles.ctaSection}>
         <div className={styles.ctaContent}>
           <h2>{t.ctaTitle}</h2>
           <p>{t.ctaText}</p>
           <div className={styles.heroBtns}>
-            <Link href="/booking/full-service" className={styles.btnRed}>{t.getQuotation}</Link>
-            <Link href="/booking/bodywash" className={styles.btnGold}>{t.bookService}</Link>
+            <Link href="/booking/full-service" className={styles.btnRed}>
+              {t.getQuotation}
+            </Link>
+            <Link href="/booking/bodywash" className={styles.btnGold}>
+              {t.bookService}
+            </Link>
           </div>
         </div>
       </section>

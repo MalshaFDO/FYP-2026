@@ -20,27 +20,27 @@ const copy = {
     services: [
       {
         tag: "Maintenance",
-        title: "Full & Express Service",
+        title: "Full Service",
         text: "Comprehensive mechanical checkups, oil changes, and filter replacements to keep your engine running at peak performance.",
         link: "/booking/full-service"
       },
       {
-        tag: "Detailing",
-        title: "Auto Detailing & Cut Polish",
-        text: "Premium exterior restoration and interior deep cleaning using high-grade compounds and protective coatings.",
-        link: "/booking/detailing"
+        tag: "Wash",
+        title: "Body Wash",
+        text: "A clean and quick wash service to keep your vehicle fresh and tidy.",
+        link: "/booking/bodywash"
       },
       {
-        tag: "Protection",
-        title: "Under-Carriage Coating",
-        text: "Specialized anti-corrosion treatments to protect your vehicle's chassis from harsh environmental conditions.",
-        link: "/booking/coating"
+        tag: "Wash",
+        title: "Bodywash Vacuum Wax",
+        text: "Body wash with vacuuming and wax finishing for a cleaner, sharper result.",
+        link: "/booking/bodywash"
       },
       {
-        tag: "Specialized",
-        title: "Mechanical & Hybrid Repairs",
-        text: "Advanced diagnostics and repairs for modern hybrid systems and complex mechanical issues.",
-        link: "/booking/mechanical"
+        tag: "Wash",
+        title: "Full Body Wash",
+        text: "A more detailed wash package for deeper exterior cleaning and finishing.",
+        link: "/booking/bodywash"
       }
     ],
     ctaTitle: "Not sure which service you need?",
