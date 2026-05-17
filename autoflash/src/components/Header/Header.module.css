@@ -276,6 +276,7 @@
   visibility: hidden;
   pointer-events: none;
   transition: all 0.4s ease;
+  z-index: 2000;
 }
 
 .mobileLanguageSwitch {
@@ -331,6 +332,7 @@
     /* Changes to space-between to push hamburger left and actions right */
     justify-content: space-between;
     padding: 0 20px;
+    overflow: visible;
   }
 
   .hamburger {

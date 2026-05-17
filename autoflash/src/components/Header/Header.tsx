@@ -78,6 +78,16 @@ const Header = () => {
   }, [pathname]);
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  useEffect(() => {
     let ignore = false;
 
     const fetchProfileImage = async () => {

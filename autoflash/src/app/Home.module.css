@@ -53,10 +53,6 @@
 .heroTitle { font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 900; margin: 15px 0; text-transform: uppercase; line-height: 1; }
 .heroDescription { font-size: 1.2rem; color: rgba(255,255,255,0.8); margin-bottom: 40px; max-width: 800px; margin-inline: auto; }
 
-.heroMobilePanel {
-  display: none;
-}
-
 /* --- FEATURES --- */
 .featureSection { padding: 120px 0; background: #0a0a0a; color: #fff; }
 .sectionHeader { text-align: center; margin-bottom: 70px; }
@@ -186,67 +182,36 @@
 
 @media (max-width: 768px) {
   .hero {
-    min-height: 92svh;
-    padding: 128px 0 72px;
-    align-items: flex-end;
+    min-height: 100svh;
+    padding: 120px 0 72px;
+    align-items: center;
   }
 
   .bgVideo {
     display: none;
   }
 
-  .heroContent {
-    padding: 0 18px;
-    max-width: 100%;
-  }
-
   .heroTitle {
-    font-size: clamp(2.4rem, 14vw, 3.6rem);
+    font-size: clamp(2.8rem, 10vw, 4.8rem);
   }
 
   .heroDescription {
-    font-size: 1rem;
-    margin-bottom: 28px;
-  }
-
-  .heroMobilePanel {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 10px;
-    width: 100%;
-    margin: 0 auto 26px;
-    padding: 0 6px;
-  }
-
-  .heroMobilePanel span {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 42px;
-    padding: 10px 12px;
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: #fff;
-    font-size: 0.72rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    text-align: center;
-    backdrop-filter: blur(12px);
+    font-size: 1.15rem;
+    margin-bottom: 40px;
+    max-width: 800px;
   }
 
   .heroBtns {
-    gap: 12px;
+    gap: 14px;
   }
 
   .btnRed,
   .btnGold,
   .btnTransparent {
-    width: 100%;
-    max-width: 320px;
-    padding: 16px 22px;
-    font-size: 0.82rem;
+    padding: 18px 34px;
+    width: auto;
+    max-width: none;
+    font-size: 0.9rem;
   }
 
   .featureSection,
@@ -272,16 +237,16 @@
 
 @media (max-width: 480px) {
   .hero {
-    min-height: 90svh;
+    min-height: 100svh;
     padding-top: 112px;
   }
 
   .heroSubtitle {
-    letter-spacing: 3px;
+    letter-spacing: 5px;
   }
 
   .heroTitle {
-    font-size: clamp(2rem, 15vw, 3rem);
+    font-size: clamp(2.4rem, 12vw, 4rem);
   }
 
   .featureGrid,
