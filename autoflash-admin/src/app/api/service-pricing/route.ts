@@ -104,13 +104,38 @@ const buildPayload = (body: any) => ({
   },
 });
 
+const mergePricingConfig = (current: any = {}, incoming: any = {}) => ({
+  ...current,
+  ...incoming,
+  bodywash: {
+    ...(current?.bodywash || {}),
+    ...(incoming?.bodywash || {}),
+  },
+  fullService: {
+    ...(current?.fullService || {}),
+    ...(incoming?.fullService || {}),
+  },
+  bodywashAddons: {
+    ...(current?.bodywashAddons || {}),
+    ...(incoming?.bodywashAddons || {}),
+  },
+  fullServiceAddons: {
+    ...(current?.fullServiceAddons || {}),
+    ...(incoming?.fullServiceAddons || {}),
+  },
+  quote: {
+    ...(current?.quote || {}),
+    ...(incoming?.quote || {}),
+  },
+});
+
 export async function GET() {
   try {
     await connectDB();
     const doc = await ServicePricing.findOne({}).lean();
     return NextResponse.json({
       success: true,
-      config: doc || buildPayload({}),
+      config: buildPayload(doc || {}),
     });
   } catch (error: any) {
     console.error("FETCH SERVICE PRICING ERROR:", error);
@@ -125,7 +150,8 @@ export async function PATCH(req: Request) {
   try {
     await connectDB();
     const body = await req.json();
-    const config = buildPayload(body);
+    const current = await ServicePricing.findOne({}).lean();
+    const config = buildPayload(mergePricingConfig(current, body));
 
     const doc = await ServicePricing.findOneAndUpdate(
       {},

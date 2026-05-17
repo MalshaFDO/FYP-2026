@@ -1,0 +1,379 @@
+.container {
+  display: grid;
+  gap: 24px;
+  color: #f8fafc;
+}
+
+.heroCard,
+.panel {
+  border-radius: 28px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: linear-gradient(180deg, rgba(11, 20, 34, 0.9), rgba(8, 15, 26, 0.78));
+  box-shadow: 0 22px 56px rgba(2, 8, 20, 0.22);
+  backdrop-filter: blur(12px);
+}
+
+.heroCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroCard::after {
+  content: "";
+  position: absolute;
+  inset: auto -80px -80px auto;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(103, 232, 249, 0.18), transparent 70%);
+  pointer-events: none;
+}
+
+.kicker {
+  margin: 0 0 12px;
+  color: #67e8f9;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.copy {
+  margin: 0;
+  max-width: 68ch;
+  color: #9fb0c7;
+  line-height: 1.7;
+}
+
+.heroStats {
+  display: grid;
+  gap: 12px;
+  min-width: 220px;
+}
+
+.heroStats div,
+.serviceCard {
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(7, 18, 30, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.heroStats span,
+.field span,
+.fieldWide span,
+.toggleRow span,
+.searchWrap span,
+.serviceCategory,
+.serviceMeta span {
+  display: block;
+  color: #91a7bd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.heroStats strong {
+  display: block;
+  margin-top: 8px;
+  font-size: 1.7rem;
+}
+
+.panel {
+  padding: 28px;
+}
+
+.panelHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.panelHeader h3 {
+  margin: 0 0 6px;
+  font-size: 1.2rem;
+}
+
+.panelHeader p {
+  margin: 0;
+  color: #9fb0c7;
+}
+
+.secondaryButton,
+.cardButton {
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-weight: 700;
+  background: rgba(103, 232, 249, 0.12);
+  color: #d9fbff;
+}
+
+.panelButtons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: end;
+}
+
+.secondaryButton:hover,
+.cardButton:hover {
+  background: rgba(103, 232, 249, 0.18);
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.field,
+.fieldWide,
+.fieldRow,
+.searchWrap {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldWide {
+  grid-column: 1 / -1;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border-radius: 16px;
+  border: 1px solid rgba(125, 211, 252, 0.14);
+  background: rgba(2, 8, 20, 0.58);
+  color: #ffffff;
+  padding: 12px 14px;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.toggleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.fieldRow span,
+.field span,
+.fieldWide span,
+.toggleRow span,
+.searchWrap span,
+.serviceCategory,
+.serviceMeta span,
+.pricingSummary span {
+  display: block;
+  color: #91a7bd;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.pricingSummary strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.05rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.success {
+  color: #67e8a6;
+  font-weight: 700;
+}
+
+.error {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+.serviceGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.bodywashGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.serviceCard {
+  display: grid;
+  gap: 14px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.serviceCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(103, 232, 249, 0.24);
+}
+
+.inactive {
+  opacity: 0.78;
+}
+
+.pricingCard {
+  display: grid;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  background: rgba(7, 18, 30, 0.72);
+  border: 1px solid rgba(125, 211, 252, 0.12);
+}
+
+.serviceHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.serviceHead h4 {
+  margin: 4px 0 0;
+  font-size: 1.1rem;
+}
+
+.serviceDescription {
+  margin: 0;
+  color: #9fb0c7;
+  line-height: 1.6;
+}
+
+.serviceMeta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.serviceMeta strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.15rem;
+}
+
+.cardActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pricingCardHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.pricingCardHeader h4 {
+  margin: 4px 0 0;
+  font-size: 1.05rem;
+}
+
+.pricingEditor {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pricingSummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.pricingSummary div {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(2, 8, 20, 0.52);
+  border: 1px solid rgba(125, 211, 252, 0.08);
+}
+
+.panelSeparator {
+  height: 1px;
+  margin: 24px 0;
+  background: rgba(125, 211, 252, 0.12);
+}
+
+.activePill,
+.inactivePill {
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.activePill {
+  color: #67e8a6;
+  background: rgba(103, 232, 166, 0.12);
+}
+
+.inactivePill {
+  color: #fca5a5;
+  background: rgba(252, 165, 165, 0.12);
+}
+
+.dangerButton {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fecaca;
+}
+
+.dangerButton:hover {
+  background: rgba(248, 113, 113, 0.18);
+}
+
+.emptyState {
+  padding: 22px;
+  border-radius: 20px;
+  border: 1px dashed rgba(125, 211, 252, 0.2);
+  color: #9fb0c7;
+  background: rgba(7, 18, 30, 0.55);
+}
+
+@media (max-width: 960px) {
+  .heroCard,
+  .panelHeader,
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldWide {
+    grid-column: auto;
+  }
+
+  .pricingEditor,
+  .pricingSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .panelButtons {
+    justify-content: start;
+  }
+}

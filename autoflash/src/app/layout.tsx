@@ -6,6 +6,11 @@ import { LanguageProvider } from "@/components/providers/LanguageProvider";
 export const metadata = {
   title: "AutoFlash",
   description: "Smart Vehicle Service & Quotation System",
+  icons: {
+    icon: "/AFLOG.jpg",
+    shortcut: "/AFLOG.jpg",
+    apple: "/AFLOG.jpg",
+  },
 };
 
 export const viewport = {

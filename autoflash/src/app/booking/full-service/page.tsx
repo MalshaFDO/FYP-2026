@@ -10,6 +10,10 @@ import { addCartItem } from "@/lib/cart";
 import { calculateServiceQuote } from "@/lib/pricing";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
 import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
+import {
+  defaultServicePricingConfig,
+  fetchServicePricingConfig,
+} from "@/lib/servicePricingConfig";
 import CartTransition from "@/components/CartTransition/CartTransition";
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
@@ -190,44 +194,6 @@ function toTitleCase(value?: string) {
     .replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-const standardAddons: ExtraServiceOption[] = [
-  { id: 1, name: "Wheel Alignment", price: 3500 },
-  { id: 2, name: "Brake Fluid", price: 1800 },
-  { id: 3, name: "Coolant Flush", price: 2500 },
-  { id: 4, name: "Battery Health", price: 750 },
-  { id: 5, name: "Tire Rotation", price: 1500 },
-  {
-    id: 6,
-    name: "Engine Wash",
-    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
-  },
-];
-
-const oilSpecificAddons: ExtraServiceOption[] = [
-  {
-    id: 101,
-    name: "Quick Wash",
-    priceByVehicle: { Sedan: 900, SUV: 1100, Pickup: 1250, MiniVan: 1550 },
-  },
-  {
-    id: 102,
-    name: "Bodywash & Vacuum",
-    priceByVehicle: { Sedan: 1450, SUV: 1750, Pickup: 2000, MiniVan: 2400 },
-  },
-  {
-    id: 103,
-    name: "Wash, Vacuum & WAX",
-    priceByVehicle: { Sedan: 1950, SUV: 2250, Pickup: 2450, MiniVan: 2800 },
-  },
-  {
-    id: 104,
-    name: "Full Bodywash",
-    priceByVehicle: { Sedan: 3600, SUV: 4100, Pickup: 4600, MiniVan: 4850 },
-  },
-];
-
-const extraServiceOptions = [...standardAddons, ...oilSpecificAddons];
-
 function getExtraServicePrice(extra: ExtraServiceOption, vehicle: VehicleType) {
   if (extra.priceByVehicle) {
     return extra.priceByVehicle[vehicle];
@@ -236,11 +202,70 @@ function getExtraServicePrice(extra: ExtraServiceOption, vehicle: VehicleType) {
   return extra.price ?? 0;
 }
 
+const createExtraServiceOptions = (pricing: typeof defaultServicePricingConfig): ExtraServiceOption[] => [
+  { id: 1, name: "Wheel Alignment", price: pricing.fullServiceAddons.wheelAlignment },
+  { id: 2, name: "Brake Fluid", price: pricing.fullServiceAddons.brakeFluid },
+  { id: 3, name: "Coolant Flush", price: pricing.fullServiceAddons.coolantFlush },
+  { id: 4, name: "Battery Health", price: pricing.fullServiceAddons.batteryHealth },
+  { id: 5, name: "Tire Rotation", price: pricing.fullServiceAddons.tireRotation },
+  {
+    id: 6,
+    name: "Engine Wash",
+    priceByVehicle: {
+      Sedan: pricing.fullServiceAddons.engineWash.sedan,
+      SUV: pricing.fullServiceAddons.engineWash.suv,
+      Pickup: pricing.fullServiceAddons.engineWash.pickup,
+      MiniVan: pricing.fullServiceAddons.engineWash.minivan,
+    },
+  },
+  {
+    id: 101,
+    name: "Quick Wash",
+    priceByVehicle: {
+      Sedan: pricing.fullServiceAddons.quickWash.sedan,
+      SUV: pricing.fullServiceAddons.quickWash.suv,
+      Pickup: pricing.fullServiceAddons.quickWash.pickup,
+      MiniVan: pricing.fullServiceAddons.quickWash.minivan,
+    },
+  },
+  {
+    id: 102,
+    name: "Bodywash & Vacuum",
+    priceByVehicle: {
+      Sedan: pricing.fullServiceAddons.bodywashVacuum.sedan,
+      SUV: pricing.fullServiceAddons.bodywashVacuum.suv,
+      Pickup: pricing.fullServiceAddons.bodywashVacuum.pickup,
+      MiniVan: pricing.fullServiceAddons.bodywashVacuum.minivan,
+    },
+  },
+  {
+    id: 103,
+    name: "Wash, Vacuum & WAX",
+    priceByVehicle: {
+      Sedan: pricing.fullServiceAddons.washVacuumWax.sedan,
+      SUV: pricing.fullServiceAddons.washVacuumWax.suv,
+      Pickup: pricing.fullServiceAddons.washVacuumWax.pickup,
+      MiniVan: pricing.fullServiceAddons.washVacuumWax.minivan,
+    },
+  },
+  {
+    id: 104,
+    name: "Full Bodywash",
+    priceByVehicle: {
+      Sedan: pricing.fullServiceAddons.fullBodywash.sedan,
+      SUV: pricing.fullServiceAddons.fullBodywash.suv,
+      Pickup: pricing.fullServiceAddons.fullBodywash.pickup,
+      MiniVan: pricing.fullServiceAddons.fullBodywash.minivan,
+    },
+  },
+];
+
 export default function FullServicePage() {
   const router = useRouter();
   const FULLSERVICE_SLOTS = 2;
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
   const [vehicleCatalog, setVehicleCatalog] = useState(getFallbackVehicleCatalog());
+  const [pricingConfig, setPricingConfig] = useState(defaultServicePricingConfig);
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
@@ -328,6 +353,10 @@ export default function FullServicePage() {
     bookingTime: selectedTime,
   });
 
+  const extraServiceOptions = createExtraServiceOptions(pricingConfig);
+  const standardAddons = extraServiceOptions.filter((item) => item.id < 100);
+  const oilSpecificAddons = extraServiceOptions.filter((item) => item.id >= 100);
+
   const selectedAdditionalServices = extras
     .map((id) => extraServiceOptions.find((service) => service.id === id))
     .filter((service): service is ExtraServiceOption => Boolean(service))
@@ -347,6 +376,9 @@ export default function FullServicePage() {
           oilGrade: bookingData.oilGrade,
           vehicle: bookingData.vehicle,
           brand: (bookingData.oilBrand as "toyota" | "mobil" | "castrol" | "honda") || "mobil",
+        }, {
+          oilFilter: pricingConfig.quote.oilFilter,
+          serviceCharge: pricingConfig.quote.serviceCharge,
         })
       : null;
 
@@ -402,6 +434,15 @@ export default function FullServicePage() {
     };
 
     loadCatalog();
+  }, []);
+
+  useEffect(() => {
+    const loadPricing = async () => {
+      const config = await fetchServicePricingConfig();
+      setPricingConfig(config);
+    };
+
+    loadPricing();
   }, []);
 
   useEffect(() => {

@@ -20,6 +20,11 @@ import { PiEngineFill } from "react-icons/pi";
 import { addCartItem, getPaymentAmount } from "@/lib/cart";
 import { formatVehicleNumber } from "@/lib/vehicleNumber";
 import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
+import {
+  defaultServicePricingConfig,
+  fetchServicePricingConfig,
+  type VehicleTypeKey,
+} from "@/lib/servicePricingConfig";
 import CartTransition from "@/components/CartTransition/CartTransition";
 import styles from "./Bodywash.module.css";
 
@@ -102,39 +107,85 @@ const savedVehicleTypeMap: Record<string, VehicleType> = {
   minivan: "MiniVan",
 };
 
-const pricing: Record<VehicleType, Plan[]> = {
-  Sedan: [
-    { id: 1, name: "Quick Wash", price: 900, cents: 0, time: "15 min", duration: 15, features: [true, false, false, false] },
-    { id: 2, name: "Bodywash & Vacuum", price: 1450, cents: 0, time: "30 min", duration: 30, features: [true, true, false, false] },
-    { id: 3, name: "Wash, Vacuum & WAX", price: 1950, cents: 0, time: "45 min", duration: 45, features: [true, true, true, false] },
-    { id: 4, name: "Full Bodywash", price: 3600, cents: 0, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
-  ],
-  SUV: [
-    { id: 1, name: "Quick Wash", price: 1100, cents: 0, time: "20 min", duration: 20, features: [true, false, false, false] },
-    { id: 2, name: "Bodywash & Vacuum", price: 1750, cents: 0, time: "35 min", duration: 35, features: [true, true, false, false] },
-    { id: 3, name: "Wash, Vacuum & WAX", price: 2250, cents: 0, time: "50 min", duration: 50, features: [true, true, true, false] },
-    { id: 4, name: "Full Bodywash", price: 4100, cents: 0, time: "130 min", duration: 130, features: [true, true, true, true], dark: true },
-  ],
-  Pickup: [
-    { id: 1, name: "Quick Wash", price: 1250, cents: 0, time: "25 min", duration: 25, features: [true, false, false, false] },
-    { id: 2, name: "Bodywash & Vacuum", price: 2000, cents: 0, time: "40 min", duration: 40, features: [true, true, false, false] },
-    { id: 3, name: "Wash, Vacuum & WAX", price: 2450, cents: 0, time: "55 min", duration: 55, features: [true, true, true, false] },
-    { id: 4, name: "Full Bodywash", price: 4600, cents: 0, time: "140 min", duration: 140, features: [true, true, true, true], dark: true },
-  ],
-  MiniVan: [
-    { id: 1, name: "Quick Wash", price: 1550, cents: 0, time: "30 min", duration: 30, features: [true, false, false, false] },
-    { id: 2, name: "Bodywash & Vacuum", price: 2400, cents: 0, time: "45 min", duration: 45, features: [true, true, false, false] },
-    { id: 3, name: "Wash, Vacuum & WAX", price: 2800, cents: 0, time: "60 min", duration: 60, features: [true, true, true, false] },
-    { id: 4, name: "Full Bodywash", price: 4850, cents: 0, time: "160 min", duration: 160, features: [true, true, true, true], dark: true },
-  ],
-};
-
 const hasPriceByVehicle = (extra: ExtraService): extra is Extract<ExtraService, { priceByVehicle: Record<VehicleType, number> }> =>
   "priceByVehicle" in extra;
 
 const getExtraPrice = (extra: ExtraService, vehicle: VehicleType) => {
   return hasPriceByVehicle(extra) ? extra.priceByVehicle[vehicle] : extra.price;
 };
+
+const createBodywashPlans = (pricing: typeof defaultServicePricingConfig, vehicle: VehicleType): Plan[] => {
+  const key = vehicle.toLowerCase() as VehicleTypeKey;
+  const row = pricing.bodywash[key] || defaultServicePricingConfig.bodywash[key];
+
+  return [
+    { id: 1, name: "Quick Wash", price: row.quickWash, cents: 0, time: "15 min", duration: 15, features: [true, false, false, false] },
+    { id: 2, name: "Bodywash & Vacuum", price: row.bodywashVacuum, cents: 0, time: "30 min", duration: 30, features: [true, true, false, false] },
+    { id: 3, name: "Wash, Vacuum & WAX", price: row.washVacuumWax, cents: 0, time: "45 min", duration: 45, features: [true, true, true, false] },
+    { id: 4, name: "Full Bodywash", price: row.fullBodywash, cents: 0, time: "120 min", duration: 120, features: [true, true, true, true], dark: true },
+  ];
+};
+
+const createBodywashAddons = (pricing: typeof defaultServicePricingConfig): ExtraService[] => [
+  {
+    id: 1,
+    name: "Leather Treatment",
+    time: "30 min",
+    price: pricing.bodywashAddons.leatherTreatment,
+    icon: <FaCar />,
+    desc: "Cleans, conditions, and protects leather from cracks and fading.",
+  },
+  {
+    id: 2,
+    name: "RainX",
+    time: "15 min",
+    price: pricing.bodywashAddons.rainX,
+    icon: <FaTint />,
+    desc: "Water-repellent coating improving visibility during rain on glass surfaces.",
+  },
+  {
+    id: 3,
+    name: "Tar Removal",
+    time: "15 min",
+    price: pricing.bodywashAddons.tarRemoval,
+    icon: <FaHistory />,
+    desc: "Eliminates sticky tar spots from paint without damaging finish.",
+  },
+  {
+    id: 4,
+    name: "Engine Wash",
+    time: "45 min",
+    priceByVehicle: {
+      Sedan: pricing.bodywashAddons.engineWash.sedan,
+      SUV: pricing.bodywashAddons.engineWash.suv,
+      Pickup: pricing.bodywashAddons.engineWash.pickup,
+      MiniVan: pricing.bodywashAddons.engineWash.minivan,
+    },
+    icon: <PiEngineFill />,
+    desc: "Removes dirt and grease from engine for better performance.",
+  },
+  {
+    id: 5,
+    name: "Head Light Polish",
+    time: "45 min",
+    price: pricing.bodywashAddons.headLightPolish,
+    icon: <FaCar />,
+    desc: "Restores clarity by removing oxidation and yellowing from headlights.",
+  },
+  {
+    id: 6,
+    name: "UnderBody Wax",
+    time: "30 min",
+    priceByVehicle: {
+      Sedan: pricing.bodywashAddons.underBodyWax.sedan,
+      SUV: pricing.bodywashAddons.underBodyWax.suv,
+      Pickup: pricing.bodywashAddons.underBodyWax.pickup,
+      MiniVan: pricing.bodywashAddons.underBodyWax.minivan,
+    },
+    icon: <FaCar />,
+    desc: "Protective coating preventing rust and corrosion underneath vehicle.",
+  },
+];
 
 // Generates a week starting from today plus `offset * 7` days.
 const getWeekDays = (offset: number) => {
@@ -202,6 +253,7 @@ export default function BookingPage() {
   const [notes, setNotes] = useState("");
   const [vehicle, setVehicle] = useState<VehicleType>("Sedan");
   const [vehicleCatalog, setVehicleCatalog] = useState(getFallbackVehicleCatalog());
+  const [pricingConfig, setPricingConfig] = useState(defaultServicePricingConfig);
   const [vehicles, setVehicles] = useState<SavedVehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState("");
   const [selectedVehicle, setSelectedVehicle] = useState<SavedVehicle | null>(null);
@@ -266,6 +318,15 @@ export default function BookingPage() {
   }, []);
 
   useEffect(() => {
+    const loadPricing = async () => {
+      const config = await fetchServicePricingConfig();
+      setPricingConfig(config);
+    };
+
+    loadPricing();
+  }, []);
+
+  useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 60 * 1000);
     return () => clearInterval(timer);
   }, []);
@@ -307,26 +368,105 @@ export default function BookingPage() {
 
     setTouchStartX(null);
   };
-  const currentPlan = pricing[vehicle].find(p => p.id === selectedPlanId);
-const additionalServices: ExtraService[] = [
-  { id: 1, name: "Leather Treatment", time: "30 min", price: 3850, icon: <FaCar />, desc: "Cleans, conditions, and protects leather from cracks and fading." },
-  { id: 2, name: "RainX", time: "15 min", price: 650, icon: <FaTint />, desc: "Water-repellent coating improving visibility during rain on glass surfaces." },
-  { id: 3, name: "Tar Removal", time: "15 min", price: 650, icon: <FaHistory />, desc: "Eliminates sticky tar spots from paint without damaging finish." },
-  {
-    id: 4,
-    name: "Engine Wash",
-    time: "45 min",
-    priceByVehicle: { Sedan: 1750, SUV: 1950, Pickup: 2450, MiniVan: 1950 },
-    icon: <PiEngineFill/>,
-    desc: "Removes dirt and grease from engine for better performance.",
-  },
-  { id: 5, name: "Head Light Polish", time: "45 min", price: 1200, icon: <FaCar />, desc: "Restores clarity by removing oxidation and yellowing from headlights." },
+  const vehiclePricingKey = vehicle.toLowerCase() as VehicleTypeKey;
+  const bodywashRow = pricingConfig.bodywash[vehiclePricingKey] ?? defaultServicePricingConfig.bodywash[vehiclePricingKey];
+  const currentPlan = selectedPlanId
+    ? {
+        id: selectedPlanId,
+        name:
+          selectedPlanId === 1
+            ? "Quick Wash"
+            : selectedPlanId === 2
+            ? "Bodywash & Vacuum"
+            : selectedPlanId === 3
+            ? "Wash, Vacuum & WAX"
+            : "Full Bodywash",
+        price:
+          selectedPlanId === 1
+            ? bodywashRow.quickWash
+            : selectedPlanId === 2
+            ? bodywashRow.bodywashVacuum
+            : selectedPlanId === 3
+            ? bodywashRow.washVacuumWax
+            : bodywashRow.fullBodywash,
+        cents: 0,
+        time:
+          selectedPlanId === 1 ? "15 min" : selectedPlanId === 2 ? "30 min" : selectedPlanId === 3 ? "45 min" : "120 min",
+        duration:
+          selectedPlanId === 1 ? 15 : selectedPlanId === 2 ? 30 : selectedPlanId === 3 ? 45 : 120,
+        features:
+          selectedPlanId === 1
+            ? [true, false, false, false]
+            : selectedPlanId === 2
+            ? [true, true, false, false]
+            : selectedPlanId === 3
+            ? [true, true, true, false]
+            : [true, true, true, true],
+        dark: selectedPlanId === 4,
+      }
+    : null;
 
-  { id: 6, name: "UnderBody Wax", time: "30 min",
-    priceByVehicle: { Sedan: 1600, SUV: 1950, Pickup: 2450, MiniVan: 2800 }, 
-    icon: <FaCar />, 
-    desc: "Protective coating preventing rust and corrosion underneath vehicle." },
-];
+  const additionalServices: ExtraService[] = [
+    {
+      id: 1,
+      name: "Leather Treatment",
+      time: "30 min",
+      price: pricingConfig.bodywashAddons.leatherTreatment,
+      icon: <FaCar />,
+      desc: "Cleans, conditions, and protects leather from cracks and fading.",
+    },
+    {
+      id: 2,
+      name: "RainX",
+      time: "15 min",
+      price: pricingConfig.bodywashAddons.rainX,
+      icon: <FaTint />,
+      desc: "Water-repellent coating improving visibility during rain on glass surfaces.",
+    },
+    {
+      id: 3,
+      name: "Tar Removal",
+      time: "15 min",
+      price: pricingConfig.bodywashAddons.tarRemoval,
+      icon: <FaHistory />,
+      desc: "Eliminates sticky tar spots from paint without damaging finish.",
+    },
+    {
+      id: 4,
+      name: "Engine Wash",
+      time: "45 min",
+      priceByVehicle: {
+        Sedan: pricingConfig.bodywashAddons.engineWash.sedan,
+        SUV: pricingConfig.bodywashAddons.engineWash.suv,
+        Pickup: pricingConfig.bodywashAddons.engineWash.pickup,
+        MiniVan: pricingConfig.bodywashAddons.engineWash.minivan,
+      },
+      icon: <PiEngineFill />,
+      desc: "Removes dirt and grease from engine for better performance.",
+    },
+    {
+      id: 5,
+      name: "Head Light Polish",
+      time: "45 min",
+      price: pricingConfig.bodywashAddons.headLightPolish,
+      icon: <FaCar />,
+      desc: "Restores clarity by removing oxidation and yellowing from headlights.",
+    },
+    {
+      id: 6,
+      name: "UnderBody Wax",
+      time: "30 min",
+      priceByVehicle: {
+        Sedan: pricingConfig.bodywashAddons.underBodyWax.sedan,
+        SUV: pricingConfig.bodywashAddons.underBodyWax.suv,
+        Pickup: pricingConfig.bodywashAddons.underBodyWax.pickup,
+        MiniVan: pricingConfig.bodywashAddons.underBodyWax.minivan,
+      },
+      icon: <FaCar />,
+      desc: "Protective coating preventing rust and corrosion underneath vehicle.",
+    },
+  ];
+  const bodywashPlans = createBodywashPlans(pricingConfig, vehicle);
   const vehicleImage =
     vehicleCatalog.find((entry) => entry.category.trim().toLowerCase() === vehicle.toLowerCase())
       ?.imageUrl || carImages[vehicle];
@@ -624,9 +764,9 @@ useEffect(() => {
           <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>Washing Plan</h2>
 
           <div className={styles.plansGrid}>
-            {pricing[vehicle].map(plan => (
-              <div 
-                key={plan.id} 
+            {bodywashPlans.map(plan => (
+                <div 
+                  key={plan.id} 
                 className={`${styles.planCard} ${plan.dark ? styles.darkCard : ""} ${selectedPlanId === plan.id ? styles.cardActive : ""}`}
               >
                 <h3 className={`${styles.planName} ${styles.displayFont}`}>{plan.name}</h3>
