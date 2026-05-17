@@ -98,7 +98,7 @@ export default function HomePageClient() {
   return (
     <main className={styles.pageWrapper}>
       <section className={styles.hero}>
-        <video autoPlay muted loop className={styles.bgVideo}>
+        <video autoPlay muted loop playsInline preload="metadata" poster="/bookingbg.jpg" className={styles.bgVideo}>
           <source src="/BGV.mp4" type="video/mp4" />
         </video>
         <div className={styles.videoOverlay} />
@@ -106,6 +106,12 @@ export default function HomePageClient() {
           <span className={styles.heroSubtitle}>{t.heroSubtitle}</span>
           <h1 className={styles.heroTitle}>{t.heroTitle}</h1>
           <p className={styles.heroDescription}>{t.heroDescription}</p>
+
+          <div className={styles.heroMobilePanel} aria-label="AutoFlash highlights">
+            <span>AI quotes</span>
+            <span>Mobile booking</span>
+            <span>Fast slot check</span>
+          </div>
 
           <div className={styles.heroBtns}>
             <Link href="/booking/bodywash" className={styles.btnRed}>

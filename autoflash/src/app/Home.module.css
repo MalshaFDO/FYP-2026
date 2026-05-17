@@ -18,6 +18,9 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.7)),
+    url('/bookingbg.jpg') center/cover no-repeat;
 }
 
 .bgVideo {
@@ -28,7 +31,8 @@
   min-height: 100%;
   transform: translate(-50%, -50%);
   object-fit: cover;
-  z-index: -0.5;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .videoOverlay {
@@ -48,6 +52,10 @@
 .heroSubtitle { color: #e31e24; letter-spacing: 5px; font-weight: 800; text-transform: uppercase; }
 .heroTitle { font-size: clamp(3rem, 8vw, 5.5rem); font-weight: 900; margin: 15px 0; text-transform: uppercase; line-height: 1; }
 .heroDescription { font-size: 1.2rem; color: rgba(255,255,255,0.8); margin-bottom: 40px; max-width: 800px; margin-inline: auto; }
+
+.heroMobilePanel {
+  display: none;
+}
 
 /* --- FEATURES --- */
 .featureSection { padding: 120px 0; background: #0a0a0a; color: #fff; }
@@ -175,3 +183,114 @@
 
 .ctaContent h2 { font-size: 50px; font-weight: 900; margin-bottom: 25px; }
 .ctaContent p { font-size: 1.3rem; color: #aaa; margin-bottom: 45px; }
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: 92svh;
+    padding: 128px 0 72px;
+    align-items: flex-end;
+  }
+
+  .bgVideo {
+    display: none;
+  }
+
+  .heroContent {
+    padding: 0 18px;
+    max-width: 100%;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.4rem, 14vw, 3.6rem);
+  }
+
+  .heroDescription {
+    font-size: 1rem;
+    margin-bottom: 28px;
+  }
+
+  .heroMobilePanel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+    margin: 0 auto 26px;
+    padding: 0 6px;
+  }
+
+  .heroMobilePanel span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 10px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+    backdrop-filter: blur(12px);
+  }
+
+  .heroBtns {
+    gap: 12px;
+  }
+
+  .btnRed,
+  .btnGold,
+  .btnTransparent {
+    width: 100%;
+    max-width: 320px;
+    padding: 16px 22px;
+    font-size: 0.82rem;
+  }
+
+  .featureSection,
+  .howSection,
+  .servicesSection {
+    padding: 84px 0;
+  }
+
+  .sectionTitle,
+  .centerTitleLight,
+  .centerTitle,
+  .ctaContent h2 {
+    font-size: clamp(2rem, 8vw, 2.8rem);
+  }
+
+  .featureCard,
+  .stepCard,
+  .serviceCard {
+    padding: 32px 22px;
+    border-radius: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero {
+    min-height: 90svh;
+    padding-top: 112px;
+  }
+
+  .heroSubtitle {
+    letter-spacing: 3px;
+  }
+
+  .heroTitle {
+    font-size: clamp(2rem, 15vw, 3rem);
+  }
+
+  .featureGrid,
+  .howGrid,
+  .servicesGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .heroMobilePanel {
+    grid-template-columns: 1fr;
+  }
+}

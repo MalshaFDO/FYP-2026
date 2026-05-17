@@ -372,3 +372,52 @@
     justify-content: center;
   }
 }
+
+@media (max-width: 640px) {
+  .header {
+    height: 68px;
+    padding: 0 14px;
+    border-radius: 0 0 20px 20px;
+  }
+
+  .scrolled {
+    height: 60px;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+
+  .logoWrapper img {
+    width: 112px;
+  }
+
+  .mobileRightActions {
+    gap: 8px;
+  }
+
+  .profileLink,
+  .cartLink {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .mobileHeaderLanguage {
+    min-height: 32px;
+    padding: 0 8px;
+    font-size: 10px;
+  }
+
+  .hamburger span {
+    width: 24px;
+  }
+
+  .mobileMenu {
+    gap: 16px;
+    padding: 20px;
+  }
+
+  .mobileMenu a,
+  .mobileProfileLink {
+    font-size: 14px;
+  }
+}
