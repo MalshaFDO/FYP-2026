@@ -221,7 +221,7 @@ export default function PaymentReturnPage() {
     };
 
     finalizePayment();
-  }, [router]);
+  }, [router, t]);
 
   return (
     <main

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { DotLottie } from "@lottiefiles/dotlottie-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import styles from "./CartTransition.module.css";
@@ -22,12 +22,12 @@ export default function CartTransition({
   const hasCompletedRef = useRef(false);
   const timeoutRef = useRef<number | null>(null);
 
-  const completeOnce = () => {
+  const completeOnce = useCallback(() => {
     if (hasCompletedRef.current) return;
 
     hasCompletedRef.current = true;
     onComplete?.();
-  };
+  }, [onComplete]);
 
   useEffect(() => {
     timeoutRef.current = window.setTimeout(completeOnce, 7000);
@@ -37,7 +37,7 @@ export default function CartTransition({
         window.clearTimeout(timeoutRef.current);
       }
     };
-  }, []);
+  }, [completeOnce]);
 
   return (
     <div className={styles.overlay} role="status" aria-live="polite">

@@ -12,14 +12,6 @@ const OTP_LENGTH = 6;
 
 const normalizePhone = (value: string) => value.replace(/[^\d+]/g, "").trim();
 const clearRedirectAfterLogin = () => localStorage.removeItem("redirectAfterLogin");
-const getRouteLabel = (route: string) =>
-  route === "/booking/full-service"
-    ? "Full Service / Quote"
-    : route === "/booking/bodywash"
-    ? "Body Wash"
-    : route === "/booking/oil-change"
-    ? "Oil Change"
-    : "Selected Service";
 
 const copy = {
   en: {

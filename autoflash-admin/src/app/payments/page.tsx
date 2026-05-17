@@ -36,6 +36,13 @@ const formatDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 };
 
+const initialSummary: PaymentSummary = {
+  totalPaid: 0,
+  outstanding: 0,
+  paymentCount: 0,
+  partialCount: 0,
+};
+
 const formatStackedDate = (value: string) => {
   const raw = value?.trim() || "";
   if (!raw) return { year: "-", monthDay: "-" };
@@ -71,12 +78,7 @@ const formatService = (value: string) => {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [summary, setSummary] = useState<PaymentSummary>({
-    totalPaid: 0,
-    outstanding: 0,
-    paymentCount: 0,
-    partialCount: 0,
-  });
+  const [summary, setSummary] = useState<PaymentSummary>(initialSummary);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
@@ -92,7 +94,7 @@ export default function PaymentsPage() {
         }
 
         setPayments(Array.isArray(data.payments) ? data.payments : []);
-        setSummary(data.summary || summary);
+        setSummary(data.summary || initialSummary);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load payments");
       }

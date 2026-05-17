@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./vehicles.module.css";
 
@@ -233,11 +234,17 @@ export default function VehiclesPage() {
           <label className={styles.previewBox}>
             <span>Preview</span>
             <div className={styles.imagePreview}>
-              {form.imageUrl ? (
-                <img src={form.imageUrl} alt={`${form.make} ${form.model}`} />
-              ) : (
-                <div className={styles.placeholder}>Upload a vehicle image</div>
-              )}
+                {form.imageUrl ? (
+                  <Image
+                    src={form.imageUrl}
+                    alt={`${form.make} ${form.model}`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    unoptimized
+                  />
+                ) : (
+                  <div className={styles.placeholder}>Upload a vehicle image</div>
+                )}
             </div>
           </label>
         </div>
@@ -283,9 +290,19 @@ export default function VehiclesPage() {
           <div className={styles.cards}>
             {filteredEntries.map((entry) => (
               <article key={entry._id} className={styles.vehicleCard}>
-                <div className={styles.vehicleImage}>
-                  {entry.imageUrl ? <img src={entry.imageUrl} alt={`${entry.make} ${entry.model}`} /> : <span>No image</span>}
-                </div>
+                  <div className={styles.vehicleImage}>
+                    {entry.imageUrl ? (
+                      <Image
+                        src={entry.imageUrl}
+                        alt={`${entry.make} ${entry.model}`}
+                        fill
+                        sizes="200px"
+                        unoptimized
+                      />
+                    ) : (
+                      <span>No image</span>
+                    )}
+                  </div>
                 <div className={styles.vehicleBody}>
                   <div className={styles.vehicleMeta}>
                     <span>{entry.category}</span>

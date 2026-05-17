@@ -56,7 +56,7 @@ async function uploadQuotationPdf(base64File: string) {
   }
 }
 
-async function createFullServiceBooking(data: any, serviceType: string) {
+async function createFullServiceBooking(data: any, serviceType?: string) {
   await connectDB();
 
   const slotDateTime = parseTimeSlot(data.bookingDate, data.bookingTime);
@@ -175,7 +175,9 @@ function buildQuote(bookingData: any) {
 
 // --- Stage Handlers ---
 
-const STAGE_HANDLERS: Record<string, Function> = {
+type StageHandler = (msg: string, data: any, serviceType?: string) => Promise<NextResponse> | NextResponse;
+
+const STAGE_HANDLERS: Record<string, StageHandler> = {
   start: (msg: string, data: any) => {
     if (data?.hasSavedVehicles && data?.selectedVehicleLabel) {
       return sendResponse(
@@ -328,7 +330,7 @@ const STAGE_HANDLERS: Record<string, Function> = {
     return sendResponse(reply, "confirm_slot", data);
   },
 
-  confirm_slot: async (msg: string, data: any, serviceType: string) => {
+    confirm_slot: async (msg: string, data: any, serviceType?: string) => {
     const isAffirmative = /yes|yeah|yep|sure|ok/i.test(msg);
 
     if (!isAffirmative) {
@@ -352,7 +354,7 @@ const STAGE_HANDLERS: Record<string, Function> = {
     return createFullServiceBooking(data, serviceType);
   },
 
-  details_name: async (msg: string, data: any, serviceType: string) => {
+    details_name: async (msg: string, data: any, serviceType?: string) => {
     data.customerName = msg.trim();
 
     const nextStage = getNextDetailsStage(data);
@@ -368,7 +370,7 @@ const STAGE_HANDLERS: Record<string, Function> = {
     return createFullServiceBooking(data, serviceType);
   },
 
-  details_mobile: async (msg: string, data: any, serviceType: string) => {
+    details_mobile: async (msg: string, data: any, serviceType?: string) => {
     const match = msg.match(/0\d{9}/);
     if (!match) return sendResponse("Please enter a valid 10-digit mobile number, for example 0771234567.", "details_mobile", data);
     data.mobile = match[0];
@@ -382,11 +384,11 @@ const STAGE_HANDLERS: Record<string, Function> = {
     return createFullServiceBooking(data, serviceType);
   },
 
-  details_vehicle: async (msg: string, data: any, serviceType: string) => {
+    details_vehicle: async (msg: string, data: any, serviceType?: string) => {
     try {
       data.vehicleNumber = msg;
       return createFullServiceBooking(data, serviceType);
-    } catch (err) {
+    } catch {
       return NextResponse.json({ reply: "We encountered a system issue while saving your booking. Please try again.", nextStage: "details_vehicle", bookingData: data }, { status: 500 });
     }
   },

@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Oswald, Inter } from "next/font/google";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import styles from "./aboutpage.module.css";
-
-const oswald = Oswald({ subsets: ["latin"], weight: ["500", "700"] });
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const copy = {
   en: {
@@ -118,13 +114,13 @@ export default function AboutPageClient() {
   const t = copy[language as keyof typeof copy] || copy.en;
 
   return (
-    <main className={`${styles.page} ${inter.className}`}>
+    <main className={styles.page}>
       {/* --- HERO SECTION --- */}
       <section className={styles.heroSection}>
         <div className={styles.container}>
           <div className={styles.heroContent}>
             <span className={styles.eyebrow}>{t.eyebrow}</span>
-            <h1 className={`${styles.heroTitle} ${oswald.className}`}>{t.heroTitle}</h1>
+            <h1 className={`${styles.heroTitle} ${styles.displayFont}`}>{t.heroTitle}</h1>
             <p className={styles.heroText}>{t.heroText}</p>
             <div className={styles.heroActions}>
               <Link href="/services" className={styles.primaryBtn}>{t.exploreServices}</Link>
@@ -135,7 +131,7 @@ export default function AboutPageClient() {
           <aside className={styles.heroSnapshotGrid}>
             <div className={styles.snapshotCard}>
               <span className={styles.cardTag}>{t.snapshot}</span>
-              <h2 className={`${styles.cardTitle} ${oswald.className}`}>{t.snapshotTitle}</h2>
+              <h2 className={`${styles.cardTitle} ${styles.displayFont}`}>{t.snapshotTitle}</h2>
               <p className={styles.cardText}>{t.snapshotText}</p>
             </div>
             <div className={styles.metricsWrapper}>
@@ -156,14 +152,14 @@ export default function AboutPageClient() {
           <div className={styles.splitLayout}>
             <article className={styles.storyContent}>
               <span className={styles.cardTag}>{t.whyItMatters}</span>
-              <h2 className={`${styles.storyTitle} ${oswald.className}`}>{t.storyTitle}</h2>
+              <h2 className={`${styles.storyTitle} ${styles.displayFont}`}>{t.storyTitle}</h2>
               {t.storyParagraphs.map((p, i) => <p key={i} className={styles.storyPara}>{p}</p>)}
               
               <div className={styles.valuesGrid}>
                 {t.values.map((v, i) => (
                   <div key={i} className={styles.valueCard}>
                     <span className={styles.cardTag}>{v.tag}</span>
-                    <h3 className={oswald.className}>{v.title}</h3>
+                    <h3 className={styles.displayFont}>{v.title}</h3>
                     <p>{v.text}</p>
                   </div>
                 ))}
@@ -177,7 +173,7 @@ export default function AboutPageClient() {
               </div>
               <div className={styles.highlightCard}>
                 <span className={styles.brandTag}>{t.brandDirection}</span>
-                <h3 className={oswald.className}>{t.brandTitle}</h3>
+                <h3 className={styles.displayFont}>{t.brandTitle}</h3>
                 <p>{t.brandText}</p>
               </div>
             </aside>
@@ -189,14 +185,14 @@ export default function AboutPageClient() {
       <section className={styles.journeySection}>
         <div className={styles.container}>
           <div className={styles.journeyHeader}>
-            <h2 className={`${styles.sectionTitle} ${oswald.className}`}>{t.journeyTitle}</h2>
+            <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>{t.journeyTitle}</h2>
             <p>{t.journeyText}</p>
           </div>
           <div className={styles.timelineGrid}>
             {t.milestones.map((m, i) => (
               <div key={i} className={styles.timelineItem}>
                 <span className={styles.timelineTag}>{m.tag}</span>
-                <h3 className={oswald.className}>{m.title}</h3>
+                <h3 className={styles.displayFont}>{m.title}</h3>
                 <p>{m.text}</p>
               </div>
             ))}
@@ -208,7 +204,7 @@ export default function AboutPageClient() {
       <section className={styles.ctaSection}>
         <div className={styles.container}>
           <div className={styles.ctaBox}>
-            <h2 className={`${styles.ctaTitle} ${oswald.className}`}>{t.ctaTitle}</h2>
+            <h2 className={`${styles.ctaTitle} ${styles.displayFont}`}>{t.ctaTitle}</h2>
             <p className={styles.ctaText}>{t.ctaText}</p>
             <div className={styles.ctaActions}>
               <Link href="/services" className={styles.primaryBtn}>{t.viewServicePages}</Link>

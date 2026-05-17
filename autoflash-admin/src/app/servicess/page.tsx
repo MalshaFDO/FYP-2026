@@ -28,32 +28,6 @@ const vehicleLabels: Record<VehicleTypeKey, string> = {
 };
 const vehicleKeys = Object.keys(vehicleLabels) as VehicleTypeKey[];
 
-const bodywashFields: Array<keyof Pick<PricingRow, "quickWash" | "bodywashVacuum" | "washVacuumWax" | "fullBodywash">> = [
-  "quickWash",
-  "bodywashVacuum",
-  "washVacuumWax",
-  "fullBodywash",
-];
-
-const fullServiceFields: Array<keyof Pick<PricingRow, "fullService" | "engineWash" | "brakeService" | "oilChange" | "oilFilter" | "underBodyWash" | "windowWasher" | "caliperGrease" | "brakeCaliperLube" | "brakeDrumCleaning" | "sumpWasher" | "chemicalCost" | "rexine" | "interiorFumigation" | "n2" | "serviceCharge">> = [
-  "fullService",
-  "engineWash",
-  "brakeService",
-  "oilChange",
-  "oilFilter",
-  "underBodyWash",
-  "windowWasher",
-  "caliperGrease",
-  "brakeCaliperLube",
-  "brakeDrumCleaning",
-  "sumpWasher",
-  "chemicalCost",
-  "rexine",
-  "interiorFumigation",
-  "n2",
-  "serviceCharge",
-];
-
 const rowTitle: Record<string, string> = {
   quickWash: "Quick Wash",
   bodywashVacuum: "Bodywash & Vacuum",

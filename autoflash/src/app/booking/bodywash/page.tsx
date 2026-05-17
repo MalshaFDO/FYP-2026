@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ReactNode, TouchEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaCheck,
@@ -23,9 +22,6 @@ import { formatVehicleNumber } from "@/lib/vehicleNumber";
 import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
 import CartTransition from "@/components/CartTransition/CartTransition";
 import styles from "./Bodywash.module.css";
-
-const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
-const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type SavedVehicleType = VehicleType | Lowercase<VehicleType>;
@@ -521,27 +517,29 @@ useEffect(() => {
 
         setClosedDays(nextClosedDays);
 
-        const visibleWeek = getWeekDays(weekOffset);
-        const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
-        const selectedDayClosed =
-          !!selectedDayInWeek &&
-          (selectedDayInWeek.isSunday ||
-            nextClosedDays.some(
-              (closedDay: { date: string; reason?: string }) =>
-                closedDay.date === selectedDayInWeek.isoDate
-            ));
-
-        if (!selectedDayInWeek || selectedDayClosed) {
-          setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
         }
+      } catch (error) {
+        console.error("Fetch closed days error:", error);
       }
-    } catch (error) {
-      console.error("Fetch closed days error:", error);
-    }
-  };
+    };
 
-  fetchClosedDays();
-}, []);
+    fetchClosedDays();
+  }, []);
+
+  useEffect(() => {
+    if (!closedDays.length) return;
+
+    const visibleWeek = getWeekDays(weekOffset);
+    const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
+    const selectedDayClosed =
+      !!selectedDayInWeek &&
+      (selectedDayInWeek.isSunday ||
+        closedDays.some((closedDay: { date: string; reason?: string }) => closedDay.date === selectedDayInWeek.isoDate));
+
+    if (!selectedDayInWeek || selectedDayClosed) {
+      setSelectedDate(getFirstAvailableDayIso(weekOffset, closedDays));
+    }
+  }, [closedDays, selectedDate, weekOffset]);
 
 useEffect(() => {
   const fetchClosedSlots = async () => {
@@ -572,14 +570,14 @@ useEffect(() => {
 
 
   return (
-    <main className={`${styles.page} ${inter.className}`}>
+    <main className={styles.page}>
       {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
 
       {/* STEP 01 */}
       <section className={styles.heroSection}>
         <div className={styles.contentWrapper}>
-          <p className={`${styles.stepTag} ${oswald.className}`}>STEP 01</p>
-          <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Car Type</h1>
+          <p className={`${styles.stepTag} ${styles.displayFont}`}>STEP 01</p>
+          <h1 className={`${styles.heroTitle} ${styles.displayFont}`}>Choose Your Car Type</h1>
           <nav className={styles.carTypeNav}>
             {vehicleTypes.map(type => (
               <button
@@ -623,7 +621,7 @@ useEffect(() => {
       <section id="bodywash-plans" className={styles.plansSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 02</p>
-          <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Washing Plan</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>Washing Plan</h2>
 
           <div className={styles.plansGrid}>
             {pricing[vehicle].map(plan => (
@@ -631,7 +629,7 @@ useEffect(() => {
                 key={plan.id} 
                 className={`${styles.planCard} ${plan.dark ? styles.darkCard : ""} ${selectedPlanId === plan.id ? styles.cardActive : ""}`}
               >
-                <h3 className={`${styles.planName} ${oswald.className}`}>{plan.name}</h3>
+                <h3 className={`${styles.planName} ${styles.displayFont}`}>{plan.name}</h3>
 
                 <div className={styles.priceContainer}>
                   <span className={styles.currency}>LKR.</span>
@@ -671,7 +669,7 @@ useEffect(() => {
       <section id="bodywash-additional" className={styles.additionalSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 03</p>
-          <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Additional Services</h2>
+          <h2 className={`${styles.sectionTitleLight} ${styles.displayFont}`}>Additional Services</h2>
           <p className={styles.sectionSubtitle}>Praesent tempor mauris sem, eu molestie metus sollicitudin sit amet.</p>
 
           <div className={styles.additionalGrid}>
@@ -687,7 +685,7 @@ useEffect(() => {
                 <div className={styles.cardInternal}>
                   <div className={styles.serviceIcon}>{service.icon}</div>
                   <div className={styles.serviceText}>
-                    <h3 className={oswald.className}>{service.name}</h3>
+                    <h3 className={styles.displayFont}>{service.name}</h3>
                     <p>{service.desc}</p>
                     <div className={styles.extraMetaInline}>
                       <span><FaHistory className={styles.metaIcon} /> {service.time}</span>
@@ -708,7 +706,7 @@ useEffect(() => {
      <section id="bodywash-datetime" className={styles.dateTimeSection}>
   <div className={styles.containerLarge}>
     <p className={styles.stepTagCenter}>STEP 04</p>
-    <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
+    <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>Date and Time</h2>
     <div className={styles.calendarWrapper}>
       <div className={styles.mobileDaySelector}>
         <button
@@ -883,7 +881,7 @@ useEffect(() => {
       <section id="bodywash-summary" className={styles.summarySection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 05</p>
-          <h2 className={`${styles.sectionTitle} ${oswald.className}`}>
+          <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>
             Summary & Confirmation
           </h2>
 

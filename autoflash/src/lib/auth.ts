@@ -16,7 +16,7 @@ export function getUserFromToken(req: Request) {
     };
 
     return decoded;
-  } catch (error) {
+  } catch {
     throw new Error("Invalid token");
   }
 }

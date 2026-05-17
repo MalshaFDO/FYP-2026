@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Oswald, Inter } from "next/font/google";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import styles from "./contactpage.module.css";
-
-const oswald = Oswald({ subsets: ["latin"], weight: ["500", "700"] });
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const copy = {
   en: {
@@ -88,12 +84,12 @@ export default function ContactPageClient() {
   const t = copy[language];
 
   return (
-    <main className={`${styles.page} ${inter.className}`}>
+    <main className={styles.page}>
       {/* 1. HERO SECTION WITH QUICK CARDS */}
       <section className={styles.heroSection}>
         <div className={styles.container}>
           <span className={styles.stepTag}>{t.eyebrow}</span>
-          <h1 className={`${styles.heroTitle} ${oswald.className}`}>{t.heroTitle}</h1>
+          <h1 className={`${styles.heroTitle} ${styles.displayFont}`}>{t.heroTitle}</h1>
           <p className={styles.heroSubtitle}>{t.heroText}</p>
           
           <div className={styles.heroActions}>
@@ -104,15 +100,15 @@ export default function ContactPageClient() {
           <div className={styles.quickCardRow}>
             <div className={styles.quickCard}>
               <span className={styles.cardTag}>{t.phoneLabel}</span>
-              <p className={oswald.className}>{t.phoneValue}</p>
+              <p className={styles.displayFont}>{t.phoneValue}</p>
             </div>
             <div className={styles.quickCard}>
               <span className={styles.cardTag}>{t.hoursLabel}</span>
-              <p className={oswald.className}>{t.hoursValue}</p>
+              <p className={styles.displayFont}>{t.hoursValue}</p>
             </div>
             <div className={styles.quickCard}>
               <span className={styles.cardTag}>{t.routeLabel}</span>
-              <p className={oswald.className}>{t.routeValue}</p>
+              <p className={styles.displayFont}>{t.routeValue}</p>
             </div>
           </div>
         </div>
@@ -124,7 +120,7 @@ export default function ContactPageClient() {
           <div className={styles.splitLayout}>
             <aside className={styles.logicCard}>
               <span className={styles.cardTag}>{t.whenToCall}</span>
-              <h2 className={oswald.className}>{t.whenToCallTitle}</h2>
+              <h2 className={styles.displayFont}>{t.whenToCallTitle}</h2>
               <ul className={styles.checkList}>
                 {t.whenToCallList.map((item) => <li key={item}>{item}</li>)}
               </ul>
@@ -134,7 +130,7 @@ export default function ContactPageClient() {
               {t.contactBlocks.map((block) => (
                 <div key={block.title} className={styles.infoCard}>
                   <span className={styles.cardTag}>{block.tag}</span>
-                  <h3 className={oswald.className}>{block.title}</h3>
+                  <h3 className={styles.displayFont}>{block.title}</h3>
                   <p>{block.text}</p>
                 </div>
               ))}
@@ -147,14 +143,14 @@ export default function ContactPageClient() {
       <section className={styles.faqSection}>
         <div className={styles.container}>
           <div className={styles.sectionHeader}>
-            <h2 className={oswald.className}>{t.answersTitle}</h2>
+            <h2 className={styles.displayFont}>{t.answersTitle}</h2>
             <p>{t.answersText}</p>
           </div>
           <div className={styles.faqGrid}>
             {t.faqs.map((faq) => (
               <div key={faq.question} className={styles.faqCard}>
                 <span className={styles.cardTag}>FAQ</span>
-                <h4 className={oswald.className}>{faq.question}</h4>
+                <h4 className={styles.displayFont}>{faq.question}</h4>
                 <p>{faq.answer}</p>
               </div>
             ))}
@@ -162,7 +158,7 @@ export default function ContactPageClient() {
 
           {/* FINAL CTA BOX */}
           <div className={styles.ctaBox}>
-            <h2 className={oswald.className}>{t.ctaTitle}</h2>
+            <h2 className={styles.displayFont}>{t.ctaTitle}</h2>
             <p>{t.ctaText}</p>
             <div className={styles.heroActions}>
               <Link href="/booking/bodywash" className={styles.primaryBtn}>{t.bookBodyWash}</Link>

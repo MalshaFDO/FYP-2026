@@ -1,12 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Oswald, Inter } from "next/font/google";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import styles from "./servicespage.module.css";
-
-const oswald = Oswald({ subsets: ["latin"], weight: ["500", "700"] });
-const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 const copy = {
   en: {
@@ -94,13 +90,13 @@ export default function ServicesPageClient() {
   const t = copy[language as keyof typeof copy] || copy.en;
 
   return (
-    <main className={`${styles.page} ${inter.className}`}>
+    <main className={styles.page}>
       {/* --- HERO SECTION --- */}
       <section className={styles.heroSection}>
         <div className={styles.container}>
           <div className={styles.heroContent} style={{ textAlign: "center" }}>
             <span className={styles.cardTag}>{t.eyebrow}</span>
-            <h1 className={`${styles.heroTitle} ${oswald.className}`}>{t.heroTitle}</h1>
+            <h1 className={`${styles.heroTitle} ${styles.displayFont}`}>{t.heroTitle}</h1>
             <p className={styles.heroText}>{t.heroText}</p>
             <div className={styles.heroActions}>
               <Link href="/booking" className={styles.primaryBtn}>{t.bookNow}</Link>
@@ -115,7 +111,7 @@ export default function ServicesPageClient() {
         <div className={styles.container}>
           <div style={{ textAlign: 'center', marginBottom: '80px' }}>
              <span className={styles.cardTag}>{t.eyebrow}</span>
-             <h2 className={`${styles.heroTitle} ${oswald.className}`} style={{ color: '#111', fontSize: '3rem', margin: '10px 0' }}>{t.categoriesTitle}</h2>
+             <h2 className={`${styles.heroTitle} ${styles.displayFont}`} style={{ color: '#111', fontSize: '3rem', margin: '10px 0' }}>{t.categoriesTitle}</h2>
              <p style={{ maxWidth: '700px', margin: '0 auto', color: '#666', lineHeight: '1.6' }}>{t.categoriesText}</p>
           </div>
 
@@ -124,7 +120,7 @@ export default function ServicesPageClient() {
               <article key={i} className={styles.valueCard}>
                 <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                   <span className={styles.cardTag}>{service.tag}</span>
-                  <h3 className={oswald.className} style={{ fontSize: '1.8rem', marginBottom: '15px', color: '#111' }}>{service.title}</h3>
+                  <h3 className={styles.displayFont} style={{ fontSize: '1.8rem', marginBottom: '15px', color: '#111' }}>{service.title}</h3>
                   <p style={{ color: '#444', marginBottom: '30px', flexGrow: 1 }}>{service.text}</p>
                   <Link href={service.link} className={styles.secondaryBtn} style={{ alignSelf: 'flex-start' }}>
                     {t.bookNow}
@@ -140,7 +136,7 @@ export default function ServicesPageClient() {
       <section className={styles.ctaSection}>
         <div className={styles.container}>
           <div className={styles.ctaBox}>
-            <h2 className={`${styles.ctaTitle} ${oswald.className}`}>{t.ctaTitle}</h2>
+            <h2 className={`${styles.ctaTitle} ${styles.displayFont}`}>{t.ctaTitle}</h2>
             <p className={styles.ctaText}>{t.ctaText}</p>
             <div className={styles.ctaActions}>
               <Link href="/booking" className={styles.primaryBtn}>{t.startFlow}</Link>

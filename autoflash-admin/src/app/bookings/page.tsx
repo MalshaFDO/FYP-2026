@@ -104,8 +104,6 @@ const formatVehicleNumber = (vehicleNumber?: string) => {
 };
 
 const formatCustomerName = (name?: string) => (name || "").trim().toUpperCase();
-const formatBookingTime = (booking: any) =>
-  booking?.bookingTime || booking?.time || booking?.date || "-";
 const formatSmsPhone = (mobile?: string) => {
   const raw = mobile?.toString().trim() || "";
   if (!raw) return "";

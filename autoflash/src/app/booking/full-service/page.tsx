@@ -1,9 +1,8 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { TouchEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Oswald, Inter } from 'next/font/google';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaCheck, FaPlus, FaOilCan, FaTools, FaRobot } from 'react-icons/fa';
 import styles from "./FullService.module.css";
@@ -13,8 +12,6 @@ import { formatVehicleNumber } from "@/lib/vehicleNumber";
 import { fetchVehicleCatalog, getFallbackVehicleCatalog } from "@/lib/vehicleCatalog";
 import CartTransition from "@/components/CartTransition/CartTransition";
 
-const oswald = Oswald({ subsets: ['latin'], weight: ['400', '700'] });
-const inter = Inter({ subsets: ['latin'], weight: ['400', '600'] });
 type VehicleType = 'Sedan' | 'SUV' | 'Pickup' | 'MiniVan';
 type PricingVehicleType = "sedan" | "suv" | "pickup" | "minivan";
 
@@ -512,19 +509,6 @@ export default function FullServicePage() {
 
           setClosedDays(nextClosedDays);
 
-          const visibleWeek = getWeekDays(weekOffset);
-          const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
-            const selectedDayClosed =
-            !!selectedDayInWeek &&
-            (selectedDayInWeek.isSunday ||
-              nextClosedDays.some(
-                (closedDay: { date: string; reason?: string }) =>
-                  closedDay.date === selectedDayInWeek.isoDate
-              ));
-              
-          if (!selectedDayInWeek || selectedDayClosed) {
-            setSelectedDate(getFirstAvailableDayIso(weekOffset, nextClosedDays));
-          }
         }
       } catch (error) {
         console.error("Fetch closed days error:", error);
@@ -533,6 +517,21 @@ export default function FullServicePage() {
 
     fetchClosedDays();
   }, []);
+
+  useEffect(() => {
+    if (!closedDays.length) return;
+
+    const visibleWeek = getWeekDays(weekOffset);
+    const selectedDayInWeek = visibleWeek.find((day) => day.isoDate === selectedDate);
+    const selectedDayClosed =
+      !!selectedDayInWeek &&
+      (selectedDayInWeek.isSunday ||
+        closedDays.some((closedDay: { date: string; reason?: string }) => closedDay.date === selectedDayInWeek.isoDate));
+
+    if (!selectedDayInWeek || selectedDayClosed) {
+      setSelectedDate(getFirstAvailableDayIso(weekOffset, closedDays));
+    }
+  }, [closedDays, selectedDate, weekOffset]);
 
   const weekDays = getWeekDays(weekOffset);
   const isThisWeek = weekOffset === 0;
@@ -969,14 +968,14 @@ export default function FullServicePage() {
   };
 
   return (
-    <main className={`${styles.page} ${inter.className}`}>
+    <main className={styles.page}>
       {isCartTransitionVisible && <CartTransition onComplete={() => router.push("/cart")} />}
 
       {/* STEP 01 - HERO SECTION */}
       <section className={styles.heroSection}>
         <div className={styles.contentWrapper}>
-          <p className={`${styles.stepTag} ${oswald.className}`}>STEP 01</p>
-          <h1 className={`${styles.heroTitle} ${oswald.className}`}>Choose Your Vehicle Type</h1>
+          <p className={`${styles.stepTag} ${styles.displayFont}`}>STEP 01</p>
+          <h1 className={`${styles.heroTitle} ${styles.displayFont}`}>Choose Your Vehicle Type</h1>
           
           <nav className={styles.carTypeNav}>
             {vehicleTypes.map((type) => (
@@ -1021,7 +1020,7 @@ export default function FullServicePage() {
       <section id="fullservice-plans" className={styles.planSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 02</p>
-          <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Service Type</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>Service Type</h2>
           
           <div className={styles.planGrid}>
             {/* FULL SERVICE CARD */}
@@ -1069,7 +1068,7 @@ export default function FullServicePage() {
       <section id="fullservice-addons" className={styles.addonsSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 03</p>
-          <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Add Extra Services</h2>
+          <h2 className={`${styles.sectionTitleLight} ${styles.displayFont}`}>Add Extra Services</h2>
           
           <div className={styles.addonsGrid}>
             {standardAddons.map(item => (
@@ -1130,7 +1129,7 @@ export default function FullServicePage() {
       <section id="fullservice-datetime" className={styles.dateTimeSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 04</p>
-          <h2 className={`${styles.sectionTitle} ${oswald.className}`}>Date and Time</h2>
+          <h2 className={`${styles.sectionTitle} ${styles.displayFont}`}>Date and Time</h2>
 
           <div className={styles.calendarWrapper}>
             <div className={styles.mobileDaySelector}>
@@ -1301,7 +1300,7 @@ export default function FullServicePage() {
       <section id="fullservice-ai-quote" className={styles.aiBookingSection}>
         <div className={styles.containerLarge}>
           <p className={styles.stepTagCenter}>STEP 05</p>
-          <h2 className={`${styles.sectionTitleLight} ${oswald.className}`}>Get AI Quote and Confirm</h2>
+          <h2 className={`${styles.sectionTitleLight} ${styles.displayFont}`}>Get AI Quote and Confirm</h2>
           <div className={styles.aiActionWrapper}>
             <button className={styles.aiQuoteBtn} onClick={openChat}>
               <FaRobot className={styles.botIcon} />
